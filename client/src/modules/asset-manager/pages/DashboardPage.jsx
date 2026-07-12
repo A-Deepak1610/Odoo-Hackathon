@@ -44,10 +44,10 @@ const DashboardPage = () => {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   return (
-    <div className="p-4 md:p-6 w-full space-y-4 md:space-y-6 bg-slate-100 min-h-screen">
+    <div className="p-3 md:p-4 w-full space-y-3 md:space-y-4 bg-slate-100 min-h-screen">
       
       {/* Header Area */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Asset Manager Command Center</h2>
           <p className="text-sm font-medium text-slate-500 mt-1">Real-time telemetry and overview of all organizational assets.</p>
@@ -61,7 +61,7 @@ const DashboardPage = () => {
       </div>
 
       {/* Extreme Density KPI Cards (6 columns on large screens) */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 items-start">
         <StatsCard title="Total Assets" value="2,498" icon={Box} trend="up" trendValue="12%" color="blue" />
         <StatsCard title="In Active Use" value="1,842" icon={Activity} trend="up" trendValue="5%" color="emerald" />
         <StatsCard title="Under Maintenance" value="124" icon={Wrench} trend="down" trendValue="2%" color="amber" />
@@ -71,14 +71,14 @@ const DashboardPage = () => {
       </div>
 
       {/* Critical Alerts Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
         <AlertCard 
           title="Overdue Returns Detected" 
           message="7 assets have exceeded their scheduled return date. Immediate action required."
           actionText="Review Overdue"
           onAction={() => navigate("/asset-manager/allocations")}
         />
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 shadow-sm flex items-start justify-between">
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 shadow-sm flex items-start justify-between">
           <div className="flex gap-4">
             <div className="bg-white p-3 rounded-xl shadow-sm border border-amber-100 text-amber-600">
               <Zap size={24} />
@@ -93,12 +93,12 @@ const DashboardPage = () => {
       </div>
 
       {/* Primary Analytics Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-3 items-start">
         
         {/* Main Chart spanning 2 cols */}
         <div className="xl:col-span-2">
           <DashboardCard title="Asset Utilization vs Active Allocations (YTD)">
-            <div className="h-[300px] w-full pt-4">
+            <div className="h-[220px] w-full pt-3">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={UTILIZATION_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
@@ -126,7 +126,7 @@ const DashboardPage = () => {
         {/* Small Pie Chart */}
         <div className="xl:col-span-1">
           <DashboardCard title="Department Distribution">
-            <div className="h-[300px] w-full flex items-center justify-center pt-2">
+            <div className="h-[220px] w-full flex items-center justify-center pt-2">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={DEPARTMENT_DATA} cx="50%" cy="45%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value">
@@ -143,7 +143,7 @@ const DashboardPage = () => {
         {/* Small Bar Chart */}
         <div className="xl:col-span-1">
           <DashboardCard title="Asset Status Breakdown">
-            <div className="h-[300px] w-full pt-4">
+            <div className="h-[220px] w-full pt-3">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={STATUS_DATA} layout="vertical" margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
@@ -161,10 +161,10 @@ const DashboardPage = () => {
       </div>
 
       {/* Complex Density Grid (3 columns layout) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-start">
         
         {/* Left Col: Lists */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <DashboardCard title="Pending Transfers (Urgent)" action={<Button variant="ghost" size="sm" onClick={() => navigate("/asset-manager/allocations")}>View All</Button>}>
             <div className="space-y-3">
               {[
@@ -188,7 +188,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Middle Col: Upcoming & Maintenance */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <DashboardCard title="Upcoming Returns Schedule">
             <div className="space-y-2.5">
               {[
@@ -240,7 +240,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Right Col: Actions & Logs */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <DashboardCard title="Quick Action Panel" className="bg-white border-slate-200">
             <div className="space-y-3">
               <Button onClick={() => setIsRegisterModalOpen(true)} className="w-full bg-blue-600 hover:bg-blue-700 text-white justify-start gap-3 h-12">
@@ -256,7 +256,7 @@ const DashboardPage = () => {
           </DashboardCard>
 
           <DashboardCard title="System Activity Feed">
-            <div className="pt-2 pl-2 overflow-y-auto max-h-[400px] custom-scrollbar">
+            <div className="pt-2 pl-2 overflow-y-auto max-h-[300px] custom-scrollbar">
               <ActivityCard title="Asset Allocated" description="MacBook Pro assigned to Jane Smith." timestamp="2 hrs ago" icon={CheckCircle2} iconColor="emerald" />
               <ActivityCard title="Maintenance Completed" description="HVAC Unit 3 routine servicing finished." timestamp="5 hrs ago" icon={Wrench} iconColor="blue" />
               <ActivityCard title="Transfer Rejected" description="Transfer of Server Rack B denied by IT Head." timestamp="Yesterday" icon={AlertTriangle} iconColor="amber" />

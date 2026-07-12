@@ -40,20 +40,7 @@ const depreciationData = [
   { year: '2027', laptops: 25600, furniture: 14580, av: 7680 },
 ];
 
-const generateHeatmap = () => {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-  const weeks = Array.from({length: 16}, (_, i) => `W${i+1}`);
-  const grid = [];
-  for(let d=0; d<days.length; d++) {
-    const row = [];
-    for(let w=0; w<weeks.length; w++) {
-      row.push(Math.floor(Math.random() * 5));
-    }
-    grid.push({ day: days[d], intensities: row });
-  }
-  return { weeks, grid };
-};
-const heatmapData = generateHeatmap();
+
 
 const ReportsPage = () => {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -77,7 +64,7 @@ const ReportsPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 items-start">
         
         {/* Main Analytics Area (3 cols) */}
         <div className="xl:col-span-3 space-y-4">
@@ -151,28 +138,7 @@ const ReportsPage = () => {
             </DashboardCard>
           </div>
 
-          <DashboardCard title="Facility / Shared Resource Booking Heatmap (Last 16 Weeks)">
-            <div className="overflow-x-auto pb-2 mt-2 w-full">
-              <div className="min-w-max flex gap-2">
-                <div className="flex flex-col gap-1.5 pt-6 pr-2 text-xs text-slate-500 font-semibold justify-between">
-                  {heatmapData.grid.map(row => <div key={row.day} className="h-[24px] flex items-center">{row.day}</div>)}
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex gap-1.5 pl-0.5">
-                    {heatmapData.weeks.map(w => <div key={w} className="w-[24px] text-center text-[10px] text-slate-400 font-semibold">{w.replace('W','')}</div>)}
-                  </div>
-                  {heatmapData.grid.map((row, i) => (
-                     <div key={i} className="flex gap-1.5">
-                      {row.intensities.map((intensity, j) => {
-                        const colors = ['bg-slate-100', 'bg-indigo-200', 'bg-indigo-400', 'bg-indigo-600', 'bg-indigo-800'];
-                        return <div key={j} className={`w-[24px] h-[24px] rounded-sm ${colors[intensity]} hover:ring-2 hover:ring-slate-400 cursor-pointer transition-all shadow-sm`}></div>
-                      })}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </DashboardCard>
+
           
         </div>
 
@@ -198,45 +164,7 @@ const ReportsPage = () => {
             </div>
           </DashboardCard>
 
-          <DashboardCard title="Least Used Assets">
-            <div className="space-y-2">
-              {[
-                { name: 'Mobile Projector Screen', uses: 2, icon: TrendingDown, color: 'text-red-500' },
-                { name: 'iPad Pro (AST-011)', uses: 4, icon: TrendingDown, color: 'text-red-500' },
-                { name: 'Standing Desk Pro', uses: 5, icon: TrendingDown, color: 'text-red-500' },
-                { name: 'Wacom Tablet Small', uses: 5, icon: TrendingDown, color: 'text-red-500' },
-                { name: 'Old Conf. Phone', uses: 7, icon: TrendingDown, color: 'text-red-500' },
-              ].map((asset, i) => (
-                <div key={i} className="flex justify-between items-center p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <div className="font-bold text-xs text-slate-900">{asset.name}</div>
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-white px-2 py-1 rounded shadow-sm border border-slate-200">
-                    {asset.uses} <asset.icon size={12} className={asset.color} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </DashboardCard>
 
-          <DashboardCard title="Maintenance Schedule (7 Days)">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3 p-2 border border-amber-200 bg-amber-50 rounded-lg">
-                <div className="p-1.5 bg-white rounded text-amber-600 shadow-sm"><Wrench size={14} /></div>
-                <div><p className="text-xs font-bold text-amber-900">HVAC Inspection</p><p className="text-[10px] font-medium text-amber-700">Tomorrow</p></div>
-              </div>
-              <div className="flex items-center gap-3 p-2 border border-slate-200 bg-slate-50 rounded-lg">
-                <div className="p-1.5 bg-white rounded text-slate-600 shadow-sm"><CheckCircle size={14} /></div>
-                <div><p className="text-xs font-bold text-slate-900">Server Cleanup</p><p className="text-[10px] font-medium text-slate-500">Friday</p></div>
-              </div>
-              <div className="flex items-center gap-3 p-2 border border-red-200 bg-red-50 rounded-lg">
-                <div className="p-1.5 bg-white rounded text-red-600 shadow-sm"><AlertTriangle size={14} /></div>
-                <div><p className="text-xs font-bold text-red-900">Fire Extinguishers</p><p className="text-[10px] font-medium text-red-700">Oct 28</p></div>
-              </div>
-              <div className="flex items-center gap-3 p-2 border border-slate-200 bg-slate-50 rounded-lg">
-                <div className="p-1.5 bg-white rounded text-slate-600 shadow-sm"><Car size={14} /></div>
-                <div><p className="text-xs font-bold text-slate-900">Vehicle Servicing</p><p className="text-[10px] font-medium text-slate-500">Nov 2</p></div>
-              </div>
-            </div>
-          </DashboardCard>
 
         </div>
       </div>
