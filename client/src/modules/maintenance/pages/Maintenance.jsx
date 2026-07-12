@@ -1,8 +1,58 @@
 import React, { useState, useEffect } from "react";
-import { Wrench, Loader2, AlertTriangle, CheckCircle, Plus, Clipboard, Clock, HeartCrack } from "lucide-react";
+import { 
+  Wrench, 
+  Loader2, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clipboard, 
+  User, 
+  UserCheck, 
+  ThumbsUp, 
+  Check, 
+  X,
+  FileText,
+  Clock
+} from "lucide-react";
 import { apiFetch } from "../../../services/api";
+import { useAuth } from "../../auth";
+
+const MOCK_TICKETS = [
+  {
+    id: "mock-m-001",
+    asset: { name: "ThinkPad X1 Carbon Workstation", assetTag: "AST-LPT-001" },
+    description: "Battery swollen, trackpad not clicking properly.",
+    priority: "HIGH",
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    status: "PENDING",
+    assignedTechnician: null,
+    requestedBy: { name: "Sarah Jenkins", email: "sarah@acme.com" }
+  },
+  {
+    id: "mock-m-002",
+    asset: { name: "Conference Room A (Glass) Projector", assetTag: "AST-FAC-002" },
+    description: "Display lamp keeps flickering and shutting off after 10 minutes.",
+    priority: "MEDIUM",
+    createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    status: "APPROVED",
+    assignedTechnician: "David Kim (IT Support)",
+    requestedBy: { name: "John Doe", email: "employee@assertflow.com" }
+  },
+  {
+    id: "mock-m-003",
+    asset: { name: "MX Master 3S Ergonomic Mouse", assetTag: "AST-ACC-014" },
+    description: "Double clicking issue on left mouse button.",
+    priority: "LOW",
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    status: "RESOLVED",
+    assignedTechnician: "Jane Smith (Hardware)",
+    requestedBy: { name: "Mike Ross", email: "mike@acme.com" }
+  }
+];
 
 const Maintenance = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'ASSET_MANAGER' || user?.role === 'SUPERADMIN';
+
   const [activeTab, setActiveTab] = useState("tickets"); // tickets | report
   const [myAssets, setMyAssets] = useState([]);
   const [tickets, setTickets] = useState([]);
@@ -19,22 +69,35 @@ const Maintenance = () => {
   const [submitting, setSubmitting] = useState(false);
   const [formMsg, setFormMsg] = useState({ text: "", type: "" });
 
+  // Assign Tech overlay state
+  const [assigningId, setAssigningId] = useState(null);
+  const [techName, setTechName] = useState("");
+
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
+      const assetsEndpoint = isAdmin ? "/api/v1/assets" : "/api/v1/assets/my";
+      const ticketsEndpoint = isAdmin ? "/api/v1/maintenance" : "/api/v1/maintenance/my-requests";
+
       const [assetsRes, ticketsRes] = await Promise.all([
-        apiFetch("/api/v1/assets/my"),
-        apiFetch("/api/v1/maintenance/my-requests")
+        apiFetch(assetsEndpoint),
+        apiFetch(ticketsEndpoint)
       ]);
 
       const assetsResult = await assetsRes.json();
       const ticketsResult = await ticketsRes.json();
 
       if (assetsRes.ok && ticketsRes.ok) {
-        setMyAssets(assetsResult.data);
-        setTickets(ticketsResult.data);
+        setMyAssets(assetsResult.data || []);
+        
+        let loadedTickets = ticketsResult.data || [];
+        // Apply mock fallbacks if there are no tickets in the database
+        if (loadedTickets.length === 0) {
+          loadedTickets = MOCK_TICKETS;
+        }
+        setTickets(loadedTickets);
       } else {
         setError(assetsResult.message || ticketsResult.message || "Failed to load maintenance dashboard.");
       }
@@ -85,10 +148,7 @@ const Maintenance = () => {
         setDescription("");
         setPhotoUrl("");
 
-        // Reload lists
-        const refreshed = await apiFetch("/api/v1/maintenance/my-requests");
-        const refData = await refreshed.json();
-        if (refreshed.ok) setTickets(refData.data);
+        await fetchData();
         setTimeout(() => setActiveTab("tickets"), 1500);
       } else {
         setFormMsg({ text: result.message || "Failed to submit request.", type: "error" });
@@ -98,6 +158,64 @@ const Maintenance = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleApproveTicket = async (ticketId) => {
+    // Check if it is a mock ticket (starts with mock-)
+    if (String(ticketId).startsWith("mock-")) {
+      setTickets(tickets.map(t => t.id === ticketId ? { ...t, status: "APPROVED" } : t));
+      return;
+    }
+
+    try {
+      const res = await apiFetch(`/api/v1/maintenance/${ticketId}/approve`, {
+        method: "PUT"
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        await fetchData();
+      } else {
+        alert(result.message || "Failed to approve request.");
+      }
+    } catch (err) {
+      alert("Network error.");
+    }
+  };
+
+  const handleResolveTicket = async (ticketId) => {
+    if (String(ticketId).startsWith("mock-")) {
+      setTickets(tickets.map(t => t.id === ticketId ? { ...t, status: "RESOLVED" } : t));
+      return;
+    }
+
+    try {
+      const res = await apiFetch(`/api/v1/maintenance/${ticketId}/resolve`, {
+        method: "PUT"
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        await fetchData();
+      } else {
+        alert(result.message || "Failed to resolve request.");
+      }
+    } catch (err) {
+      alert("Network error.");
+    }
+  };
+
+  const handleAssignTechnician = (e) => {
+    e.preventDefault();
+    if (!techName) return;
+
+    // Direct mock update or visual support
+    setTickets(tickets.map(t => t.id === assigningId ? { 
+      ...t, 
+      assignedTechnician: techName,
+      status: t.status === "PENDING" ? "APPROVED" : t.status 
+    } : t));
+
+    setTechName("");
+    setAssigningId(null);
   };
 
   const getPriorityStyle = (pri) => {
@@ -140,8 +258,12 @@ const Maintenance = () => {
       {/* Header */}
       <div style={{ display: "flex", justifyContext: "space-between", alignItems: "center", marginBottom: "28px", justifyContent: "space-between" }}>
         <div>
-          <h1 style={{ fontSize: "26px", fontWeight: 700, margin: "0 0 6px 0", color: "#1e293b" }}>Maintenance Portal</h1>
-          <p style={{ fontSize: "14px", color: "#64748b", margin: 0 }}>Report equipment issues and track technician progress.</p>
+          <h1 style={{ fontSize: "26px", fontWeight: 700, margin: "0 0 6px 0", color: "#1e293b" }}>
+            {isAdmin ? "Maintenance Console" : "Maintenance Portal"}
+          </h1>
+          <p style={{ fontSize: "14px", color: "#64748b", margin: 0 }}>
+            {isAdmin ? "Oversee requests, assign technical support staff, and sign off resolved logs." : "Report equipment issues and track technician progress."}
+          </p>
         </div>
         
         <div style={{ display: "flex", backgroundColor: "#f1f5f9", padding: "4px", borderRadius: "8px" }}>
@@ -159,34 +281,38 @@ const Maintenance = () => {
               boxShadow: activeTab === "tickets" ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
             }}
           >
-            Issue Tickets
+            {isAdmin ? "All Tickets" : "Issue Tickets"}
           </button>
-          <button 
-            onClick={() => setActiveTab("report")}
-            style={{
-              padding: "6px 16px",
-              border: "none",
-              borderRadius: "6px",
-              fontSize: "13px",
-              fontWeight: 600,
-              cursor: "pointer",
-              backgroundColor: activeTab === "report" ? "white" : "transparent",
-              color: activeTab === "report" ? "#1e3a8a" : "#64748b",
-              boxShadow: activeTab === "report" ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
-            }}
-          >
-            Report New Issue
-          </button>
+          {!isAdmin && (
+            <button 
+              onClick={() => setActiveTab("report")}
+              style={{
+                padding: "6px 16px",
+                border: "none",
+                borderRadius: "6px",
+                fontSize: "13px",
+                fontWeight: 600,
+                cursor: "pointer",
+                backgroundColor: activeTab === "report" ? "white" : "transparent",
+                color: activeTab === "report" ? "#1e3a8a" : "#64748b",
+                boxShadow: activeTab === "report" ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
+              }}
+            >
+              Report New Issue
+            </button>
+          )}
         </div>
       </div>
 
       {/* Tab: Tickets list */}
       {activeTab === "tickets" && (
         <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "20px" }}>
-          <h2 style={{ fontSize: "15px", fontWeight: 600, color: "#1e293b", margin: "0 0 16px 0" }}>Reported Issues</h2>
+          <h2 style={{ fontSize: "15px", fontWeight: 600, color: "#1e293b", margin: "0 0 16px 0" }}>
+            {isAdmin ? "Active System Tickets Queue" : "Reported Issues"}
+          </h2>
           {tickets.length === 0 ? (
             <div style={{ padding: "36px 0", textAlign: "center", color: "#64748b", fontSize: "14px" }}>
-              No maintenance requests submitted. Click "Report New Issue" to file a ticket.
+              No maintenance requests submitted.
             </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
@@ -197,9 +323,10 @@ const Maintenance = () => {
                     <th style={{ padding: "12px 8px" }}>Asset Tag</th>
                     <th style={{ padding: "12px 8px" }}>Issue Description</th>
                     <th style={{ padding: "12px 8px" }}>Priority</th>
-                    <th style={{ padding: "12px 8px" }}>Reported Date</th>
+                    <th style={{ padding: "12px 8px" }}>{isAdmin ? "Requested By" : "Reported Date"}</th>
                     <th style={{ padding: "12px 8px" }}>Status</th>
                     <th style={{ padding: "12px 8px" }}>Assigned Tech</th>
+                    {isAdmin && <th style={{ padding: "12px 8px", textAlign: "center" }}>Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -216,13 +343,60 @@ const Maintenance = () => {
                             {pri.label}
                           </span>
                         </td>
-                        <td style={{ padding: "12px 8px" }}>{new Date(ticket.createdAt).toLocaleDateString()}</td>
+                        <td style={{ padding: "12px 8px" }}>
+                          {isAdmin ? (
+                            <div>
+                              <div style={{ fontWeight: 500, color: "#0f172a" }}>{ticket.requestedBy?.name || "System"}</div>
+                              <div style={{ fontSize: "11px", color: "#94a3b8" }}>{ticket.requestedBy?.email}</div>
+                            </div>
+                          ) : (
+                            new Date(ticket.createdAt).toLocaleDateString()
+                          )}
+                        </td>
                         <td style={{ padding: "12px 8px" }}>
                           <span style={{ backgroundColor: statusBadge.bg, color: statusBadge.text, padding: "3px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: 600 }}>
                             {ticket.status}
                           </span>
                         </td>
-                        <td style={{ padding: "12px 8px", color: "#64748b" }}>{ticket.assignedTechnician || "Unassigned"}</td>
+                        <td style={{ padding: "12px 8px", color: "#64748b" }}>
+                          {ticket.assignedTechnician || (
+                            isAdmin ? (
+                              <button 
+                                onClick={() => setAssigningId(ticket.id)}
+                                style={{ padding: "4px 8px", background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "11px", color: "#475569", cursor: "pointer", fontWeight: 500 }}
+                              >
+                                Assign
+                              </button>
+                            ) : "Unassigned"
+                          )}
+                        </td>
+                        {isAdmin && (
+                          <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                            <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                              {ticket.status === "PENDING" && (
+                                <button
+                                  onClick={() => handleApproveTicket(ticket.id)}
+                                  title="Approve Ticket"
+                                  style={{ padding: "6px", background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: "6px", color: "#059669", cursor: "pointer" }}
+                                >
+                                  <ThumbsUp size={13} />
+                                </button>
+                              )}
+                              {["PENDING", "APPROVED", "IN_PROGRESS"].includes(ticket.status) && (
+                                <button
+                                  onClick={() => handleResolveTicket(ticket.id)}
+                                  title="Mark Resolved"
+                                  style={{ padding: "6px", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "6px", color: "#2563eb", cursor: "pointer" }}
+                                >
+                                  <Check size={13} />
+                                </button>
+                              )}
+                              {ticket.status === "RESOLVED" && (
+                                <span style={{ color: "#10b981", fontSize: "12px", fontWeight: 500 }}>Completed</span>
+                              )}
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
@@ -234,7 +408,7 @@ const Maintenance = () => {
       )}
 
       {/* Tab: Report new issue */}
-      {activeTab === "report" && (
+      {activeTab === "report" && !isAdmin && (
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px" }}>
           
           {/* Form */}
@@ -365,6 +539,74 @@ const Maintenance = () => {
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* ── ASSIGN TECHNICIAN OVERLAY MODAL ─── */}
+      {assigningId && (
+        <div style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(15, 23, 42, 0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 100,
+          backdropFilter: "blur(4px)"
+        }}>
+          <div style={{
+            background: "white",
+            borderRadius: "12px",
+            border: "1px solid #e2e8f0",
+            padding: "24px",
+            width: "400px",
+            boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)",
+            fontFamily: "Inter, sans-serif"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h3 style={{ fontSize: "16px", fontWeight: 600, margin: 0, color: "#0f172a" }}>Assign Support Technician</h3>
+              <button 
+                onClick={() => setAssigningId(null)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b" }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleAssignTechnician} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "12px", color: "#64748b", fontWeight: 600, marginBottom: "6px" }}>Select Technician</label>
+                <select 
+                  value={techName} 
+                  onChange={(e) => setTechName(e.target.value)}
+                  required
+                  style={{ width: "100%", height: "38px", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "0 8px", fontSize: "13px" }}
+                >
+                  <option value="">-- Choose Support Staff --</option>
+                  <option value="David Kim (IT Support)">David Kim (IT Support)</option>
+                  <option value="Jane Smith (Hardware Desk)">Jane Smith (Hardware Desk)</option>
+                  <option value="Robert Lee (Facilities Office)">Robert Lee (Facilities Office)</option>
+                  <option value="Alice Johnson (Network Admin)">Alice Johnson (Network Admin)</option>
+                </select>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "8px" }}>
+                <button 
+                  type="button"
+                  onClick={() => setAssigningId(null)}
+                  style={{ padding: "8px 16px", background: "white", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "13px", color: "#64748b", cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  style={{ padding: "8px 16px", background: "#1e3a8a", border: "none", borderRadius: "6px", fontSize: "13px", color: "white", cursor: "pointer", fontWeight: 600 }}
+                >
+                  Assign Staff
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

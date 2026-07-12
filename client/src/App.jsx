@@ -23,6 +23,9 @@ import { SuperAdminProvider } from './modules/super-admin/store/SuperAdminContex
 import { AuthProvider, ProtectedRoute, LoginPage, SignupPage, useAuth } from './modules/auth';
 import ProfilePage from './modules/auth/pages/ProfilePage';
 
+<<<<<<< HEAD
+
+=======
 // NEW: Import the isolated Asset Manager routes
 import { AssetManagerRoutes } from './modules/asset-manager';
 
@@ -33,6 +36,7 @@ const RoleBasedRedirect = () => {
   }
   return <Navigate to="/dashboard" replace />;
 };
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
 
 function App() {
   return (
@@ -45,7 +49,11 @@ function App() {
 
           {/* Secure Application Routes (Authenticated & Guarded Layout) */}
           <Route path="/" element={<ProtectedRoute><SuperAdminProvider><DeptHeadProvider><AppLayout /></DeptHeadProvider></SuperAdminProvider></ProtectedRoute>}>
+<<<<<<< HEAD
+            <Route index element={<Navigate to="/dashboard" replace />} />
+=======
             <Route index element={<RoleBasedRedirect />} />
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
             
             {/* General Dashboard & Panel Routes */}
             <Route path="dashboard" element={<Dashboard />} />
@@ -107,7 +115,7 @@ function App() {
               } 
             />
 
-            {/* Catch all fallback within panels */}
+          {/* Catch all fallback within panels */}
             <Route path="*" element={<div className="p-8">Work in progress</div>} />
           </Route>
           

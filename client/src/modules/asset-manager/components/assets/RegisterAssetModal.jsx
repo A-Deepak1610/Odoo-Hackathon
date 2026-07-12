@@ -1,9 +1,17 @@
+<<<<<<< HEAD
+import React, { useEffect } from 'react';
+=======
 import React, { useEffect, useState } from 'react';
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
 import { X, UploadCloud, AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerAssetSchema } from '../../schemas/assetSchema';
 import { Input, Select, Label, Button } from '../ui';
+<<<<<<< HEAD
+
+export const RegisterAssetModal = ({ isOpen, onClose }) => {
+=======
 import { createAssetApi, getAssetCategoriesApi } from '../../api';
 
 export const RegisterAssetModal = ({ isOpen, onClose, onAssetCreated }) => {
@@ -11,6 +19,7 @@ export const RegisterAssetModal = ({ isOpen, onClose, onAssetCreated }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm({
     resolver: zodResolver(registerAssetSchema),
     defaultValues: {
@@ -22,6 +31,16 @@ export const RegisterAssetModal = ({ isOpen, onClose, onAssetCreated }) => {
   useEffect(() => {
     if (isOpen) {
       setValue('tag', 'AST-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000));
+<<<<<<< HEAD
+    }
+  }, [isOpen, setValue]);
+
+  const onSubmit = (data) => {
+    console.log("Form Data Submitted:", data);
+    // TODO: Implement API submission
+    reset();
+    onClose();
+=======
       
       // Fetch categories
       getAssetCategoriesApi().then(res => {
@@ -59,6 +78,7 @@ export const RegisterAssetModal = ({ isOpen, onClose, onAssetCreated }) => {
     } finally {
       setIsSubmitting(false);
     }
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
   };
 
   const handleClose = () => {
@@ -120,9 +140,16 @@ export const RegisterAssetModal = ({ isOpen, onClose, onAssetCreated }) => {
                     className={errors.category ? 'border-red-300 focus:ring-red-500' : ''}
                   >
                     <option value="">Select a category</option>
+<<<<<<< HEAD
+                    <option value="Electronics">Electronics</option>
+                    <option value="Furniture">Furniture</option>
+                    <option value="Vehicles">Vehicles</option>
+                    <option value="Software">Software</option>
+=======
                     {categories.map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
                   </Select>
                   {errors.category && <p className="text-red-500 text-xs font-medium">{errors.category.message}</p>}
                 </div>
@@ -258,6 +285,8 @@ export const RegisterAssetModal = ({ isOpen, onClose, onAssetCreated }) => {
               </div>
             )}
             
+<<<<<<< HEAD
+=======
             {submitError && (
               <div className="bg-red-50 p-4 rounded-xl flex items-start gap-3 border border-red-200">
                 <AlertCircle size={20} className="text-red-600 mt-0.5 shrink-0" />
@@ -268,16 +297,25 @@ export const RegisterAssetModal = ({ isOpen, onClose, onAssetCreated }) => {
               </div>
             )}
             
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
           </form>
         </div>
 
         {/* Footer */}
         <div className="border-t border-slate-200 p-5 bg-slate-50 flex justify-end gap-3 shrink-0">
+<<<<<<< HEAD
+          <Button type="button" variant="secondary" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button type="submit" form="register-asset-form">
+            Register Asset
+=======
           <Button type="button" variant="secondary" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button type="submit" form="register-asset-form" disabled={isSubmitting}>
             {isSubmitting ? 'Registering...' : 'Register Asset'}
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
           </Button>
         </div>
       </div>

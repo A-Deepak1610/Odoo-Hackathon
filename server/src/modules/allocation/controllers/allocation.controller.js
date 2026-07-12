@@ -140,192 +140,214 @@ const cancelTransferRequest = async (req, res, next) => {
 };
 
 /**
- * Get all allocations for managers/admins
+ * Get all allocations in the organization (Admin only)
  */
-const getAllocations = async (req, res, next) => {
+const getAllAllocations = async (req, res, next) => {
   try {
     const orgId = req.user.organizationId;
+    const whereClause = orgId ? { organizationId: orgId } : {};
+
     const allocations = await prisma.allocation.findMany({
-      where: { organizationId: orgId },
+      where: whereClause,
       include: {
         asset: true,
-        toEmployee: true,
-        fromEmployee: true,
-        toDepartment: true,
-        requestedBy: true
+        toEmployee: {
+          select: { id: true, name: true, email: true }
+        },
+        fromEmployee: {
+          select: { id: true, name: true, email: true }
+        },
+        toDepartment: true
       },
       orderBy: { createdAt: 'desc' }
     });
-    return successResponse(res, 200, 'Allocations retrieved successfully', allocations);
+
+    return successResponse(res, 200, 'All allocations retrieved successfully', allocations);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Allocate asset directly (ASSET_MANAGER / ADMIN)
- */
-const allocateAsset = async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-    const orgId = req.user.organizationId;
-    const { assetId, toEmployeeId, toDepartmentId, expectedReturnDate } = req.body;
-
-    if (!assetId) throw new ApiError(400, 'Asset ID is required');
-    if (!toEmployeeId && !toDepartmentId) throw new ApiError(400, 'Employee or Department is required');
-
-    // Check if asset exists and is available
-    const asset = await prisma.asset.findUnique({ where: { id: assetId } });
-    if (!asset) throw new ApiError(404, 'Asset not found');
-
-    if (asset.status === 'ALLOCATED') {
-      throw new ApiError(400, 'Asset is already allocated');
-    }
-    if (asset.status !== 'AVAILABLE') {
-      throw new ApiError(400, `Asset cannot be allocated because its status is ${asset.status}`);
-    }
-
-    const allocation = await prisma.$transaction(async (tx) => {
-      // Create allocation record
-      const record = await tx.allocation.create({
-        data: {
-          organizationId: orgId || asset.organizationId,
-          assetId,
-          toEmployeeId,
-          toDepartmentId,
-          requestedById: userId,
-          approvedById: userId,
-          status: 'ACTIVE',
-          expectedReturnDate: expectedReturnDate ? new Date(expectedReturnDate) : null
-        },
-        include: { asset: true, toEmployee: true, toDepartment: true }
-      });
-
-      // Update asset status and holder
-      await tx.asset.update({
-        where: { id: assetId },
-        data: {
-          status: 'ALLOCATED',
-          currentEmployeeId: toEmployeeId || null,
-          currentDepartmentId: toDepartmentId || null
-        }
-      });
-
-      return record;
-    });
-
-    return successResponse(res, 201, 'Asset allocated successfully', allocation);
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Return an asset (Check-in)
- */
-const returnAsset = async (req, res, next) => {
-  try {
-    const { id } = req.params; // Allocation ID
-    const { condition, checkInNotes } = req.body;
-
-    const allocation = await prisma.allocation.findUnique({
-      where: { id },
-      include: { asset: true }
-    });
-
-    if (!allocation) throw new ApiError(404, 'Allocation not found');
-    if (allocation.status !== 'ACTIVE') throw new ApiError(400, 'Only ACTIVE allocations can be returned');
-
-    const updatedAllocation = await prisma.$transaction(async (tx) => {
-      const record = await tx.allocation.update({
-        where: { id },
-        data: {
-          status: 'RETURNED',
-          returnedDate: new Date(),
-          checkInNotes
-        }
-      });
-
-      await tx.asset.update({
-        where: { id: allocation.assetId },
-        data: {
-          status: 'AVAILABLE',
-          condition: condition || allocation.asset.condition,
-          currentEmployeeId: null,
-          currentDepartmentId: null
-        }
-      });
-
-      return record;
-    });
-
-    return successResponse(res, 200, 'Asset returned successfully', updatedAllocation);
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Approve a transfer request
+ * Approve a pending transfer request
  */
 const approveTransfer = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const adminId = req.user.id;
 
-    const allocation = await prisma.allocation.findUnique({ where: { id } });
-    if (!allocation) throw new ApiError(404, 'Transfer request not found');
-    if (allocation.status !== 'PENDING') throw new ApiError(400, 'Only PENDING transfers can be approved');
-
-    const approved = await prisma.$transaction(async (tx) => {
-      const record = await tx.allocation.update({
-        where: { id },
-        data: {
-          status: 'ACTIVE',
-          approvedById: userId
-        }
-      });
-
-      // Close any previous ACTIVE allocation for this asset
-      await tx.allocation.updateMany({
-        where: { assetId: allocation.assetId, status: 'ACTIVE', id: { not: id } },
-        data: { status: 'RETURNED', returnedDate: new Date() }
-      });
-
-      await tx.asset.update({
-        where: { id: allocation.assetId },
-        data: {
-          currentEmployeeId: allocation.toEmployeeId,
-          currentDepartmentId: allocation.toDepartmentId
-        }
-      });
-
-      return record;
+    const transfer = await prisma.allocation.findUnique({
+      where: { id },
+      include: { asset: true }
     });
 
-    return successResponse(res, 200, 'Transfer approved successfully', approved);
+    if (!transfer) {
+      throw new ApiError(404, 'Transfer request not found');
+    }
+
+    if (transfer.status !== 'PENDING') {
+      throw new ApiError(400, 'Only pending transfer requests can be approved');
+    }
+
+    // Update the transfer status
+    const updatedTransfer = await prisma.allocation.update({
+      where: { id },
+      data: {
+        status: 'APPROVED',
+        approvedById: adminId,
+        returnedDate: new Date() // Mark the actual transfer date
+      }
+    });
+
+    // Update the asset owner
+    await prisma.asset.update({
+      where: { id: transfer.assetId },
+      data: {
+        currentEmployeeId: transfer.toEmployeeId || null,
+        currentDepartmentId: transfer.toDepartmentId || null,
+        status: 'ALLOCATED'
+      }
+    });
+
+    return successResponse(res, 200, 'Transfer request approved and asset reassigned successfully', updatedTransfer);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Reject a transfer request
+ * Reject a pending transfer request
  */
 const rejectTransfer = async (req, res, next) => {
   try {
     const { id } = req.params;
-    
-    const allocation = await prisma.allocation.findUnique({ where: { id } });
-    if (!allocation) throw new ApiError(404, 'Transfer request not found');
-    if (allocation.status !== 'PENDING') throw new ApiError(400, 'Only PENDING transfers can be rejected');
+    const adminId = req.user.id;
 
-    const rejected = await prisma.allocation.update({
-      where: { id },
-      data: { status: 'REJECTED' }
+    const transfer = await prisma.allocation.findUnique({
+      where: { id }
     });
 
-    return successResponse(res, 200, 'Transfer rejected successfully', rejected);
+    if (!transfer) {
+      throw new ApiError(404, 'Transfer request not found');
+    }
+
+    if (transfer.status !== 'PENDING') {
+      throw new ApiError(400, 'Only pending transfer requests can be rejected');
+    }
+
+    const updatedTransfer = await prisma.allocation.update({
+      where: { id },
+      data: {
+        status: 'REJECTED',
+        approvedById: adminId
+      }
+    });
+
+    return successResponse(res, 200, 'Transfer request rejected successfully', updatedTransfer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Force return an asset (de-allocate)
+ */
+const forceReturn = async (req, res, next) => {
+  try {
+    const { assetId } = req.body;
+    const adminId = req.user.id;
+
+    const asset = await prisma.asset.findUnique({
+      where: { id: assetId }
+    });
+
+    if (!asset) {
+      throw new ApiError(404, 'Asset not found');
+    }
+
+    // 1. Update active allocations to completed/returned
+    await prisma.allocation.updateMany({
+      where: {
+        assetId,
+        status: 'ACTIVE'
+      },
+      data: {
+        status: 'RETURNED',
+        returnedDate: new Date(),
+        approvedById: adminId
+      }
+    });
+
+    // 2. Update asset status to available and clear custodians
+    const updatedAsset = await prisma.asset.update({
+      where: { id: assetId },
+      data: {
+        status: 'AVAILABLE',
+        currentEmployeeId: null,
+        currentDepartmentId: null
+      }
+    });
+
+    return successResponse(res, 200, 'Asset returned and marked as available', updatedAsset);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Allocate/Assign an asset directly (Admin only)
+ */
+const assignAsset = async (req, res, next) => {
+  try {
+    const adminId = req.user.id;
+    let orgId = req.user.organizationId;
+    if (!orgId) {
+      const firstOrg = await prisma.organization.findFirst();
+      orgId = firstOrg?.id;
+    }
+
+    const { assetId, toEmployeeId, toDepartmentId } = req.body;
+
+    if (!assetId) {
+      throw new ApiError(400, 'Asset ID is required');
+    }
+    if (!toEmployeeId && !toDepartmentId) {
+      throw new ApiError(400, 'Must specify either employee or department to assign');
+    }
+
+    const asset = await prisma.asset.findUnique({
+      where: { id: assetId }
+    });
+
+    if (!asset) {
+      throw new ApiError(404, 'Asset not found');
+    }
+
+    // Create a new allocation record
+    const allocation = await prisma.allocation.create({
+      data: {
+        organizationId: orgId,
+        assetId,
+        toEmployeeId: toEmployeeId || null,
+        toDepartmentId: toDepartmentId || null,
+        requestedById: adminId,
+        approvedById: adminId,
+        status: 'ACTIVE',
+        expectedReturnDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 days default
+      }
+    });
+
+    // Update asset
+    await prisma.asset.update({
+      where: { id: assetId },
+      data: {
+        status: 'ALLOCATED',
+        currentEmployeeId: toEmployeeId || null,
+        currentDepartmentId: toDepartmentId || null
+      }
+    });
+
+    return successResponse(res, 201, 'Asset assigned successfully', allocation);
   } catch (error) {
     next(error);
   }
@@ -335,9 +357,9 @@ module.exports = {
   getMyTransfers,
   requestTransfer,
   cancelTransferRequest,
-  getAllocations,
-  allocateAsset,
-  returnAsset,
+  getAllAllocations,
   approveTransfer,
-  rejectTransfer
+  rejectTransfer,
+  forceReturn,
+  assignAsset
 };

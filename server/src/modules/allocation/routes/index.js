@@ -3,11 +3,11 @@ const {
   getMyTransfers,
   requestTransfer,
   cancelTransferRequest,
-  getAllocations,
-  allocateAsset,
-  returnAsset,
+  getAllAllocations,
   approveTransfer,
-  rejectTransfer
+  rejectTransfer,
+  forceReturn,
+  assignAsset
 } = require('../controllers/allocation.controller');
 const { authenticateJWT } = require('../../auth/middlewares/auth.middleware');
 
@@ -16,16 +16,17 @@ const router = Router();
 // Secure all allocation/transfer routes
 router.use(authenticateJWT);
 
+// Employee routes
 // Employee endpoints
 router.get('/my-transfers', getMyTransfers);
 router.post('/transfer', requestTransfer);
 router.put('/transfer/:id/cancel', cancelTransferRequest);
 
-// Manager/Admin endpoints
-router.get('/', getAllocations);
-router.post('/', allocateAsset);
-router.put('/:id/return', returnAsset);
+// Admin routes
+router.get('/', getAllAllocations);
 router.put('/transfer/:id/approve', approveTransfer);
 router.put('/transfer/:id/reject', rejectTransfer);
+router.post('/force-return', forceReturn);
+router.post('/assign', assignAsset)
 
 module.exports = { router };
