@@ -2,10 +2,22 @@ import React from "react";
 import { Search, Bell, Moon, ChevronDown } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
+const PAGE_TITLES = {
+  "dashboard": "Dashboard",
+  "notifications": "Activity Logs & Notifications",
+  "organization": "Organization Setup",
+  "assets": "Asset Registration & Directory",
+  "allocations": "Asset Allocation & Transfer",
+  "booking": "Resource Booking",
+  "maintenance": "Maintenance Management",
+  "audit": "Asset Audit",
+  "reports": "Reports & Analytics",
+};
+
 const getPageTitle = (pathname) => {
-  const path = pathname.split("/")[1];
-  if (!path) return "Dashboard";
-  return path.charAt(0).toUpperCase() + path.slice(1).replace("-", " ");
+  const pathParts = pathname.split("/").filter(Boolean);
+  const path = pathParts[pathParts.length - 1] || "dashboard";
+  return PAGE_TITLES[path] || (path.charAt(0).toUpperCase() + path.slice(1).replace("-", " "));
 };
 
 const TopNavbar = () => {

@@ -1,1 +1,9 @@
-export { default as AssetManagerPage } from './AssetManagerPage';
+export { default as DashboardPage } from './DashboardPage';
+export { default as AssetsPage } from './AssetsPage';
+export { default as AssetDetailsPage } from './AssetDetailsPage';
+export { default as AllocationPage } from './AllocationPage';
+export { default as BookingPage } from './BookingPage';
+export { default as MaintenancePage } from './MaintenancePage';
+export { default as AuditPage } from './AuditPage';
+export { default as ReportsPage } from './ReportsPage';
+export { default as NotificationsPage } from './NotificationsPage';
