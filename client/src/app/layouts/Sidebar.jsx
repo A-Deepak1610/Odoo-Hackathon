@@ -31,6 +31,14 @@ const navGroups = [
     ],
   },
   {
+    label: "EMPLOYEE SERVICES",
+    items: [
+      { name: 'Allocation & Transfer', path: '/allocations', icon: ArrowRightLeft, roles: ['EMPLOYEE', 'ADMIN', 'SUPERADMIN'] },
+      { name: 'Resource Booking', path: '/booking', icon: CalendarClock, roles: ['EMPLOYEE', 'ADMIN', 'SUPERADMIN'] },
+      { name: 'Maintenance Log', path: '/maintenance', icon: Wrench, roles: ['EMPLOYEE', 'ADMIN', 'SUPERADMIN'] },
+    ],
+  },
+  {
     label: "DEPARTMENT HEAD (MOCKED)",
     items: [
       { name: 'Dashboard & Assets', path: '/dept-dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'SUPERADMIN', 'DEPARTMENT_HEAD'] },
