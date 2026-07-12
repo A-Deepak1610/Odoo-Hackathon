@@ -5,9 +5,7 @@ import { Input, Button } from '../ui';
 
 export const Header = () => {
   return (
-    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 font-sans">
-      <div></div>
-
+    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-end px-6 shrink-0 font-sans">
       {/* Right Actions */}
       <div className="flex items-center gap-2">
         <button className="p-2 text-slate-400 bg-transparent border-none cursor-pointer rounded-full relative transition-all hover:text-slate-900 hover:bg-slate-100">

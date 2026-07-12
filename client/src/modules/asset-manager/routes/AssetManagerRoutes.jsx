@@ -14,6 +14,7 @@ const MaintenancePage = React.lazy(() => import('../pages/MaintenancePage').catc
 const AuditPage = React.lazy(() => import('../pages/AuditPage').catch(() => ({ default: () => <div style={{padding: '24px'}}>Audit Page (Placeholder)</div> })));
 const ReportsPage = React.lazy(() => import('../pages/ReportsPage').catch(() => ({ default: () => <div style={{padding: '24px'}}>Reports Page (Placeholder)</div> })));
 const NotificationsPage = React.lazy(() => import('../pages/NotificationsPage').catch(() => ({ default: () => <div style={{padding: '24px'}}>Notifications Page (Placeholder)</div> })));
+const OrganizationPage = React.lazy(() => import('../pages/OrganizationPage').catch(() => ({ default: () => <div style={{padding: '24px'}}>Organization Page (Placeholder)</div> })));
 
 const LoadingFallback = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '2rem' }}>
@@ -39,6 +40,7 @@ export const AssetManagerRoutes = () => {
           <Route path={ASSET_MANAGER_ROUTES.AUDIT} element={<AuditPage />} />
           <Route path={ASSET_MANAGER_ROUTES.REPORTS} element={<ReportsPage />} />
           <Route path={ASSET_MANAGER_ROUTES.NOTIFICATIONS} element={<NotificationsPage />} />
+          <Route path={ASSET_MANAGER_ROUTES.ORGANIZATION} element={<OrganizationPage />} />
           
         </Route>
       </Routes>

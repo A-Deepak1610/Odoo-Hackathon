@@ -26,7 +26,7 @@ const navGroups = [
   {
     label: "MANAGEMENT",
     items: [
-      { name: 'Organization Setup', path: '/organization', icon: Building2, roles: ['ADMIN', 'SUPERADMIN'] },
+      { name: 'Organization Setup', path: '/asset-manager/organization', icon: Building2, roles: ['ADMIN', 'SUPERADMIN'] },
       { name: 'Asset Registration & Directory', path: '/asset-manager/directory', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
       { name: 'Asset Allocation & Transfer', path: '/asset-manager/allocations', icon: ArrowRightLeft },
       { name: 'Resource Booking', path: '/asset-manager/booking', icon: CalendarClock },

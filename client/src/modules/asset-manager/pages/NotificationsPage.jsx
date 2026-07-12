@@ -92,6 +92,7 @@ const MOCK_LOGS = [
 const NotificationsPage = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [isMarkReadModalOpen, setIsMarkReadModalOpen] = useState(false);
 
   const filteredNotifs = activeTab === 'all' 
     ? notifications 

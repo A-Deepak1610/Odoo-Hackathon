@@ -4,7 +4,7 @@ import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { 
   Clock, Users, MapPin, Calendar as CalendarIcon, 
-  X, Plus, ChevronRight, AlertCircle, Edit, Trash2, Box, CalendarClock
+  X, Plus, ChevronRight, AlertCircle, Edit, Trash2, Box, CalendarClock, User
 } from 'lucide-react';
 import { DashboardCard } from '../components/dashboard';
 import { Button, Badge, Input, Select, Label, Card, CardContent, CardHeader, CardTitle } from '../components/ui';

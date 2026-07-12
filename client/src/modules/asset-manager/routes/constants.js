@@ -8,4 +8,5 @@ export const ASSET_MANAGER_ROUTES = {
   AUDIT: "audit",
   REPORTS: "reports",
   NOTIFICATIONS: "notifications",
+  ORGANIZATION: "organization",
 };

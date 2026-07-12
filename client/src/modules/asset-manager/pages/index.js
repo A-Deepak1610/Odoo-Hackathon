@@ -7,3 +7,4 @@ export { default as MaintenancePage } from './MaintenancePage';
 export { default as AuditPage } from './AuditPage';
 export { default as ReportsPage } from './ReportsPage';
 export { default as NotificationsPage } from './NotificationsPage';
+export { default as OrganizationPage } from './OrganizationPage';
