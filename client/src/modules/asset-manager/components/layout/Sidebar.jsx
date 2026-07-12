@@ -19,7 +19,11 @@ const navGroups = [
   {
     label: "MAIN",
     items: [
+<<<<<<< HEAD
+      { name: "Dashboard", path: "/asset-manager/dashboard", icon: LayoutDashboard },
+=======
       { name: "Dashboard", path: "/asset-manager", icon: LayoutDashboard, end: true },
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
       { name: "Activity Logs & Notifications", path: "/asset-manager/notifications", icon: Bell },
     ],
   },
@@ -84,7 +88,10 @@ const Sidebar = () => {
                   <NavLink
                     key={item.name}
                     to={item.path}
+<<<<<<< HEAD
+=======
                     end={item.end}
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
                     className={({ isActive }) => 
                       `flex items-center gap-3 px-3 py-2 rounded-lg text-[14px] font-medium transition-all relative ${
                         isActive 

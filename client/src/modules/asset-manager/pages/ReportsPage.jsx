@@ -1,219 +1,162 @@
 import React, { useState } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, AreaChart, Area
+  LineChart, Line, PieChart, Pie, Cell, AreaChart, Area, ComposedChart
 } from 'recharts';
-import { Download, TrendingUp, TrendingDown, Wrench, Building2, Calendar, FileText, ArrowRight, Filter, X } from 'lucide-react';
+import { Download, TrendingUp, TrendingDown, Wrench, Building2, Calendar, FileText, ArrowRight, Filter, X, CheckCircle, AlertTriangle, Car } from 'lucide-react';
 import { DashboardCard } from '../components/dashboard';
 import { Button } from '../components/ui';
 
-// Static Chart Data
+// DENSE STATIC DATA
 const utilizationData = [
-  { name: 'Jan', usage: 45, capacity: 100 },
-  { name: 'Feb', usage: 52, capacity: 100 },
-  { name: 'Mar', usage: 48, capacity: 100 },
-  { name: 'Apr', usage: 70, capacity: 100 },
-  { name: 'May', usage: 78, capacity: 100 },
-  { name: 'Jun', usage: 85, capacity: 100 },
-  { name: 'Jul', usage: 82, capacity: 100 },
+  { name: 'Jan', usage: 45, cost: 4000 }, { name: 'Feb', usage: 52, cost: 3000 },
+  { name: 'Mar', usage: 48, cost: 2000 }, { name: 'Apr', usage: 70, cost: 2780 },
+  { name: 'May', usage: 78, cost: 1890 }, { name: 'Jun', usage: 85, cost: 2390 },
+  { name: 'Jul', usage: 82, cost: 3490 }, { name: 'Aug', usage: 90, cost: 2000 },
 ];
 
 const maintenanceData = [
-  { name: 'Jan', 'Preventative': 12, 'Reactive': 5 },
-  { name: 'Feb', 'Preventative': 15, 'Reactive': 8 },
-  { name: 'Mar', 'Preventative': 10, 'Reactive': 12 },
-  { name: 'Apr', 'Preventative': 20, 'Reactive': 4 },
-  { name: 'May', 'Preventative': 18, 'Reactive': 6 },
-  { name: 'Jun', 'Preventative': 14, 'Reactive': 10 },
+  { name: 'Jan', 'Preventative': 12, 'Reactive': 5, 'Critical': 2 },
+  { name: 'Feb', 'Preventative': 15, 'Reactive': 8, 'Critical': 1 },
+  { name: 'Mar', 'Preventative': 10, 'Reactive': 12, 'Critical': 4 },
+  { name: 'Apr', 'Preventative': 20, 'Reactive': 4, 'Critical': 0 },
+  { name: 'May', 'Preventative': 18, 'Reactive': 6, 'Critical': 1 },
+  { name: 'Jun', 'Preventative': 14, 'Reactive': 10, 'Critical': 3 },
+  { name: 'Jul', 'Preventative': 22, 'Reactive': 5, 'Critical': 1 },
+  { name: 'Aug', 'Preventative': 19, 'Reactive': 7, 'Critical': 2 },
 ];
 
 const departmentData = [
-  { name: 'Engineering', value: 340 },
-  { name: 'Marketing', value: 120 },
-  { name: 'Sales', value: 95 },
-  { name: 'HR', value: 45 },
-  { name: 'Facilities', value: 65 },
+  { name: 'Engineering', value: 340 }, { name: 'Marketing', value: 120 },
+  { name: 'Sales', value: 95 }, { name: 'HR', value: 45 },
+  { name: 'Facilities', value: 165 }, { name: 'Finance', value: 85 },
 ];
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#64748b'];
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#64748b', '#ec4899'];
 
-// Heatmap generator
-const generateHeatmap = () => {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-  const weeks = Array.from({length: 12}, (_, i) => `W${i+1}`);
-  const grid = [];
-  
-  for(let d=0; d<days.length; d++) {
-    const row = [];
-    for(let w=0; w<weeks.length; w++) {
-      // Generate random intensity 0-4
-      const intensity = Math.floor(Math.random() * 5);
-      row.push(intensity);
-    }
-    grid.push({ day: days[d], intensities: row });
-  }
-  return { weeks, grid };
-};
-const heatmapData = generateHeatmap();
+const depreciationData = [
+  { year: '2024', laptops: 50000, furniture: 20000, av: 15000 },
+  { year: '2025', laptops: 40000, furniture: 18000, av: 12000 },
+  { year: '2026', laptops: 32000, furniture: 16200, av: 9600 },
+  { year: '2027', laptops: 25600, furniture: 14580, av: 7680 },
+];
+
+
 
 const ReportsPage = () => {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto space-y-6">
+    <div className="p-4 md:p-6 w-full space-y-4 md:space-y-6 bg-slate-100 min-h-screen">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Reports & Analytics</h2>
-          <p className="text-sm font-medium text-slate-500 mt-1">Visualize asset utilization, maintenance frequencies, and department costs.</p>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Reports & Analytics Engine</h2>
+          <p className="text-sm font-medium text-slate-500 mt-1">Deep dive into asset lifecycles, maintenance costs, and predictive depreciation.</p>
         </div>
         <div className="flex gap-3 w-full sm:w-auto">
           <Button variant="secondary" className="flex-1 sm:flex-none gap-2">
-            <Filter size={16} /> Filter
+            <Filter size={16} /> Filter Data
           </Button>
-          <Button className="flex-1 sm:flex-none gap-2" onClick={() => setIsExportModalOpen(true)}>
-            <Download size={16} /> Export PDF Report
+          <Button className="flex-1 sm:flex-none gap-2 bg-indigo-600 hover:bg-indigo-700 text-white border-none" onClick={() => setIsExportModalOpen(true)}>
+            <Download size={16} /> Export Reports
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 items-start">
         
-        {/* Main Charts Column */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Main Analytics Area (3 cols) */}
+        <div className="xl:col-span-3 space-y-4">
           
-          {/* Asset Utilization Area Chart */}
-          <DashboardCard title="Asset Utilization Trend (YTD)">
-            <div className="h-[300px] w-full mt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={utilizationData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorUsage" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                  <RechartsTooltip 
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Area type="monotone" dataKey="usage" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorUsage)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </DashboardCard>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DashboardCard title="Utilization & Cost Correlation (YTD)">
+              <div className="h-[280px] w-full pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={utilizationData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
+                    <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                    <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                    <Area yAxisId="left" type="monotone" dataKey="usage" fill="#3b82f6" fillOpacity={0.2} stroke="#3b82f6" name="Utilization %" />
+                    <Line yAxisId="right" type="monotone" dataKey="cost" stroke="#ec4899" strokeWidth={3} name="Maint. Cost ($)" />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </DashboardCard>
 
-          {/* Side by side charts on desktop */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Maintenance Frequency */}
-            <DashboardCard title="Maintenance Frequency">
-              <div className="h-[250px] w-full mt-4">
+            <DashboardCard title="Maintenance Ticket Resolution">
+              <div className="h-[280px] w-full pt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={maintenanceData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
                     <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
                     <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }} />
-                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                    <Bar dataKey="Preventative" stackId="a" fill="#10b981" radius={[0, 0, 4, 4]} barSize={24} />
-                    <Bar dataKey="Reactive" stackId="a" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                    <Bar dataKey="Preventative" stackId="a" fill="#10b981" barSize={32} />
+                    <Bar dataKey="Reactive" stackId="a" fill="#f59e0b" />
+                    <Bar dataKey="Critical" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </DashboardCard>
+          </div>
 
-            {/* Department Allocation */}
-            <DashboardCard title="Department Allocation">
-              <div className="h-[250px] w-full flex items-center justify-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <DashboardCard title="Asset Value Depreciation Forecast" className="md:col-span-2">
+              <div className="h-[240px] w-full pt-2">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={departmentData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={90}
-                      paddingAngle={5}
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {departmentData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
+                  <AreaChart data={depreciationData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
                     <RechartsTooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }} />
-                  </PieChart>
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                    <Area type="monotone" dataKey="laptops" stackId="1" stroke="#3b82f6" fill="#3b82f6" />
+                    <Area type="monotone" dataKey="furniture" stackId="1" stroke="#8b5cf6" fill="#8b5cf6" />
+                    <Area type="monotone" dataKey="av" stackId="1" stroke="#10b981" fill="#10b981" />
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
             </DashboardCard>
 
+            <DashboardCard title="Total Organization Allocation">
+              <div className="h-[240px] w-full flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={departmentData} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={2} dataKey="value" stroke="none">
+                      {departmentData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                    </Pie>
+                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                    <Legend verticalAlign="bottom" height={40} iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </DashboardCard>
           </div>
 
-          {/* Booking Heatmap */}
-          <DashboardCard title="Resource Booking Heatmap (Last 12 Weeks)">
-            <div className="overflow-x-auto pb-2 mt-2">
-              <div className="min-w-max flex gap-2">
-                {/* Y-Axis Labels */}
-                <div className="flex flex-col gap-1.5 pt-6 pr-2 text-xs text-slate-500 font-semibold justify-between">
-                  {heatmapData.grid.map(row => <div key={row.day} className="h-[20px] flex items-center">{row.day}</div>)}
-                </div>
-                
-                {/* Heatmap Grid */}
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex gap-1.5 pl-0.5">
-                    {heatmapData.weeks.map(w => <div key={w} className="w-[20px] text-center text-[10px] text-slate-400 font-semibold">{w.replace('W','')}</div>)}
-                  </div>
-                  
-                  {heatmapData.grid.map((row, i) => (
-                     <div key={i} className="flex gap-1.5">
-                      {row.intensities.map((intensity, j) => {
-                        // Tailwind color mapping based on intensity
-                        const colors = ['bg-slate-100', 'bg-blue-200', 'bg-blue-400', 'bg-blue-600', 'bg-blue-800'];
-                        return (
-                          <div 
-                            key={j} 
-                            className={`w-[20px] h-[20px] rounded-sm ${colors[intensity]} hover:ring-2 hover:ring-slate-400 cursor-pointer transition-all shadow-sm`}
-                            title={`${row.day}, Week ${j+1}: ${intensity} bookings`}
-                          ></div>
-                        )
-                      })}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-2 mt-4 text-xs font-semibold text-slate-500">
-              <span>Less</span>
-              <div className="flex gap-1">
-                <div className="w-3 h-3 rounded-sm bg-slate-100"></div>
-                <div className="w-3 h-3 rounded-sm bg-blue-200"></div>
-                <div className="w-3 h-3 rounded-sm bg-blue-400"></div>
-                <div className="w-3 h-3 rounded-sm bg-blue-600"></div>
-                <div className="w-3 h-3 rounded-sm bg-blue-800"></div>
-              </div>
-              <span>More</span>
-            </div>
-          </DashboardCard>
+
           
         </div>
 
-        {/* Sidebar Cards */}
-        <div className="space-y-6">
+        {/* Dense Sidebar */}
+        <div className="xl:col-span-1 space-y-4">
           
-          {/* Most Used Assets */}
           <DashboardCard title="Most Used Assets">
-            <div className="space-y-4">
+            <div className="space-y-2">
               {[
                 { name: 'Conf. Projector A', uses: 45, icon: TrendingUp, color: 'text-emerald-500' },
                 { name: 'Dell XPS 15 (AST-042)', uses: 38, icon: TrendingUp, color: 'text-emerald-500' },
-                { name: 'Sony A7IV Camera', uses: 32, icon: TrendingUp, color: 'text-emerald-500' }
+                { name: 'Sony A7IV Camera', uses: 32, icon: TrendingUp, color: 'text-emerald-500' },
+                { name: 'Meeting Room 1', uses: 28, icon: TrendingUp, color: 'text-emerald-500' },
+                { name: 'Mobile Hotspot Z', uses: 25, icon: TrendingUp, color: 'text-emerald-500' },
               ].map((asset, i) => (
-                <div key={i} className="flex justify-between items-center p-3.5 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
-                  <div className="font-bold text-sm text-slate-900">{asset.name}</div>
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-white px-2.5 py-1.5 rounded-lg shadow-sm border border-slate-200">
+                <div key={i} className="flex justify-between items-center p-2.5 bg-slate-50 rounded-lg border border-slate-100">
+                  <div className="font-bold text-xs text-slate-900">{asset.name}</div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-white px-2 py-1 rounded shadow-sm border border-slate-200">
                     {asset.uses} <asset.icon size={12} className={asset.color} />
                   </div>
                 </div>
@@ -221,101 +164,20 @@ const ReportsPage = () => {
             </div>
           </DashboardCard>
 
-          {/* Least Used Assets */}
-          <DashboardCard title="Least Used Assets">
-            <div className="space-y-4">
-              {[
-                { name: 'Mobile Projector Screen', uses: 2, icon: TrendingDown, color: 'text-red-500' },
-                { name: 'iPad Pro (AST-011)', uses: 4, icon: TrendingDown, color: 'text-red-500' },
-                { name: 'Standing Desk Pro', uses: 5, icon: TrendingDown, color: 'text-red-500' }
-              ].map((asset, i) => (
-                <div key={i} className="flex justify-between items-center p-3.5 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
-                  <div className="font-bold text-sm text-slate-900">{asset.name}</div>
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-white px-2.5 py-1.5 rounded-lg shadow-sm border border-slate-200">
-                    {asset.uses} <asset.icon size={12} className={asset.color} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </DashboardCard>
 
-          {/* Department Summary */}
-          <DashboardCard title="Department Summary">
-            <div className="space-y-4">
-              {departmentData.map((dept, i) => (
-                <div key={i}>
-                  <div className="flex justify-between items-end mb-1.5">
-                    <span className="text-sm font-bold text-slate-900">{dept.name}</span>
-                    <span className="text-xs font-medium text-slate-500">{dept.value} Assets</span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                    <div 
-                      className="h-2 rounded-full" 
-                      style={{ width: `${(dept.value / 340) * 100}%`, backgroundColor: COLORS[i % COLORS.length] }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </DashboardCard>
-
-          {/* Upcoming Maintenance */}
-          <DashboardCard title="Upcoming Maintenance">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3.5 border border-amber-200 bg-amber-50 rounded-xl shadow-sm">
-                <div className="p-2.5 bg-white rounded-lg text-amber-600 shrink-0 shadow-sm"><Calendar size={18} /></div>
-                <div>
-                  <p className="text-sm font-bold text-amber-900">HVAC Inspection</p>
-                  <p className="text-xs font-medium text-amber-700 mt-0.5">Scheduled for Tomorrow</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3.5 border border-slate-200 bg-slate-50 rounded-xl shadow-sm">
-                <div className="p-2.5 bg-white rounded-lg text-slate-600 shrink-0 shadow-sm"><Calendar size={18} /></div>
-                <div>
-                  <p className="text-sm font-bold text-slate-900">Server Rack Cleanup</p>
-                  <p className="text-xs font-medium text-slate-500 mt-0.5">Scheduled for Friday</p>
-                </div>
-              </div>
-            </div>
-            <Button variant="ghost" className="w-full mt-4 gap-1 text-blue-600 h-8">
-              View Schedule <ArrowRight size={14} />
-            </Button>
-          </DashboardCard>
 
         </div>
       </div>
-      {/* Export Report Dialog */}
+
       {isExportModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="font-bold text-slate-900 text-lg">Export Report</h3>
-              <button onClick={() => setIsExportModalOpen(false)} className="text-slate-400 hover:text-slate-700 hover:bg-slate-200 p-1 rounded-md transition-colors"><X size={20}/></button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">Format</label>
-                <select className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                  <option>PDF Document</option>
-                  <option>Excel Spreadsheet (CSV)</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">Time Range</label>
-                <select className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                  <option>Last 6 Months</option>
-                  <option>This Year (YTD)</option>
-                  <option>Last 30 Days</option>
-                </select>
-              </div>
-            </div>
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-              <Button variant="secondary" onClick={() => setIsExportModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => setIsExportModalOpen(false)} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
-                <Download size={16} /> Download
-              </Button>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden p-6 space-y-4">
+            <h3 className="font-bold text-slate-900 text-lg">Export Report</h3>
+            <select className="w-full px-3 py-2 border rounded-lg text-sm bg-white"><option>PDF Document</option><option>Excel (CSV)</option></select>
+            <select className="w-full px-3 py-2 border rounded-lg text-sm bg-white"><option>Last 6 Months</option><option>This Year (YTD)</option></select>
+            <div className="flex justify-end gap-3 mt-4">
+              <Button variant="secondary" onClick={() => setIsExportModalOpen(false)}>Cancel</Button>
+              <Button onClick={() => setIsExportModalOpen(false)} className="bg-indigo-600 text-white">Download</Button>
             </div>
           </div>
         </div>
