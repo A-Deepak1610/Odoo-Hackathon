@@ -11,7 +11,7 @@ import {
   BarChart3, 
   Bell 
 } from 'lucide-react';
-import { cn } from '../../../shared/utils/cn';
+import { cn } from '../../shared/utils/cn';
 
 const navGroups = [
   {
