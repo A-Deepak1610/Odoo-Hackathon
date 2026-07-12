@@ -36,7 +36,8 @@ const authenticateJWT = async (req, res, next) => {
         phone: true,
         address: true,
         avatarUrl: true,
-        departmentId: true
+        departmentId: true,
+        organizationId: true
       },
     });
 
