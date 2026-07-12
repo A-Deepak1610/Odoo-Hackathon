@@ -64,11 +64,10 @@ function App() {
               />
             </Route>
             
-            {/* RBAC Route: Assets Management requires ADMIN, ASSET_MANAGER or DEPARTMENT_HEAD */}
             <Route 
               path="assets" 
               element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}>
                   <Assets />
                 </ProtectedRoute>
               } 
@@ -95,6 +94,32 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
                   <Reports />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Department Head Dedicated Screens (Mocked for Hackathon) */}
+            <Route 
+              path="dept-dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN', 'DEPARTMENT_HEAD']}>
+                  <DeptDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="dept-approvals" 
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN', 'DEPARTMENT_HEAD']}>
+                  <Approvals />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="dept-booking" 
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN', 'DEPARTMENT_HEAD']}>
+                  <ResourceBooking />
                 </ProtectedRoute>
               } 
             />

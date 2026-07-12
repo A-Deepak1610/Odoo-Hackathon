@@ -31,12 +31,11 @@ const navGroups = [
     ],
   },
   {
-    label: "DEPARTMENT HEAD",
+    label: "DEPARTMENT HEAD (MOCKED)",
     items: [
-      { name: 'Assets', path: '/assets', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN', 'EMPLOYEE'] },
-      { name: 'Allocation & Transfer', path: '/allocations', icon: ArrowRightLeft },
-      { name: 'Resource Booking', path: '/booking', icon: CalendarClock },
-      { name: 'Maintenance', path: '/maintenance', icon: Wrench },
+      { name: 'Dashboard & Assets', path: '/dept-dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'SUPERADMIN', 'DEPARTMENT_HEAD'] },
+      { name: 'Pending Approvals', path: '/dept-approvals', icon: ClipboardCheck, roles: ['ADMIN', 'SUPERADMIN', 'DEPARTMENT_HEAD'] },
+      { name: 'Resource Booking', path: '/dept-booking', icon: CalendarClock, roles: ['ADMIN', 'SUPERADMIN', 'DEPARTMENT_HEAD'] },
     ],
   },
   {
