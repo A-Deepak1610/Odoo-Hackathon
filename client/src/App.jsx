@@ -31,18 +31,25 @@ function App() {
             {/* General Dashboard & Panel Routes */}
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="notifications" element={<Notifications />} />
-            <Route path="db-assistant" element={<DbAssistant />} />
-            
-            {/* RBAC Route: Organization Setup requires ADMIN privilege */}
-            <Route 
-              path="organization" 
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
-                  <Organization />
-                </ProtectedRoute>
-              } 
-            />
-            
+            {/* Administration Routes (Grouped under /admin) */}
+            <Route path="admin">
+              <Route 
+                path="organization" 
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN']}>
+                    <Organization />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="db-assistant" 
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN']}>
+                    <DbAssistant />
+                  </ProtectedRoute>
+                } 
+              />
+            </Route>
             {/* RBAC Route: Assets Management requires ADMIN, ASSET_MANAGER or DEPARTMENT_HEAD */}
             <Route 
               path="assets" 
