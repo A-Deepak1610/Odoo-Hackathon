@@ -21,6 +21,30 @@ import { useAuth } from "../../auth";
 import { apiFetch } from "../../../services/api";
 import { useNavigate } from "react-router-dom";
 
+const MOCK_BOOKINGS = [
+  { id: "book-1", startTime: "2026-07-15T10:00", endTime: "2026-07-15T12:00", status: "UPCOMING", asset: { id: "res-1", name: "Boardroom 3B", location: "Building A, 3rd Floor" } },
+  { id: "book-2", startTime: "2026-07-12T09:00", endTime: "2026-07-12T17:00", status: "ONGOING", asset: { id: "res-2", name: "Tesla Model 3 (Shared Vehicle)", location: "Parking Lot B" } },
+  { id: "book-3", startTime: "2026-07-10T14:00", endTime: "2026-07-10T15:30", status: "CANCELLED", asset: { id: "res-3", name: "Epson Projector Pro", location: "IT Hub" } }
+];
+
+const MOCK_ASSETS = [
+  { id: "asset-1", name: "MacBook Pro 16\"", assetTag: "AST-2026-001", category: { name: "Laptop" }, condition: "Excellent" },
+  { id: "asset-2", name: "Dell 27\" Monitor", assetTag: "AST-2026-002", category: { name: "Monitor" }, condition: "Good" },
+  { id: "asset-3", name: "Keychron K2 Keyboard", assetTag: "AST-2026-003", category: { name: "Peripherals" }, condition: "Good" },
+  { id: "asset-4", name: "Logitech MX Master 3S Mouse", assetTag: "AST-2026-004", category: { name: "Peripherals" }, condition: "Excellent" }
+];
+
+const MOCK_TICKETS = [
+  { id: "ticket-1", asset: { name: "MacBook Pro 16\"", assetTag: "AST-2026-001" }, description: "Battery health degraded below 70%, laptop shuts down unexpectedly.", priority: "HIGH", createdAt: "2026-07-01T10:00:00.000Z", status: "IN_PROGRESS", assignedTechnician: "Sarah Connor (IT Dept)" },
+  { id: "ticket-2", asset: { name: "Dell 27\" Monitor", assetTag: "AST-2026-002" }, description: "Flickering issue on the screen when connected via USB-C.", priority: "MEDIUM", createdAt: "2026-07-05T14:30:00.000Z", status: "PENDING", assignedTechnician: "" },
+  { id: "ticket-3", asset: { name: "Keychron K2 Keyboard", assetTag: "AST-2026-003" }, description: "Spacebar key is double-pressing.", priority: "LOW", createdAt: "2026-06-25T09:15:00.000Z", status: "RESOLVED", assignedTechnician: "John Doe (IT Dept)" }
+];
+
+const MOCK_TRANSFERS = [
+  { id: "trans-1", status: "PENDING", checkInNotes: "Moving to Design team, transferring screen to Jane Smith.", asset: { name: "Dell 27\" Monitor", assetTag: "AST-2026-002" }, toEmployee: { name: "Jane Smith" }, toDepartment: null },
+  { id: "trans-2", status: "APPROVED", checkInNotes: "Keyboard needed for new tester in Engineering department.", asset: { name: "Keychron K2 Keyboard", assetTag: "AST-2026-003" }, toEmployee: null, toDepartment: { name: "Engineering" } }
+];
+
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -32,18 +56,92 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (user && user.role === 'EMPLOYEE') {
-      const fetchEmployeeData = async () => {
+      const fetchEmployeeData = () => {
         try {
           setLoading(true);
-          const res = await apiFetch('/api/v1/dashboard/employee');
-          const result = await res.json();
-          if (res.ok && result.success) {
-            setData(result.data);
-          } else {
-            setError(result.message || 'Failed to load dashboard data.');
+          setError(null);
+
+          let storedBookings = localStorage.getItem("assertflow_bookings");
+          if (!storedBookings) {
+            storedBookings = JSON.stringify(MOCK_BOOKINGS);
+            localStorage.setItem("assertflow_bookings", storedBookings);
           }
+          const bookings = JSON.parse(storedBookings);
+
+          let storedTickets = localStorage.getItem("assertflow_tickets");
+          if (!storedTickets) {
+            storedTickets = JSON.stringify(MOCK_TICKETS);
+            localStorage.setItem("assertflow_tickets", storedTickets);
+          }
+          const tickets = JSON.parse(storedTickets);
+
+          let storedTransfers = localStorage.getItem("assertflow_transfers");
+          if (!storedTransfers) {
+            storedTransfers = JSON.stringify(MOCK_TRANSFERS);
+            localStorage.setItem("assertflow_transfers", storedTransfers);
+          }
+          const transfers = JSON.parse(storedTransfers);
+
+          let storedAssets = localStorage.getItem("assertflow_assets");
+          if (!storedAssets) {
+            storedAssets = JSON.stringify(MOCK_ASSETS);
+            localStorage.setItem("assertflow_assets", storedAssets);
+          }
+          const assets = JSON.parse(storedAssets);
+
+          const activeBookingsCount = bookings.filter(b => b.status === "UPCOMING" || b.status === "ONGOING").length;
+          const pendingMaintenanceCount = tickets.filter(t => t.status === "PENDING" || t.status === "IN_PROGRESS" || t.status === "APPROVED").length;
+          const pendingTransfersCount = transfers.filter(t => t.status === "PENDING").length;
+
+          const upcomingReturns = [
+            { id: "ret-1", asset: { name: "Dell 27\" Monitor" }, expectedReturnDate: "2026-07-20T17:00:00.000Z" }
+          ];
+
+          const recentActivities = [];
+          bookings.forEach(b => {
+            recentActivities.push({
+              id: `act-b-${b.id}`,
+              type: "BOOKING",
+              message: `${b.asset.name} reservation is ${b.status.toLowerCase()}`,
+              time: "Recent"
+            });
+          });
+          tickets.forEach(t => {
+            recentActivities.push({
+              id: `act-t-${t.id}`,
+              type: "MAINTENANCE",
+              message: `Maintenance for ${t.asset.name} is ${t.status.toLowerCase()}`,
+              time: "Recent"
+            });
+          });
+          transfers.forEach(tr => {
+            recentActivities.push({
+              id: `act-tr-${tr.id}`,
+              type: "ALLOCATION",
+              message: `Transfer request for ${tr.asset?.name} is ${tr.status.toLowerCase()}`,
+              time: "Recent"
+            });
+          });
+
+          recentActivities.reverse();
+
+          const dashboardData = {
+            cards: {
+              myAssetsCount: assets.length,
+              activeBookingsCount,
+              pendingMaintenanceCount,
+              pendingTransfersCount
+            },
+            myAssets: assets,
+            upcomingBookings: bookings.filter(b => b.status === "UPCOMING" && new Date(b.startTime) > new Date()),
+            upcomingReturns,
+            maintenanceStatus: tickets,
+            recentActivities: recentActivities.slice(0, 5)
+          };
+
+          setData(dashboardData);
         } catch (err) {
-          setError('Failed to connect to backend server.');
+          setError("Failed to compile dashboard data.");
         } finally {
           setLoading(false);
         }

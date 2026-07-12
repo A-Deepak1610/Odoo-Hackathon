@@ -24,37 +24,56 @@ const Allocations = () => {
   const [submitting, setSubmitting] = useState(false);
   const [formMsg, setFormMsg] = useState({ text: "", type: "" });
 
+  const MOCK_ASSETS = [
+    { id: "asset-1", name: "MacBook Pro 16\"", assetTag: "AST-2026-001" },
+    { id: "asset-2", name: "Dell 27\" Monitor", assetTag: "AST-2026-002" },
+    { id: "asset-3", name: "Keychron K2 Keyboard", assetTag: "AST-2026-003" },
+    { id: "asset-4", name: "Logitech MX Master 3S Mouse", assetTag: "AST-2026-004" }
+  ];
+
+  const MOCK_TRANSFERS = [
+    {
+      id: "trans-1",
+      status: "PENDING",
+      checkInNotes: "Moving to Design team, transferring screen to Jane Smith.",
+      asset: { name: "Dell 27\" Monitor", assetTag: "AST-2026-002" },
+      toEmployee: { name: "Jane Smith" },
+      toDepartment: null
+    },
+    {
+      id: "trans-2",
+      status: "APPROVED",
+      checkInNotes: "Keyboard needed for new tester in Engineering department.",
+      asset: { name: "Keychron K2 Keyboard", assetTag: "AST-2026-003" },
+      toEmployee: null,
+      toDepartment: { name: "Engineering" }
+    }
+  ];
+
+  const MOCK_USERS = [
+    { id: "user-1", name: "Mike Ross", email: "m.ross@acme.com" },
+    { id: "user-2", name: "Sarah Jenkins", email: "s.jenkins@acme.com" },
+    { id: "user-3", name: "Jane Smith", email: "j.smith@acme.com" }
+  ];
+
+  const MOCK_DEPARTMENTS = [
+    { id: "dept-1", name: "Engineering" },
+    { id: "dept-2", name: "Marketing" },
+    { id: "dept-3", name: "Sales" },
+    { id: "dept-4", name: "Design" }
+  ];
+
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const [assetsRes, transfersRes, orgRes] = await Promise.all([
-        apiFetch("/api/v1/assets/my"),
-        apiFetch("/api/v1/allocation/my-transfers"),
-        apiFetch("/api/v1/organization") // Fetch users and departments if available, or fall back
-      ]);
-
-      const assetsResult = await assetsRes.json();
-      const transfersResult = await transfersRes.json();
-
-      if (assetsRes.ok && transfersRes.ok) {
-        setMyAssets(assetsResult.data);
-        setTransfers(transfersResult.data);
-      } else {
-        setError(assetsResult.message || transfersResult.message || "Failed to load transfer dashboard.");
-      }
-
-      // Try reading users/departments list if organization endpoint is available
-      if (orgRes.ok) {
-        const orgData = await orgRes.json();
-        if (orgData.success && orgData.data) {
-          setUsers(orgData.data.users || []);
-          setDepartments(orgData.data.departments || []);
-        }
-      }
+      setMyAssets(MOCK_ASSETS);
+      setTransfers(MOCK_TRANSFERS);
+      setUsers(MOCK_USERS);
+      setDepartments(MOCK_DEPARTMENTS);
     } catch (err) {
-      setError("Failed to connect to server.");
+      setError("Failed to load transfer dashboard.");
     } finally {
       setLoading(false);
     }
@@ -90,57 +109,43 @@ const Allocations = () => {
 
     setSubmitting(true);
 
-    try {
-      const res = await apiFetch("/api/v1/allocation/transfer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          assetId: selectedAssetId,
-          toEmployeeId: destinationType === "employee" ? destEmployeeId : undefined,
-          toDepartmentId: destinationType === "department" ? destDeptId : undefined,
-          reason
-        })
-      });
-      const result = await res.json();
+    setTimeout(() => {
+      const selectedAsset = myAssets.find(a => a.id === selectedAssetId);
+      const destEmployee = destinationType === "employee" ? users.find(u => u.id === destEmployeeId) : null;
+      const destDept = destinationType === "department" ? departments.find(d => d.id === destDeptId) : null;
 
-      if (res.ok && result.success) {
-        setFormMsg({ text: "Transfer request submitted successfully!", type: "success" });
-        setSelectedAssetId("");
-        setDestEmployeeId("");
-        setDestDeptId("");
-        setReason("");
-        
-        // Reload list
-        const refreshed = await apiFetch("/api/v1/allocation/my-transfers");
-        const refData = await refreshed.json();
-        if (refreshed.ok) setTransfers(refData.data);
-        setTimeout(() => setActiveTab("transfers"), 1500);
-      } else {
-        setFormMsg({ text: result.message || "Failed to submit request", type: "error" });
-      }
-    } catch (err) {
-      setFormMsg({ text: "Network error occurred.", type: "error" });
-    } finally {
+      const newTransfer = {
+        id: `trans-${Date.now()}`,
+        status: "PENDING",
+        checkInNotes: reason,
+        asset: {
+          name: selectedAsset ? selectedAsset.name : "Asset",
+          assetTag: selectedAsset ? selectedAsset.assetTag : "N/A"
+        },
+        toEmployee: destEmployee ? { name: destEmployee.name } : null,
+        toDepartment: destDept ? { name: destDept.name } : null
+      };
+
+      const updated = [newTransfer, ...transfers];
+      setTransfers(updated);
+      localStorage.setItem("assertflow_transfers", JSON.stringify(updated));
+
+      setFormMsg({ text: "Transfer request submitted successfully!", type: "success" });
+      setSelectedAssetId("");
+      setDestEmployeeId("");
+      setDestDeptId("");
+      setReason("");
       setSubmitting(false);
-    }
+
+      setTimeout(() => setActiveTab("transfers"), 1500);
+    }, 600);
   };
 
   const handleCancelTransfer = async (transferId) => {
     if (!window.confirm("Are you sure you want to cancel this transfer request?")) return;
-
-    try {
-      const res = await apiFetch(`/api/v1/allocation/transfer/${transferId}/cancel`, {
-        method: "PUT"
-      });
-      if (res.ok) {
-        setTransfers(transfers.filter(t => t.id !== transferId));
-      } else {
-        const result = await res.json();
-        alert(result.message || "Failed to cancel transfer request.");
-      }
-    } catch (err) {
-      alert("Network error.");
-    }
+    const updated = transfers.filter(t => t.id !== transferId);
+    setTransfers(updated);
+    localStorage.setItem("assertflow_transfers", JSON.stringify(updated));
   };
 
   const getStatusBadge = (status) => {

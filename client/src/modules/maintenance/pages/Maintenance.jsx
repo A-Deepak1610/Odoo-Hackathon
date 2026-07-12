@@ -19,27 +19,57 @@ const Maintenance = () => {
   const [submitting, setSubmitting] = useState(false);
   const [formMsg, setFormMsg] = useState({ text: "", type: "" });
 
+  const MOCK_ASSETS = [
+    { id: "asset-1", name: "MacBook Pro 16\"", assetTag: "AST-2026-001" },
+    { id: "asset-2", name: "Dell 27\" Monitor", assetTag: "AST-2026-002" },
+    { id: "asset-3", name: "Keychron K2 Keyboard", assetTag: "AST-2026-003" },
+    { id: "asset-4", name: "Logitech MX Master 3S Mouse", assetTag: "AST-2026-004" }
+  ];
+
+  const MOCK_TICKETS = [
+    {
+      id: "ticket-1",
+      asset: { name: "MacBook Pro 16\"", assetTag: "AST-2026-001" },
+      description: "Battery health degraded below 70%, laptop shuts down unexpectedly.",
+      priority: "HIGH",
+      createdAt: "2026-07-01T10:00:00.000Z",
+      status: "IN_PROGRESS",
+      assignedTechnician: "Sarah Connor (IT Dept)"
+    },
+    {
+      id: "ticket-2",
+      asset: { name: "Dell 27\" Monitor", assetTag: "AST-2026-002" },
+      description: "Flickering issue on the screen when connected via USB-C.",
+      priority: "MEDIUM",
+      createdAt: "2026-07-05T14:30:00.000Z",
+      status: "PENDING",
+      assignedTechnician: ""
+    },
+    {
+      id: "ticket-3",
+      asset: { name: "Keychron K2 Keyboard", assetTag: "AST-2026-003" },
+      description: "Spacebar key is double-pressing.",
+      priority: "LOW",
+      createdAt: "2026-06-25T09:15:00.000Z",
+      status: "RESOLVED",
+      assignedTechnician: "John Doe (IT Dept)"
+    }
+  ];
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const [assetsRes, ticketsRes] = await Promise.all([
-        apiFetch("/api/v1/assets/my"),
-        apiFetch("/api/v1/maintenance/my-requests")
-      ]);
-
-      const assetsResult = await assetsRes.json();
-      const ticketsResult = await ticketsRes.json();
-
-      if (assetsRes.ok && ticketsRes.ok) {
-        setMyAssets(assetsResult.data);
-        setTickets(ticketsResult.data);
-      } else {
-        setError(assetsResult.message || ticketsResult.message || "Failed to load maintenance dashboard.");
+      let storedTickets = localStorage.getItem("assertflow_tickets");
+      if (!storedTickets) {
+        storedTickets = JSON.stringify(MOCK_TICKETS);
+        localStorage.setItem("assertflow_tickets", storedTickets);
       }
+
+      setMyAssets(MOCK_ASSETS);
+      setTickets(JSON.parse(storedTickets));
     } catch (err) {
-      setError("Failed to connect to server.");
+      setError("Failed to load maintenance dashboard.");
     } finally {
       setLoading(false);
     }
@@ -65,39 +95,34 @@ const Maintenance = () => {
 
     setSubmitting(true);
 
-    try {
-      const res = await apiFetch("/api/v1/maintenance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          assetId: selectedAssetId,
-          description,
-          priority,
-          photoUrl: photoUrl || undefined
-        })
-      });
-      const result = await res.json();
+    setTimeout(() => {
+      const selectedAsset = myAssets.find(a => a.id === selectedAssetId);
+      const newTicket = {
+        id: `ticket-${Date.now()}`,
+        asset: {
+          name: selectedAsset ? selectedAsset.name : "Assigned Asset",
+          assetTag: selectedAsset ? selectedAsset.assetTag : "N/A"
+        },
+        description,
+        priority,
+        createdAt: new Date().toISOString(),
+        status: "PENDING",
+        assignedTechnician: ""
+      };
 
-      if (res.ok && result.success) {
-        setFormMsg({ text: "Maintenance request reported successfully!", type: "success" });
-        setSelectedAssetId("");
-        setPriority("MEDIUM");
-        setDescription("");
-        setPhotoUrl("");
+      const updated = [newTicket, ...tickets];
+      setTickets(updated);
+      localStorage.setItem("assertflow_tickets", JSON.stringify(updated));
 
-        // Reload lists
-        const refreshed = await apiFetch("/api/v1/maintenance/my-requests");
-        const refData = await refreshed.json();
-        if (refreshed.ok) setTickets(refData.data);
-        setTimeout(() => setActiveTab("tickets"), 1500);
-      } else {
-        setFormMsg({ text: result.message || "Failed to submit request.", type: "error" });
-      }
-    } catch (err) {
-      setFormMsg({ text: "Network error occurred.", type: "error" });
-    } finally {
+      setFormMsg({ text: "Maintenance request reported successfully!", type: "success" });
+      setSelectedAssetId("");
+      setPriority("MEDIUM");
+      setDescription("");
+      setPhotoUrl("");
       setSubmitting(false);
-    }
+
+      setTimeout(() => setActiveTab("tickets"), 1500);
+    }, 600);
   };
 
   const getPriorityStyle = (pri) => {

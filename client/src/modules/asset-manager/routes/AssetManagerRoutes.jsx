@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ASSET_MANAGER_ROUTES } from './constants';
 import { AssetManagerLayout } from '../components/layout';
 
@@ -28,6 +28,9 @@ export const AssetManagerRoutes = () => {
       <Routes>
         {/* Layout Wrapper */}
         <Route element={<AssetManagerLayout />}>
+          
+          {/* Default dashboard for /asset-manager */}
+          <Route index element={<DashboardPage />} />
           
           {/* TODO: Implement Route Guards/Permissions Wrapper here */}
           

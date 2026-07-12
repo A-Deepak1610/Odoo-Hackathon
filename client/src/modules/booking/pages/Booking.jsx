@@ -24,27 +24,84 @@ const Booking = () => {
   const [rescheduleMsg, setRescheduleMsg] = useState({ text: "", type: "" });
   const [updatingReschedule, setUpdatingReschedule] = useState(false);
 
+  const MOCK_RESOURCES = [
+    {
+      id: "res-1",
+      name: "Boardroom 3B",
+      location: "Building A, 3rd Floor",
+      category: { name: "Meeting Room" }
+    },
+    {
+      id: "res-2",
+      name: "Tesla Model 3 (Shared Vehicle)",
+      location: "Parking Lot B",
+      category: { name: "Vehicle" }
+    },
+    {
+      id: "res-3",
+      name: "Epson Projector Pro",
+      location: "IT Hub",
+      category: { name: "Equipment" }
+    },
+    {
+      id: "res-4",
+      name: "Focus Room 1A",
+      location: "Building B, 1st Floor",
+      category: { name: "Meeting Room" }
+    }
+  ];
+
+  const MOCK_BOOKINGS = [
+    {
+      id: "book-1",
+      startTime: "2026-07-15T10:00",
+      endTime: "2026-07-15T12:00",
+      status: "UPCOMING",
+      asset: {
+        id: "res-1",
+        name: "Boardroom 3B",
+        location: "Building A, 3rd Floor"
+      }
+    },
+    {
+      id: "book-2",
+      startTime: "2026-07-12T09:00",
+      endTime: "2026-07-12T17:00",
+      status: "ONGOING",
+      asset: {
+        id: "res-2",
+        name: "Tesla Model 3 (Shared Vehicle)",
+        location: "Parking Lot B"
+      }
+    },
+    {
+      id: "book-3",
+      startTime: "2026-07-10T14:00",
+      endTime: "2026-07-10T15:30",
+      status: "CANCELLED",
+      asset: {
+        id: "res-3",
+        name: "Epson Projector Pro",
+        location: "IT Hub"
+      }
+    }
+  ];
+
   const fetchBookingsAndResources = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const [bookingsRes, resourcesRes] = await Promise.all([
-        apiFetch("/api/v1/bookings"),
-        apiFetch("/api/v1/bookings/resources")
-      ]);
-
-      const bookingsResult = await bookingsRes.json();
-      const resourcesResult = await resourcesRes.json();
-
-      if (bookingsRes.ok && resourcesRes.ok) {
-        setBookings(bookingsResult.data);
-        setResources(resourcesResult.data);
-      } else {
-        setError(bookingsResult.message || resourcesResult.message || "Failed to load booking details.");
+      let storedBookings = localStorage.getItem("assertflow_bookings");
+      if (!storedBookings) {
+        storedBookings = JSON.stringify(MOCK_BOOKINGS);
+        localStorage.setItem("assertflow_bookings", storedBookings);
       }
+      
+      setBookings(JSON.parse(storedBookings));
+      setResources(MOCK_RESOURCES);
     } catch (err) {
-      setError("Failed to connect to backend server.");
+      setError("Failed to load details.");
     } finally {
       setLoading(false);
     }
@@ -65,50 +122,39 @@ const Booking = () => {
 
     setSubmitting(true);
 
-    try {
-      const res = await apiFetch("/api/v1/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assetId: selectedAssetId, startTime, endTime }),
-      });
-      const result = await res.json();
+    setTimeout(() => {
+      const selectedResource = resources.find(r => r.id === selectedAssetId);
+      const newBooking = {
+        id: `book-${Date.now()}`,
+        startTime,
+        endTime,
+        status: "UPCOMING",
+        asset: {
+          id: selectedAssetId,
+          name: selectedResource ? selectedResource.name : "Shared Resource",
+          location: selectedResource ? selectedResource.location : "N/A"
+        }
+      };
 
-      if (res.ok && result.success) {
-        setFormMsg({ text: "Booking created successfully!", type: "success" });
-        setSelectedAssetId("");
-        setStartTime("");
-        setEndTime("");
-        // Reload booking list
-        const refreshed = await apiFetch("/api/v1/bookings");
-        const refreshedData = await refreshed.json();
-        if (refreshed.ok) setBookings(refreshedData.data);
-        setTimeout(() => setActiveTab("history"), 1500);
-      } else {
-        setFormMsg({ text: result.message || "Failed to create booking", type: "error" });
-      }
-    } catch (err) {
-      setFormMsg({ text: "Network error occurred.", type: "error" });
-    } finally {
+      const updated = [newBooking, ...bookings];
+      setBookings(updated);
+      localStorage.setItem("assertflow_bookings", JSON.stringify(updated));
+
+      setFormMsg({ text: "Booking created successfully!", type: "success" });
+      setSelectedAssetId("");
+      setStartTime("");
+      setEndTime("");
       setSubmitting(false);
-    }
+
+      setTimeout(() => setActiveTab("history"), 1500);
+    }, 600);
   };
 
   const handleCancelBooking = async (bookingId) => {
     if (!window.confirm("Are you sure you want to cancel this booking?")) return;
-
-    try {
-      const res = await apiFetch(`/api/v1/bookings/${bookingId}/cancel`, {
-        method: "PUT",
-      });
-      const result = await res.json();
-      if (res.ok && result.success) {
-        setBookings(bookings.map(b => b.id === bookingId ? { ...b, status: "CANCELLED" } : b));
-      } else {
-        alert(result.message || "Failed to cancel booking.");
-      }
-    } catch (err) {
-      alert("Network error.");
-    }
+    const updated = bookings.map(b => b.id === bookingId ? { ...b, status: "CANCELLED" } : b);
+    setBookings(updated);
+    localStorage.setItem("assertflow_bookings", JSON.stringify(updated));
   };
 
   const handleReschedule = async (e) => {
@@ -116,32 +162,30 @@ const Booking = () => {
     setRescheduleMsg({ text: "", type: "" });
     setUpdatingReschedule(true);
 
-    try {
-      const res = await apiFetch(`/api/v1/bookings/${reschedulingId}/reschedule`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ startTime: rescheduleStart, endTime: rescheduleEnd }),
+    setTimeout(() => {
+      const updated = bookings.map(b => {
+        if (b.id === reschedulingId) {
+          return {
+            ...b,
+            startTime: rescheduleStart,
+            endTime: rescheduleEnd
+          };
+        }
+        return b;
       });
-      const result = await res.json();
+      setBookings(updated);
+      localStorage.setItem("assertflow_bookings", JSON.stringify(updated));
 
-      if (res.ok && result.success) {
-        setRescheduleMsg({ text: "Booking rescheduled successfully!", type: "success" });
-        // Update list
-        setBookings(bookings.map(b => b.id === reschedulingId ? result.data : b));
-        setTimeout(() => {
-          setReschedulingId(null);
-          setRescheduleStart("");
-          setRescheduleEnd("");
-          setRescheduleMsg({ text: "", type: "" });
-        }, 1500);
-      } else {
-        setRescheduleMsg({ text: result.message || "Failed to reschedule booking.", type: "error" });
-      }
-    } catch (err) {
-      setRescheduleMsg({ text: "Network error.", type: "error" });
-    } finally {
+      setRescheduleMsg({ text: "Booking rescheduled successfully!", type: "success" });
       setUpdatingReschedule(false);
-    }
+      
+      setTimeout(() => {
+        setReschedulingId(null);
+        setRescheduleStart("");
+        setRescheduleEnd("");
+        setRescheduleMsg({ text: "", type: "" });
+      }, 1500);
+    }, 600);
   };
 
   const getBookingStatusBadge = (status) => {

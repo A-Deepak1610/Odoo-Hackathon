@@ -1,15 +1,115 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import { 
   User, Building2, Calendar, AlertTriangle, ArrowRightLeft, 
   CheckCircle2, Clock, RotateCcw, Box, FileText, Search, X
 } from 'lucide-react';
 import { DashboardCard, ActivityCard, AlertCard } from '../components/dashboard';
 import { Input, Select, Button, Label, Card, CardContent } from '../components/ui';
+import { 
+  getAllocationsApi, getEmployeesApi, getDepartmentsApi, getAssetsApi, 
+  allocateAssetApi, returnAssetApi, approveTransferApi, rejectTransferApi
+} from '../api';
 
 const AllocationPage = () => {
+  const [allocations, setAllocations] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [assets, setAssets] = useState([]);
+  
   const [showTransferSuccess, setShowTransferSuccess] = useState(false);
   const [showReturnSuccess, setShowReturnSuccess] = useState(false);
+
+  // Form states
+  const [selectedAssetForAllocation, setSelectedAssetForAllocation] = useState(null);
+  const [selectedAssetForReturn, setSelectedAssetForReturn] = useState(null);
+  const [isAllocating, setIsAllocating] = useState(false);
+  const [isReturning, setIsReturning] = useState(false);
+  
+  const [conflictMsg, setConflictMsg] = useState('');
+
+  const { register: registerAlloc, handleSubmit: handleAllocSubmit, watch: watchAlloc, reset: resetAlloc } = useForm();
+  const { register: registerReturn, handleSubmit: handleReturnSubmit, reset: resetReturn } = useForm();
+
+  const loadData = async () => {
+    try {
+      const [allocRes, empRes, depRes, assetRes] = await Promise.all([
+        getAllocationsApi(),
+        getEmployeesApi(),
+        getDepartmentsApi(),
+        getAssetsApi()
+      ]);
+      if (allocRes.success) setAllocations(allocRes.data);
+      if (empRes.success) setEmployees(empRes.data);
+      if (depRes.success) setDepartments(depRes.data);
+      if (assetRes.success) setAssets(assetRes.data);
+    } catch (error) {
+      console.error('Failed to load allocation page data', error);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const onAllocate = async (data) => {
+    if (!selectedAssetForAllocation) return;
+    setConflictMsg('');
+    setIsAllocating(true);
+    try {
+      const payload = {
+        assetId: selectedAssetForAllocation.id,
+        toEmployeeId: data.employeeId || null,
+        toDepartmentId: data.departmentId || null,
+        expectedReturnDate: data.expectedReturnDate || null
+      };
+      const res = await allocateAssetApi(payload);
+      if (res.success) {
+        setShowTransferSuccess(true);
+        resetAlloc();
+        setSelectedAssetForAllocation(null);
+        loadData();
+      } else {
+        setConflictMsg(res.message);
+      }
+    } catch (err) {
+      setConflictMsg('Failed to allocate asset');
+    } finally {
+      setIsAllocating(false);
+    }
+  };
+
+  const onReturn = async (data) => {
+    if (!selectedAssetForReturn) return;
+    setIsReturning(true);
+    try {
+      // Find active allocation for this asset
+      const activeAlloc = allocations.find(a => a.assetId === selectedAssetForReturn.id && a.status === 'ACTIVE');
+      if (!activeAlloc) {
+        alert("No active allocation found for this asset.");
+        setIsReturning(false);
+        return;
+      }
+
+      const res = await returnAssetApi(activeAlloc.id, {
+        condition: data.condition,
+        checkInNotes: data.checkInNotes
+      });
+      if (res.success) {
+        setShowReturnSuccess(true);
+        resetReturn();
+        setSelectedAssetForReturn(null);
+        loadData();
+      } else {
+        alert(res.message);
+      }
+    } catch (err) {
+      alert("Failed to return asset");
+    } finally {
+      setIsReturning(false);
+    }
+  };
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto space-y-6">
@@ -18,13 +118,15 @@ const AllocationPage = () => {
         <p className="text-sm font-medium text-slate-500 mt-1">Assign assets to employees, manage departmental transfers, and process returns.</p>
       </div>
 
-      {/* Top Conflict Alert - Only visible if there is a conflict */}
-      <AlertCard 
-        title="Allocation Conflict Detected"
-        message="The asset 'Conference Projector A' is already booked by Marketing on the selected dates. Proceeding will require overriding the existing booking."
-        actionText="Resolve Conflict"
-        onAction={() => console.log('Resolve conflict')}
-      />
+      {/* Top Conflict Alert */}
+      {conflictMsg && (
+        <AlertCard 
+          title="Allocation Issue Detected"
+          message={conflictMsg}
+          actionText="Dismiss"
+          onAction={() => setConflictMsg('')}
+        />
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
         
@@ -33,32 +135,41 @@ const AllocationPage = () => {
           
           {/* Allocate Asset Form */}
           <DashboardCard title="Allocate New Asset">
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleAllocSubmit(onAllocate)}>
               
               {/* Asset Selection */}
               <div className="space-y-2">
                 <Label>Select Asset *</Label>
                 <div className="relative">
-                  <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
-                  <Input 
-                    type="text" 
-                    placeholder="Search by asset tag or name..." 
-                    className="pl-9"
-                    defaultValue="AST-2024-042 - Dell XPS 15"
-                  />
+                  <Box size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                  <Select 
+                    className="pl-9" 
+                    onChange={(e) => {
+                      const ast = assets.find(a => a.id === e.target.value);
+                      setSelectedAssetForAllocation(ast || null);
+                    }}
+                    value={selectedAssetForAllocation?.id || ''}
+                  >
+                    <option value="">Select Available Asset...</option>
+                    {assets.filter(a => a.status === 'AVAILABLE' || a.status === 'ALLOCATED').map(a => (
+                      <option key={a.id} value={a.id}>{a.assetTag} - {a.name}</option>
+                    ))}
+                  </Select>
                 </div>
                 
                 {/* Current Holder Preview (if transferring) */}
-                <div className="mt-3 p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between shadow-sm">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2.5 bg-white border border-blue-200 rounded-lg shadow-sm text-blue-600"><Box size={18} /></div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">Current Status</p>
-                      <p className="text-sm font-semibold text-slate-800">Allocated to <span className="font-bold text-blue-700">IT Department Storage</span></p>
+                {selectedAssetForAllocation && selectedAssetForAllocation.status === 'ALLOCATED' && (
+                  <div className="mt-3 p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2.5 bg-white border border-blue-200 rounded-lg shadow-sm text-blue-600"><Box size={18} /></div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">Current Status</p>
+                        <p className="text-sm font-semibold text-slate-800">Allocated to <span className="font-bold text-blue-700">{selectedAssetForAllocation.currentEmployee?.name || selectedAssetForAllocation.currentDepartment?.name || 'Unknown'}</span></p>
+                      </div>
                     </div>
+                    <span className="text-xs font-bold text-blue-700 bg-white px-2.5 py-1 rounded-md border border-blue-200">Transfer Required</span>
                   </div>
-                  <span className="text-xs font-bold text-blue-700 bg-white px-2.5 py-1 rounded-md border border-blue-200">Transfer Required</span>
-                </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -67,11 +178,11 @@ const AllocationPage = () => {
                   <Label>Assign To Employee</Label>
                   <div className="relative">
                     <User size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
-                    <Select className="pl-9">
+                    <Select className="pl-9" {...registerAlloc('employeeId')}>
                       <option value="">Select Employee...</option>
-                      <option value="1" selected>Alex Chen (Engineering)</option>
-                      <option value="2">Sarah Jenkins (Marketing)</option>
-                      <option value="3">Mike Ross (Logistics)</option>
+                      {employees.map(emp => (
+                        <option key={emp.id} value={emp.id}>{emp.name} ({emp.department?.name || 'No Dept'})</option>
+                      ))}
                     </Select>
                   </div>
                 </div>
@@ -81,27 +192,16 @@ const AllocationPage = () => {
                   <Label>Or Assign To Department</Label>
                   <div className="relative">
                     <Building2 size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
-                    <Select className="pl-9">
+                    <Select className="pl-9" {...registerAlloc('departmentId')}>
                       <option value="">Select Department...</option>
-                      <option value="eng">Engineering</option>
-                      <option value="mkt">Marketing</option>
-                      <option value="hr">HR</option>
+                      {departments.map(dep => (
+                        <option key={dep.id} value={dep.id}>{dep.name}</option>
+                      ))}
                     </Select>
                   </div>
                 </div>
 
                 {/* Dates */}
-                <div className="space-y-2">
-                  <Label>Allocation Date *</Label>
-                  <div className="relative">
-                    <Calendar size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
-                    <Input 
-                      type="date" 
-                      className="pl-9"
-                    />
-                  </div>
-                </div>
-
                 <div className="space-y-2">
                   <Label>Expected Return Date</Label>
                   <div className="relative">
@@ -109,6 +209,7 @@ const AllocationPage = () => {
                     <Input 
                       type="date" 
                       className="pl-9"
+                      {...registerAlloc('expectedReturnDate')}
                     />
                   </div>
                   <p className="text-xs font-medium text-slate-500 mt-1">Leave blank for permanent assignment</p>
@@ -116,12 +217,15 @@ const AllocationPage = () => {
               </div>
 
               <div className="pt-5 border-t border-slate-100 flex justify-end gap-3">
-                <Button variant="secondary" type="button" onClick={() => {}}>
+                <Button variant="secondary" type="button" onClick={() => {
+                  resetAlloc();
+                  setSelectedAssetForAllocation(null);
+                }} disabled={isAllocating}>
                   Cancel
                 </Button>
-                <Button variant="primary" type="button" className="gap-2" onClick={() => setShowTransferSuccess(true)}>
+                <Button variant="primary" type="submit" className="gap-2" disabled={isAllocating || !selectedAssetForAllocation}>
                   <ArrowRightLeft size={16} />
-                  Initiate Transfer
+                  {isAllocating ? 'Allocating...' : 'Allocate Asset'}
                 </Button>
               </div>
             </form>
@@ -129,17 +233,25 @@ const AllocationPage = () => {
 
           {/* Return Asset Form */}
           <DashboardCard title="Process Return">
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleReturnSubmit(onReturn)}>
               
               <div className="space-y-2">
                 <Label>Asset to Return</Label>
                 <div className="relative">
                   <RotateCcw size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
-                  <Input 
-                    type="text" 
-                    placeholder="Scan QR or enter asset tag..." 
+                  <Select 
                     className="pl-9"
-                  />
+                    onChange={(e) => {
+                      const ast = assets.find(a => a.id === e.target.value);
+                      setSelectedAssetForReturn(ast || null);
+                    }}
+                    value={selectedAssetForReturn?.id || ''}
+                  >
+                    <option value="">Select Allocated Asset...</option>
+                    {assets.filter(a => a.status === 'ALLOCATED').map(a => (
+                      <option key={a.id} value={a.id}>{a.assetTag} - {a.name}</option>
+                    ))}
+                  </Select>
                 </div>
               </div>
 
@@ -148,35 +260,26 @@ const AllocationPage = () => {
                   <Label>Return Condition *</Label>
                   <div className="grid grid-cols-3 gap-2">
                     <label className="cursor-pointer">
-                      <input type="radio" name="condition" className="peer sr-only" defaultChecked />
+                      <input type="radio" value="Good" {...registerReturn('condition')} className="peer sr-only" defaultChecked />
                       <div className="text-center px-3 py-2 text-sm font-semibold border border-slate-200 rounded-lg peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 hover:bg-slate-50 transition-colors">
                         Good
                       </div>
                     </label>
                     <label className="cursor-pointer">
-                      <input type="radio" name="condition" className="peer sr-only" />
+                      <input type="radio" value="Fair" {...registerReturn('condition')} className="peer sr-only" />
                       <div className="text-center px-3 py-2 text-sm font-semibold border border-slate-200 rounded-lg peer-checked:bg-amber-50 peer-checked:border-amber-500 peer-checked:text-amber-700 hover:bg-slate-50 transition-colors">
-                        Damaged
+                        Fair
                       </div>
                     </label>
                     <label className="cursor-pointer">
-                      <input type="radio" name="condition" className="peer sr-only" />
+                      <input type="radio" value="Poor" {...registerReturn('condition')} className="peer sr-only" />
                       <div className="text-center px-3 py-2 text-sm font-semibold border border-slate-200 rounded-lg peer-checked:bg-red-50 peer-checked:border-red-500 peer-checked:text-red-700 hover:bg-slate-50 transition-colors">
-                        Lost
+                        Poor
                       </div>
                     </label>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Return Location *</Label>
-                  <Select>
-                    <option value="">Select drop-off location...</option>
-                    <option value="1">IT Storage Room A</option>
-                    <option value="2">Facilities Desk</option>
-                  </Select>
-                </div>
-                
                 <div className="md:col-span-2 space-y-2">
                   <Label>Return Notes</Label>
                   <div className="relative">
@@ -185,15 +288,16 @@ const AllocationPage = () => {
                       rows="3"
                       placeholder="Note any damages, missing accessories, or reason for return..."
                       className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white resize-none"
+                      {...registerReturn('checkInNotes')}
                     ></textarea>
                   </div>
                 </div>
               </div>
 
               <div className="pt-5 border-t border-slate-100 flex justify-end">
-                <Button type="button" className="bg-blue-600 hover:bg-blue-700 text-white gap-2" onClick={() => setShowReturnSuccess(true)}>
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white gap-2" disabled={isReturning || !selectedAssetForReturn}>
                   <CheckCircle2 size={16} />
-                  Confirm Return
+                  {isReturning ? 'Processing...' : 'Confirm Return'}
                 </Button>
               </div>
 
@@ -206,75 +310,54 @@ const AllocationPage = () => {
         <div className="space-y-6">
           
           {/* Transfer Approval Timeline */}
-          <DashboardCard title="Transfer Request Status">
+          <DashboardCard title="Pending Allocations / Transfers">
             <div className="space-y-4">
-              <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-xl mb-4 shadow-sm">
-                <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Active Request</p>
-                <p className="text-sm font-bold text-slate-900">AST-2024-089 (Herman Miller Chair)</p>
-                <p className="text-xs font-medium text-slate-500 mt-1">Requested by: John Doe (Engineering)</p>
-              </div>
-
-              <div className="relative pl-4 space-y-6 py-2">
-                <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-slate-200"></div>
-                
-                <div className="relative z-10 flex items-start gap-4">
-                  <div className="w-4 h-4 bg-emerald-500 rounded-full ring-4 ring-white shrink-0 mt-0.5"></div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">Request Submitted</p>
-                    <p className="text-xs font-medium text-slate-500 mt-0.5">Today, 09:41 AM</p>
-                  </div>
+              {allocations.filter(a => a.status === 'PENDING').length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-xs text-slate-400 font-medium italic">No pending requests.</p>
                 </div>
-                
-                <div className="relative z-10 flex items-start gap-4">
-                  <div className="w-4 h-4 bg-emerald-500 rounded-full ring-4 ring-white shrink-0 mt-0.5"></div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">Department Head Approved</p>
-                    <p className="text-xs font-medium text-slate-500 mt-0.5">Today, 11:30 AM</p>
+              ) : (
+                allocations.filter(a => a.status === 'PENDING').map(req => (
+                  <div key={req.id} className="p-4 bg-blue-50/50 border border-blue-100 rounded-xl mb-4 shadow-sm">
+                    <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Transfer Request</p>
+                    <p className="text-sm font-bold text-slate-900">{req.asset?.assetTag} - {req.asset?.name}</p>
+                    <p className="text-xs font-medium text-slate-500 mt-1">From: {req.fromEmployee?.name || 'Inventory'}</p>
+                    <p className="text-xs font-medium text-slate-500 mt-0.5">To: {req.toEmployee?.name || req.toDepartment?.name || 'Unknown'}</p>
+                    
+                    <div className="flex gap-2 mt-3">
+                      <Button variant="secondary" size="sm" className="flex-1 text-xs" onClick={async () => {
+                        await rejectTransferApi(req.id);
+                        loadData();
+                      }}>Reject</Button>
+                      <Button variant="primary" size="sm" className="flex-1 text-xs" onClick={async () => {
+                        await approveTransferApi(req.id);
+                        loadData();
+                      }}>Approve</Button>
+                    </div>
                   </div>
-                </div>
-
-                <div className="relative z-10 flex items-start gap-4">
-                  <div className="w-4 h-4 bg-amber-400 rounded-full ring-4 ring-white shrink-0 mt-0.5"></div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">Pending Asset Manager</p>
-                    <p className="text-xs text-amber-600 font-semibold mt-1 cursor-pointer hover:underline">Click to review & approve</p>
-                  </div>
-                </div>
-
-                <div className="relative z-10 flex items-start gap-4 opacity-50">
-                  <div className="w-4 h-4 bg-slate-300 rounded-full ring-4 ring-white shrink-0 mt-0.5"></div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-500">Ready for Pickup</p>
-                  </div>
-                </div>
-              </div>
+                ))
+              )}
             </div>
           </DashboardCard>
 
           {/* Transfer History */}
           <DashboardCard title="Recent Activity">
             <div className="pt-2 pl-2">
-              <ActivityCard 
-                title="Return Processed"
-                description="Dell XPS 15 returned by Jane Smith."
-                timestamp="2 hrs ago"
-                icon={RotateCcw}
-                iconColor="slate"
-              />
-              <ActivityCard 
-                title="Asset Allocated"
-                description="iPad Pro assigned to Marketing Dept."
-                timestamp="Yesterday"
-                icon={CheckCircle2}
-                iconColor="emerald"
-              />
-              <ActivityCard 
-                title="Transfer Denied"
-                description="Request for Server Rack B rejected."
-                timestamp="Yesterday"
-                icon={AlertTriangle}
-                iconColor="amber"
-              />
+              {allocations.filter(a => a.status !== 'PENDING').slice(0, 5).map(act => (
+                <ActivityCard 
+                  key={act.id}
+                  title={act.status === 'ACTIVE' ? 'Asset Allocated' : act.status === 'RETURNED' ? 'Asset Returned' : 'Transfer Rejected'}
+                  description={`${act.asset?.name} ${act.status === 'ACTIVE' ? 'assigned to' : act.status === 'RETURNED' ? 'returned by' : 'request denied for'} ${act.toEmployee?.name || act.toDepartment?.name || act.fromEmployee?.name || 'User'}.`}
+                  timestamp={new Date(act.updatedAt).toLocaleDateString()}
+                  icon={act.status === 'ACTIVE' ? CheckCircle2 : act.status === 'RETURNED' ? RotateCcw : AlertTriangle}
+                  iconColor={act.status === 'ACTIVE' ? "emerald" : act.status === 'RETURNED' ? "slate" : "amber"}
+                />
+              ))}
+              {allocations.filter(a => a.status !== 'PENDING').length === 0 && (
+                <div className="text-center py-4">
+                  <p className="text-xs text-slate-400 font-medium italic">No recent activity.</p>
+                </div>
+              )}
             </div>
           </DashboardCard>
 
@@ -289,9 +372,9 @@ const AllocationPage = () => {
               <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-2">
                 <CheckCircle2 size={32} />
               </div>
-              <h3 className="font-bold text-slate-900 text-xl">Transfer Initiated</h3>
+              <h3 className="font-bold text-slate-900 text-xl">Allocation Successful</h3>
               <p className="text-sm text-slate-500">
-                The transfer request for <span className="font-semibold text-slate-700">Dell XPS 15</span> has been successfully submitted for approval.
+                The asset allocation has been successfully recorded.
               </p>
               <Button className="w-full mt-4" onClick={() => setShowTransferSuccess(false)}>
                 Done
