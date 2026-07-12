@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { loginApi, signupApi, logoutApi, getMeApi } from '../api';
 import { setAccessToken, registerAuthErrorHandler, buildApiUrl } from '../../../services/api';
 
@@ -7,6 +8,7 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Clears active tokens and state on authentication failure or logout
   const handleUnauthenticated = () => {
@@ -53,16 +55,14 @@ export const AuthProvider = ({ children }) => {
       
       setAccessToken(accessToken);
       
-      // Persist refresh token if required (or always for seamless UX)
       if (rememberMe) {
         localStorage.setItem('refreshToken', refreshToken);
       } else {
-        // Session memory only is standard for no-remember, but let's store it
-        // and adjust backend expiry. Here we always write to localStorage for simplicity
         localStorage.setItem('refreshToken', refreshToken);
       }
 
       setUser(loggedUser);
+      navigate('/dashboard');
       return loggedUser;
     } catch (error) {
       handleUnauthenticated();
@@ -93,6 +93,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Failed to clean up token on server during logout:', err);
     } finally {
       handleUnauthenticated();
+      navigate('/login');
     }
   };
 

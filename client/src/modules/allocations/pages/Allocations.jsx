@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { ArrowRightLeft, Loader2, AlertTriangle, CheckCircle, Plus, User, Building, Trash2 } from "lucide-react";
 import { apiFetch } from "../../../services/api";
+import { useAuth } from "../../auth/store/AuthContext";
 
 const Allocations = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("transfers"); // transfers | request
   const [myAssets, setMyAssets] = useState([]);
   const [transfers, setTransfers] = useState([]);
@@ -29,7 +31,7 @@ const Allocations = () => {
 
       const [assetsRes, transfersRes, orgRes] = await Promise.all([
         apiFetch("/api/v1/assets/my"),
-        apiFetch("/api/v1/allocations/my-transfers"),
+        apiFetch("/api/v1/allocation/my-transfers"),
         apiFetch("/api/v1/organization") // Fetch users and departments if available, or fall back
       ]);
 
@@ -89,7 +91,7 @@ const Allocations = () => {
     setSubmitting(true);
 
     try {
-      const res = await apiFetch("/api/v1/allocations/transfer", {
+      const res = await apiFetch("/api/v1/allocation/transfer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -109,7 +111,7 @@ const Allocations = () => {
         setReason("");
         
         // Reload list
-        const refreshed = await apiFetch("/api/v1/allocations/my-transfers");
+        const refreshed = await apiFetch("/api/v1/allocation/my-transfers");
         const refData = await refreshed.json();
         if (refreshed.ok) setTransfers(refData.data);
         setTimeout(() => setActiveTab("transfers"), 1500);
@@ -127,7 +129,7 @@ const Allocations = () => {
     if (!window.confirm("Are you sure you want to cancel this transfer request?")) return;
 
     try {
-      const res = await apiFetch(`/api/v1/allocations/transfer/${transferId}/cancel`, {
+      const res = await apiFetch(`/api/v1/allocation/transfer/${transferId}/cancel`, {
         method: "PUT"
       });
       if (res.ok) {
@@ -354,7 +356,7 @@ const Allocations = () => {
                     style={{ width: "100%", height: "38px", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "0 8px", fontSize: "13px" }}
                   >
                     <option value="">-- Select Recipient Employee --</option>
-                    {users.filter(u => u.id !== reqUser.id).map((u) => (
+                    {users.filter(u => u.id !== user?.id).map((u) => (
                       <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
                     ))}
                     {/* Fallback mock list if organization has no loaded users */}
@@ -445,8 +447,5 @@ const Allocations = () => {
     </div>
   );
 };
-
-// Simple helper to decode user ID from context safely
-const reqUser = JSON.parse(localStorage.getItem("auth_session"))?.user || { id: "" };
 
 export default Allocations;
