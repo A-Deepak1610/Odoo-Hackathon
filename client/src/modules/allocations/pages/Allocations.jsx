@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ArrowRightLeft, Loader2, AlertTriangle, CheckCircle, Plus, User, Building, Trash2 } from "lucide-react";
 import { apiFetch } from "../../../services/api";
-import { useAuth } from "../auth/store/AuthContext";
+import { useAuth } from "../../auth/store/AuthContext";
 
 const Allocations = () => {
   const { user } = useAuth();
