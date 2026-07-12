@@ -4,6 +4,7 @@ const { authenticateJWT } = require('../../auth/middlewares/auth.middleware');
 
 const router = Router();
 
+// Secure all organization routes
 router.use(authenticateJWT);
 router.get('/', getOrganizationDetails);
 

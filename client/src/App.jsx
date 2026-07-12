@@ -11,10 +11,19 @@ import Audit from './modules/admin-modules/audit/pages/Audit';
 import Reports from './modules/admin-modules/reports/pages/Reports';
 import Notifications from './modules/notifications/pages/Notifications';
 import DbAssistant from './modules/admin-modules/db-assistant/pages/DbAssistant';
+import DeptDashboard from './modules/department-head/pages/DeptDashboard';
+import Approvals from './modules/department-head/pages/Approvals';
+import ResourceBooking from './modules/department-head/pages/ResourceBooking';
+import { DeptHeadProvider } from './modules/department-head/store/DeptHeadContext';
+import SuperAdminDashboard from './modules/super-admin/pages/SuperAdminDashboard';
+import TenantManagement from './modules/super-admin/pages/TenantManagement';
+import { SuperAdminProvider } from './modules/super-admin/store/SuperAdminContext';
 
 // Auth Module exports
 import { AuthProvider, ProtectedRoute, LoginPage, SignupPage } from './modules/auth';
 import ProfilePage from './modules/auth/pages/ProfilePage';
+
+
 
 function App() {
   return (
@@ -26,7 +35,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
 
           {/* Secure Application Routes (Authenticated & Guarded Layout) */}
-          <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+          <Route path="/" element={<ProtectedRoute><SuperAdminProvider><DeptHeadProvider><AppLayout /></DeptHeadProvider></SuperAdminProvider></ProtectedRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             
             {/* General Dashboard & Panel Routes */}
@@ -54,11 +63,11 @@ function App() {
               />
             </Route>
             
-            {/* RBAC Route: Assets Management requires ADMIN, ASSET_MANAGER, DEPARTMENT_HEAD, SUPERADMIN or EMPLOYEE */}
+            {/* RBAC Route: Assets Management requires ADMIN, ASSET_MANAGER or DEPARTMENT_HEAD */}
             <Route 
               path="assets" 
               element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN', 'EMPLOYEE']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
                   <Assets />
                 </ProtectedRoute>
               } 
@@ -69,27 +78,27 @@ function App() {
             <Route path="booking" element={<Booking />} />
             <Route path="maintenance" element={<Maintenance />} />
             
-            {/* RBAC Route: Audit requires ADMIN, ASSET_MANAGER, DEPARTMENT_HEAD or SUPERADMIN */}
+            {/* RBAC Route: Audit requires ADMIN, ASSET_MANAGER, or DEPARTMENT_HEAD */}
             <Route 
               path="audit" 
               element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
                   <Audit />
                 </ProtectedRoute>
               } 
             />
             
-            {/* RBAC Route: Reports requires ADMIN, ASSET_MANAGER, DEPARTMENT_HEAD or SUPERADMIN */}
+            {/* RBAC Route: Reports requires ADMIN, ASSET_MANAGER, or DEPARTMENT_HEAD */}
             <Route 
               path="reports" 
               element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
                   <Reports />
                 </ProtectedRoute>
               } 
             />
 
-            {/* Catch all fallback within panels */}
+          {/* Catch all fallback within panels */}
             <Route path="*" element={<div className="p-8">Work in progress</div>} />
           </Route>
 

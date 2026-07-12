@@ -28,25 +28,113 @@ const Assets = () => {
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  useEffect(() => {
-    const fetchAssets = async () => {
-      try {
-        setLoading(true);
-        const res = await apiFetch('/api/v1/assets');
-        const result = await res.json();
-        if (res.ok && result.success) {
-          setAssets(result.data);
-        } else {
-          setError(result.message || 'Failed to load assets.');
-        }
-      } catch (err) {
-        setError('Failed to connect to server.');
-      } finally {
-        setLoading(false);
+  // Registration modal states
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [categoriesList, setCategoriesList] = useState([]);
+  const [newName, setNewName] = useState("");
+  const [newTag, setNewTag] = useState("");
+  const [newSerial, setNewSerial] = useState("");
+  const [newCategory, setNewCategory] = useState("");
+  const [newLocation, setNewLocation] = useState("");
+  const [newCondition, setNewCondition] = useState("Excellent");
+  const [newShared, setNewShared] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      // Load assets
+      const assetsRes = await apiFetch('/api/v1/assets');
+      const assetsResult = await assetsRes.json();
+      if (assetsRes.ok && assetsResult.success) {
+        setAssets(assetsResult.data);
+      } else {
+        setError(assetsResult.message || 'Failed to load assets.');
       }
-    };
-    fetchAssets();
+
+      // Load categories
+      const catRes = await apiFetch('/api/v1/asset-categories');
+      const catResult = await catRes.json();
+      if (catRes.ok && catResult.success) {
+        setCategoriesList(catResult.data);
+      }
+    } catch (err) {
+      setError('Failed to connect to server.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
+
+  const handleCreateAsset = async (e) => {
+    e.preventDefault();
+    setFormError("");
+    
+    if (!newName || !newTag || !newCategory) {
+      setFormError("Name, Asset Tag, and Category are required.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await apiFetch('/api/v1/assets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newName,
+          assetTag: newTag,
+          serialNumber: newSerial || undefined,
+          categoryId: newCategory,
+          condition: newCondition,
+          location: newLocation || undefined,
+          isSharedBookable: newShared
+        })
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        // Reload assets list
+        await loadData();
+        
+        // Reset form
+        setNewName("");
+        setNewTag("");
+        setNewSerial("");
+        setNewCategory("");
+        setNewLocation("");
+        setNewCondition("Excellent");
+        setNewShared(false);
+        setShowCreateModal(false);
+      } else {
+        setFormError(result.message || "Failed to create asset.");
+      }
+    } catch (err) {
+      setFormError("Network error occurred.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteAsset = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this asset? This cannot be undone.")) return;
+
+    try {
+      const res = await apiFetch(`/api/v1/assets/${id}`, {
+        method: 'DELETE'
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        setAssets(assets.filter(a => a.id !== id));
+      } else {
+        alert(result.message || "Failed to delete asset.");
+      }
+    } catch (err) {
+      alert("Network error.");
+    }
+  };
 
   const getStatusColor = (status) => {
     if (status === "ALLOCATED") return { bg: "#dcfce7", text: "#15803d" };
@@ -206,7 +294,8 @@ const Assets = () => {
               <Download size={16} />
               Export
             </button>
-            <button
+             <button
+              onClick={() => setShowCreateModal(true)}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -354,7 +443,10 @@ const Assets = () => {
                   <th style={{ padding: "12px 8px", fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Condition</th>
                   <th style={{ padding: "12px 8px", fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Status</th>
                   {!isEmployee && (
-                    <th style={{ padding: "12px 8px", fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase", textAlign: "center" }}>Custodian</th>
+                    <>
+                      <th style={{ padding: "12px 8px", fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase", textAlign: "center" }}>Custodian</th>
+                      <th style={{ padding: "12px 8px", fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase", textAlign: "center" }}>Actions</th>
+                    </>
                   )}
                 </tr>
               </thead>
@@ -437,16 +529,38 @@ const Assets = () => {
                         </span>
                       </td>
                       {!isEmployee && (
-                        <td
-                          style={{
-                            padding: "12px 8px",
-                            fontSize: "13px",
-                            color: "#475569",
-                            textAlign: "center"
-                          }}
-                        >
-                          {asset.currentEmployee?.name || "Unassigned"}
-                        </td>
+                        <>
+                          <td
+                            style={{
+                              padding: "12px 8px",
+                              fontSize: "13px",
+                              color: "#475569",
+                              textAlign: "center"
+                            }}
+                          >
+                            {asset.currentEmployee?.name || "Unassigned"}
+                          </td>
+                          <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                            <button
+                              onClick={() => handleDeleteAsset(asset.id)}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                padding: "5px 10px",
+                                backgroundColor: "#fef2f2",
+                                color: "#dc2626",
+                                border: "1px solid #fee2e2",
+                                borderRadius: "6px",
+                                fontSize: "11.5px",
+                                fontWeight: 600,
+                                cursor: "pointer",
+                              }}
+                            >
+                              <Trash2 size={12} /> Delete
+                            </button>
+                          </td>
+                        </>
                       )}
                     </tr>
                   );
@@ -456,6 +570,97 @@ const Assets = () => {
           </div>
         )}
       </div>
+
+      {/* ── CREATE ASSET MODAL ─── */}
+      {showCreateModal && (
+        <div style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(15, 23, 42, 0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 100,
+          backdropFilter: "blur(4px)"
+        }}>
+          <div style={{
+            background: "white",
+            borderRadius: "12px",
+            border: "1px solid #e2e8f0",
+            padding: "24px",
+            width: "480px",
+            boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)",
+            fontFamily: "Inter, sans-serif"
+          }}>
+            <h3 style={{ fontSize: "17px", fontWeight: 600, margin: "0 0 16px 0", color: "#0f172a" }}>Register New Asset</h3>
+            
+            {formError && (
+              <div style={{
+                padding: "8px 12px",
+                borderRadius: "6px",
+                fontSize: "12px",
+                marginBottom: "12px",
+                backgroundColor: "#fee2e2",
+                color: "#b91c1c",
+                fontWeight: 500
+              }}>{formError}</div>
+            )}
+            
+            <form onSubmit={handleCreateAsset} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "11.5px", color: "#64748b", fontWeight: 600, marginBottom: "4px" }}>Asset Name *</label>
+                <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} required placeholder="e.g. MacBook Pro M3" style={{ width: "100%", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "13px" }} />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "11.5px", color: "#64748b", fontWeight: 600, marginBottom: "4px" }}>Asset Tag *</label>
+                  <input type="text" value={newTag} onChange={(e) => setNewTag(e.target.value)} required placeholder="e.g. AST-LPT-002" style={{ width: "100%", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "13px" }} />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "11.5px", color: "#64748b", fontWeight: 600, marginBottom: "4px" }}>Serial Number</label>
+                  <input type="text" value={newSerial} onChange={(e) => setNewSerial(e.target.value)} placeholder="e.g. C02DXXXX" style={{ width: "100%", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "13px" }} />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "11.5px", color: "#64748b", fontWeight: 600, marginBottom: "4px" }}>Category *</label>
+                  <select value={newCategory} onChange={(e) => setNewCategory(e.target.value)} required style={{ width: "100%", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "13px", height: "36px" }}>
+                    <option value="">-- Select Category --</option>
+                    {categoriesList.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "11.5px", color: "#64748b", fontWeight: 600, marginBottom: "4px" }}>Condition</label>
+                  <select value={newCondition} onChange={(e) => setNewCondition(e.target.value)} style={{ width: "100%", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "13px", height: "36px" }}>
+                    <option value="New">New</option>
+                    <option value="Excellent">Excellent</option>
+                    <option value="Good">Good</option>
+                    <option value="Fair">Fair</option>
+                    <option value="Poor">Poor</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "11.5px", color: "#64748b", fontWeight: 600, marginBottom: "4px" }}>Location</label>
+                <input type="text" value={newLocation} onChange={(e) => setNewLocation(e.target.value)} placeholder="e.g. HQ - Floor 3" style={{ width: "100%", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "13px" }} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "4px 0" }}>
+                <input type="checkbox" id="newShared" checked={newShared} onChange={(e) => setNewShared(e.target.checked)} style={{ cursor: "pointer" }} />
+                <label htmlFor="newShared" style={{ fontSize: "13px", color: "#475569", fontWeight: 500, cursor: "pointer" }}>Make this asset shared/bookable by employees</label>
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "12px" }}>
+                <button type="button" onClick={() => setShowCreateModal(false)} style={{ padding: "8px 14px", backgroundColor: "#f1f5f9", color: "#64748b", border: "none", borderRadius: "6px", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                <button type="submit" disabled={submitting} style={{ padding: "8px 14px", backgroundColor: "#1e3a8a", color: "white", border: "none", borderRadius: "6px", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}>
+                  {submitting && <Loader2 size={12} className="animate-spin" />}
+                  Register Asset
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

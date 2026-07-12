@@ -1,1 +1,2 @@
-module.exports = {};
+const { router } = require('./routes');
+module.exports = { router };

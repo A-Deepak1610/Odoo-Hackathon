@@ -17,14 +17,21 @@ import { useAuth } from '../../modules/auth';
 
 const navGroups = [
   {
+    label: "SUPER ADMIN",
+    items: [
+      { name: "System Dashboard", path: "/superadmin-dashboard", icon: LayoutDashboard, roles: ['SUPERADMIN'] },
+      { name: "Tenant Management", path: "/tenants", icon: Building2, roles: ['SUPERADMIN'] },
+    ],
+  },
+  {
     label: "MAIN",
     items: [
-      { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+      { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard, roles: ['ADMIN', 'EMPLOYEE', 'ASSET_MANAGER'] },
       { name: "Notifications", path: "/notifications", icon: Bell },
     ],
   },
   {
-    label: "MANAGEMENT",    
+    label: "DEPARTMENT HEAD",
     items: [
       { name: 'Assets', path: '/assets', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN', 'EMPLOYEE'] },
       { name: 'Allocation & Transfer', path: '/allocations', icon: ArrowRightLeft },
@@ -33,14 +40,14 @@ const navGroups = [
     ],
   },
   {
-    label: "REPORTS & COMPLIANCE",
+    label: "MANAGEMENT",
     items: [
       { name: 'Audit', path: '/audit', icon: ClipboardCheck, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
       { name: 'Reports', path: '/reports', icon: BarChart3, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
     ],
   },
   {
-    label: "ADMINISTRATION",
+    label: "REPORTS & COMPLIANCE",
     items: [
       { name: 'Organization Setup', path: '/admin/organization', icon: Building2, roles: ['ADMIN', 'SUPERADMIN'] },
       { name: "DB Assistant", path: "/admin/db-assistant", icon: Bot, roles: ['ADMIN', 'SUPERADMIN'] },
