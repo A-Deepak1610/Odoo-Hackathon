@@ -241,15 +241,15 @@ const DashboardPage = () => {
 
         {/* Right Col: Actions & Logs */}
         <div className="space-y-4">
-          <DashboardCard title="Quick Action Panel" className="bg-gradient-to-br from-slate-800 to-slate-900 border-none text-white">
+          <DashboardCard title="Quick Action Panel" className="bg-white border-slate-200">
             <div className="space-y-3">
-              <Button onClick={() => setIsRegisterModalOpen(true)} className="w-full bg-blue-600 hover:bg-blue-500 border-none justify-start gap-3 h-12">
+              <Button onClick={() => setIsRegisterModalOpen(true)} className="w-full bg-blue-600 hover:bg-blue-700 text-white justify-start gap-3 h-12">
                 <PlusCircle size={18} /> Register New Asset
               </Button>
-              <Button onClick={() => navigate('/asset-manager/allocations')} className="w-full bg-slate-700 hover:bg-slate-600 border-none justify-start gap-3 h-12 text-white">
+              <Button onClick={() => navigate('/asset-manager/allocations')} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 justify-start gap-3 h-12">
                 <ArrowRightLeft size={18} /> Initiate Transfer
               </Button>
-              <Button onClick={() => navigate('/asset-manager/maintenance')} className="w-full bg-slate-700 hover:bg-slate-600 border-none justify-start gap-3 h-12 text-white">
+              <Button onClick={() => navigate('/asset-manager/maintenance')} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 justify-start gap-3 h-12">
                 <Wrench size={18} /> Schedule Maintenance
               </Button>
             </div>

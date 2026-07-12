@@ -3,7 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area, ComposedChart
 } from 'recharts';
-import { Download, TrendingUp, TrendingDown, Wrench, Building2, Calendar, FileText, ArrowRight, Filter, X, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Download, TrendingUp, TrendingDown, Wrench, Building2, Calendar, FileText, ArrowRight, Filter, X, CheckCircle, AlertTriangle, Car } from 'lucide-react';
 import { DashboardCard } from '../components/dashboard';
 import { Button } from '../components/ui';
 
