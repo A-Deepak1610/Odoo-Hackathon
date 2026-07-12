@@ -5,66 +5,91 @@
 
 ---
 
-## 📖 Overview
+## 📖 Overall Vision
 
-**AssetFlow** is a comprehensive, modular asset management system designed to streamline internal resource allocation, maintenance, and booking. Built using modern web architecture, it provides an intuitive interface for employees while ensuring strict role-based access control (RBAC) and compliance auditing for administrators.
+The vision for **AssetFlow** is to simplify and digitize how organizations track, allocate, and maintain their physical assets and shared resources through a centralized ERP platform. This is not tied to any single industry; any organization with equipment, furniture, vehicles, or shared spaces (offices, schools, hospitals, factories, agencies) can use it.
+
+The platform aims to reduce manual tracking inefficiencies (spreadsheets, paper logs) by enabling structured asset lifecycles, centralized resource booking, and real-time visibility into who holds what, where it is, and its condition.
+
+AssetFlow focuses on delivering core ERP functionality with clean architecture, role-based workflows, and scalable module design without touching purchasing, invoicing, or accounting concerns.
+
+## 🎯 Mission & Problem Statement
+
+**The Mission:** To build a user-centric, responsive application that simplifies asset and resource management. The platform provides staff with intuitive tools to:
+- Set up departments, asset categories, and the employee directory
+- Register and track assets through their full lifecycle
+- Allocate assets to employees/departments with conflict handling
+- Book shared resources (rooms, vehicles, equipment) without overlaps
+- Run a structured maintenance approval workflow
+- Run structured audit cycles to catch discrepancies
+- Get notified of overdue returns, bookings, and maintenance events
+
+**The Problem Statement:** Organizations need an Enterprise Asset & Resource Management System to track assets through a flexible lifecycle (Available ↔ Under Maintenance, Allocated → Available), prevent double-allocation, book shared resources without overlap, route maintenance requests through approval workflows, and run scheduled audit cycles. The application must demonstrate proper ERP architecture, reusable modules, secure role-based workflows (with realistic account creation), and an intuitive UI/UX.
+
+## ✨ Core Features
+
+**1. Login / Signup Screen**
+- Authenticate users with realistic, non-self-elevating account creation (Signup creates an Employee account only).
+- Admin creates/promotes Department Heads and Asset Managers from the Employee Directory.
+
+**2. Dashboard / Home Screen**
+- Give every role a real-time operational snapshot.
+- KPI cards: Assets Available, Assets Allocated, Maintenance Today, Active Bookings, Pending Transfers, Upcoming Returns.
+- Overdue returns are highlighted separately; Quick actions included.
+
+**3. Organization Setup Screen (Admin Only)**
+- **Department Management:** Create/edit/deactivate, assign Head & Parent Department.
+- **Asset Category Management:** Create/edit categories with specific fields.
+- **Employee Directory:** Manage employees and promote them to Department Head or Asset Manager.
+
+**4. Asset Registration & Directory Screen**
+- Register: Name, Category, auto-generated Asset Tag, Serial Number, condition, location, and shared flag.
+- Search/filter by Asset Tag, QR code, category, status. Lifecycle tracking and per-asset history.
+
+**5. Asset Allocation & Transfer Screen**
+- Allocate asset with optional Expected Return Date (blocks double-allocation automatically).
+- Transfer workflow: Requested → Approved → Re-allocated. Overdue allocations are auto-flagged.
+
+**6. Resource Booking Screen**
+- Time-slot booking of shared resources with strict no-overlap validation.
+- Calendar view, booking status management, and reminder notifications.
+
+**7. Maintenance Management Screen**
+- Raise requests with priority and photos; route through approval workflow before work starts.
+- Asset status auto-updates to Under Maintenance on approval.
+
+**8. Asset Audit Screen**
+- Create an Audit Cycle, assign auditors, and mark assets (Verified/Missing/Damaged).
+- System auto-generates discrepancy reports and updates statuses on close.
+
+**9. Reports & Analytics Screen**
+- Asset utilization trends, maintenance frequency, and department-wise allocation summary.
+- Resource booking heatmap and exportable reports.
+
+**10. Activity Logs & Notifications Screen**
+- Full audit log of all actions. Notifications for asset assignments, approvals, overdue returns, and flags.
+
+## 👥 User Roles
+
+- **Admin:** Manages departments, asset categories, audit cycles, and employee/role assignment. Views org-wide analytics.
+- **Asset Manager:** Registers/allocates assets, approves transfers/maintenance/audit discrepancies.
+- **Department Head:** Views department assets, approves internal transfers, books resources.
+- **Employee:** Views own assets, books resources, raises maintenance requests, initiates transfers.
+
+## 🔄 Basic Workflow
+
+1. Admin sets up departments, categories, and promotes employees to Department Head / Asset Manager.
+2. Asset Manager registers a new asset (status: Available).
+3. Asset is allocated (blocked if already allocated) or marked as a shared bookable resource.
+4. Employees book shared resources by time slot (overlaps rejected).
+5. Holders raise maintenance requests (must be approved before repair starts).
+6. Assets are transferred/returned; overdue returns are flagged.
+7. Periodic audit cycles verify assets and generate discrepancy reports.
+8. All activity is tracked through notifications, logs, and reports.
+
+---
 
 ## 🏗️ System Architecture
-
-AssetFlow follows a decoupled client-server architecture, containerized with Docker for predictable deployments and environment consistency.
-
-```mermaid
-graph TD
-    %% User Interfaces
-    User([User / Browser])
-    
-    %% Frontend Layer
-    subgraph Frontend [Client - React 19 / Vite]
-        UI[Asset Manager UI Shell]
-        Routing[React Router DOM]
-        State[Context API / Hooks]
-    end
-
-    %% Backend Layer
-    subgraph Backend [Server - Node.js / Express]
-        API[Dynamic Express Router]
-        Middleware[Auth / Error Handling / Logger]
-        Modules[Domain Modules: Assets, Booking, Maintenance...]
-        Prisma[Prisma ORM Client]
-    end
-
-    %% Database Layer
-    subgraph Database [Storage]
-        MySQL[(MySQL 8)]
-    end
-
-    %% Connections
-    User -->|HTTP / REST| Frontend
-    Frontend -->|Axios JSON Requests| API
-    API --> Middleware
-    Middleware --> Modules
-    Modules --> Prisma
-    Prisma -->|SQL / TCP| MySQL
-```
-
-### Core Technologies
-*   **Frontend**: React 19, Vite, Tailwind CSS, Lucide Icons, Recharts, React Hook Form, Zod.
-*   **Backend**: Node.js, Express.js, Prisma ORM, Winston Logger, Jest + Supertest (Testing).
-*   **Database**: MySQL 8.
-*   **Infrastructure**: Docker, Docker Compose, GitHub Actions (CI/CD).
-
----
-
-## ✨ Key Features
-
-- **Centralized Asset Directory**: Register, categorize, and track lifecycle events of organizational hardware and software assets.
-- **Resource Booking Calendar**: An interactive scheduling interface (`react-big-calendar`) to reserve shared resources without conflicts.
-- **Allocation & Transfers**: Assign assets directly to employees and maintain a rigorous audit trail of inter-departmental transfers.
-- **Maintenance Management**: Log issues, schedule repairs, and track the cost/downtime of maintenance events.
-- **Granular RBAC**: Highly secured routes and data access specific to `SUPERADMIN`, `ADMIN`, `ASSET_MANAGER`, `DEPARTMENT_HEAD`, and `EMPLOYEE`.
-- **System Health & Logs**: Integrated Winston logging for system metrics and activity auditing.
-
----
 
 ## 📁 Repository Structure
 
