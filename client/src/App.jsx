@@ -14,6 +14,7 @@ import DbAssistant from './modules/db-assistant/pages/DbAssistant';
 
 // Auth Module exports
 import { AuthProvider, ProtectedRoute, LoginPage, SignupPage } from './modules/auth';
+import ProfilePage from './modules/auth/pages/ProfilePage';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="db-assistant" element={<DbAssistant />} />
+            <Route path="profile" element={<ProfilePage />} />
             
             {/* RBAC Route: Organization Setup requires ADMIN or SUPERADMIN privilege */}
             <Route 
@@ -43,11 +45,11 @@ function App() {
               } 
             />
             
-            {/* RBAC Route: Assets Management requires ADMIN, ASSET_MANAGER, DEPARTMENT_HEAD or SUPERADMIN */}
+            {/* RBAC Route: Assets Management requires ADMIN, ASSET_MANAGER, DEPARTMENT_HEAD, SUPERADMIN or EMPLOYEE */}
             <Route 
               path="assets" 
               element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN', 'EMPLOYEE']}>
                   <Assets />
                 </ProtectedRoute>
               } 

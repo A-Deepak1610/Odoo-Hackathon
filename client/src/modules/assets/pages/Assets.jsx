@@ -1,103 +1,139 @@
-import React, { useState } from "react";
-import { Search, Download, Plus, MoreHorizontal } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Search, Download, Plus, AlertTriangle, Loader2 } from "lucide-react";
+import { useAuth } from "../../auth";
+import { apiFetch } from "../../../services/api";
 
 const Assets = () => {
+  const { user } = useAuth();
+  const [assets, setAssets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  const statsCards = [
-    {
-      label: "Total Assets",
-      value: "7,342",
-      subtitle: "Across all departments",
-      color: "#1e3a8a",
-      bg: "#eff6ff",
-    },
-    {
-      label: "Available",
-      value: "2,156",
-      subtitle: "Ready for allocation",
-      color: "#16a34a",
-      bg: "#ecfdf5",
-    },
-    {
-      label: "Allocated",
-      value: "4,891",
-      subtitle: "Currently in use",
-      color: "#0891b2",
-      bg: "#ecfeff",
-    },
-    {
-      label: "Under Maintenance",
-      value: "295",
-      subtitle: "Scheduled returns",
-      color: "#b45309",
-      bg: "#fef3c7",
-    },
-  ];
-
-  const mockAssets = [
-    {
-      id: "AST-1042",
-      name: 'MacBook Pro 16"',
-      category: "Laptops",
-      department: "Engineering",
-      location: "HQ - Floor 3",
-      status: "Allocated",
-    },
-    {
-      id: "AST-1043",
-      name: "Dell XPS 15",
-      category: "Laptops",
-      department: "Marketing",
-      location: "HQ - Floor 2",
-      status: "Available",
-    },
-    {
-      id: "AST-1044",
-      name: "Projector A1",
-      category: "A/V Equipment",
-      department: "Facilities",
-      location: "Conf Room A",
-      status: "Reserved",
-    },
-    {
-      id: "AST-1045",
-      name: "Delivery Van #4",
-      category: "Vehicles",
-      department: "Logistics",
-      location: "Warehouse North",
-      status: "Under Maintenance",
-    },
-    {
-      id: "AST-1046",
-      name: "iPad Pro",
-      category: "Tablets",
-      department: "Sales",
-      location: "HQ - Floor 1",
-      status: "Lost",
-    },
-  ];
+  useEffect(() => {
+    const fetchAssets = async () => {
+      try {
+        setLoading(true);
+        const res = await apiFetch('/api/v1/assets');
+        const result = await res.json();
+        if (res.ok && result.success) {
+          setAssets(result.data);
+        } else {
+          setError(result.message || 'Failed to load assets.');
+        }
+      } catch (err) {
+        setError('Failed to connect to server.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAssets();
+  }, []);
 
   const getStatusColor = (status) => {
-    if (status === "Allocated") return { bg: "#dcfce7", text: "#15803d" };
-    if (status === "Available") return { bg: "#dbeafe", text: "#1d4ed8" };
-    if (status === "Reserved") return { bg: "#fef3c7", text: "#b45309" };
-    if (status === "Under Maintenance")
-      return { bg: "#fef3c7", text: "#b45309" };
-    if (status === "Lost") return { bg: "#fef2f2", text: "#dc2626" };
+    if (status === "ALLOCATED") return { bg: "#dcfce7", text: "#15803d" };
+    if (status === "AVAILABLE") return { bg: "#dbeafe", text: "#1d4ed8" };
+    if (status === "RESERVED") return { bg: "#fef3c7", text: "#b45309" };
+    if (status === "UNDER_MAINTENANCE" || status === "MAINTENANCE")
+      return { bg: "#fff3cd", text: "#856404" };
+    if (status === "LOST" || status === "RETIRED") return { bg: "#fef2f2", text: "#dc2626" };
     return { bg: "#f1f5f9", text: "#475569" };
   };
 
-  const filtered = mockAssets.filter(
-    (asset) =>
-      (searchTerm === "" ||
+  const filtered = assets.filter(
+    (asset) => {
+      const matchesSearch = searchTerm === "" ||
         asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        asset.id.includes(searchTerm)) &&
-      (categoryFilter === "All" || asset.category === categoryFilter) &&
-      (statusFilter === "All" || asset.status === statusFilter),
+        asset.assetTag.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const catName = asset.category?.name || "Uncategorized";
+      const matchesCategory = categoryFilter === "All" || catName === categoryFilter;
+      
+      const matchesStatus = statusFilter === "All" || asset.status === statusFilter;
+      
+      return matchesSearch && matchesCategory && matchesStatus;
+    }
   );
+
+  // Get unique categories from list
+  const categories = ["All", ...new Set(assets.map(a => a.category?.name).filter(Boolean))];
+  const statuses = ["All", ...new Set(assets.map(a => a.status).filter(Boolean))];
+
+  // ── RENDER LOADING STATE ───
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '75vh',
+        gap: '16px',
+        fontFamily: 'Inter, sans-serif'
+      }}>
+        <Loader2 size={36} className="animate-spin" style={{ color: '#1e3a8a' }} />
+        <p style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>
+          Retrieving asset catalog...
+        </p>
+      </div>
+    );
+  }
+
+  // ── RENDER ERROR STATE ───
+  if (error) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '75vh',
+        padding: '24px',
+        textAlign: 'center',
+        fontFamily: 'Inter, sans-serif'
+      }}>
+        <div style={{
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          backgroundColor: '#fee2e2',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#ef4444',
+          marginBottom: '16px'
+        }}>
+          <AlertTriangle size={28} />
+        </div>
+        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 8px 0' }}>
+          Unable to Load Assets
+        </h3>
+        <p style={{ fontSize: '14px', color: '#64748b', maxWidth: '380px', margin: '0 0 20px 0' }}>
+          {error}
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#1e3a8a',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  const isEmployee = user?.role === 'EMPLOYEE';
 
   return (
     <div
@@ -126,97 +162,55 @@ const Assets = () => {
               color: "#1e293b",
             }}
           >
-            Asset Registry
+            {isEmployee ? "My Assigned Assets" : "Asset Registry"}
           </h1>
           <p style={{ fontSize: "14px", color: "#64748b", margin: 0 }}>
-            View and manage all organization assets across departments and
-            locations.
+            {isEmployee 
+              ? "View details and conditions of materials currently assigned to you."
+              : "View and manage all organization assets across departments and locations."
+            }
           </p>
         </div>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "10px 18px",
-              background: "white",
-              color: "#64748b",
-              border: "1px solid #e2e8f0",
-              borderRadius: "8px",
-              fontSize: "13px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            <Download size={16} />
-            Export
-          </button>
-          <button
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "10px 18px",
-              background: "#1e3a8a",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "13px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            <Plus size={16} />
-            Register Asset
-          </button>
-        </div>
-      </div>
-
-      {/* ── STAT CARDS (4-col) ─── */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "16px",
-          marginBottom: "28px",
-        }}
-      >
-        {statsCards.map((stat, i) => (
-          <div
-            key={i}
-            style={{
-              background: "white",
-              borderRadius: "12px",
-              padding: "20px",
-              border: "1px solid #e2e8f0",
-            }}
-          >
-            <div
+        {!isEmployee && (
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
               style={{
-                fontSize: "12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 18px",
+                background: "white",
                 color: "#64748b",
-                fontWeight: 500,
-                marginBottom: "4px",
+                border: "1px solid #e2e8f0",
+                borderRadius: "8px",
+                fontSize: "13px",
+                fontWeight: 600,
+                cursor: "pointer",
               }}
             >
-              {stat.label}
-            </div>
-            <div
+              <Download size={16} />
+              Export
+            </button>
+            <button
               style={{
-                fontSize: "24px",
-                fontWeight: 700,
-                color: "#1e293b",
-                marginBottom: "2px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 18px",
+                background: "#1e3a8a",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "13px",
+                fontWeight: 600,
+                cursor: "pointer",
               }}
             >
-              {stat.value}
-            </div>
-            <div style={{ fontSize: "12px", color: "#94a3b8" }}>
-              {stat.subtitle}
-            </div>
+              <Plus size={16} />
+              Register Asset
+            </button>
           </div>
-        ))}
+        )}
       </div>
 
       {/* ── MAIN CONTENT ─── */}
@@ -228,27 +222,29 @@ const Assets = () => {
           padding: "20px",
         }}
       >
-        <h2
-          style={{
-            fontSize: "15px",
-            fontWeight: 600,
-            color: "#1e293b",
-            margin: "0 0 16px 0",
-          }}
-        >
-          Asset Directory
-        </h2>
-        <p style={{ fontSize: "13px", color: "#64748b", margin: "0 0 16px 0" }}>
-          {filtered.length} assets total
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2
+            style={{
+              fontSize: "15px",
+              fontWeight: 600,
+              color: "#1e293b",
+              margin: 0,
+            }}
+          >
+            Asset Directory
+          </h2>
+          <span style={{ fontSize: "13px", color: "#64748b" }}>
+            {filtered.length} asset{filtered.length !== 1 ? 's' : ''} found
+          </span>
+        </div>
 
         {/* Search & Filters */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
+            gridTemplateColumns: "2fr 1fr 1fr",
             gap: "12px",
-            marginBottom: "16px",
+            marginBottom: "20px",
           }}
         >
           {/* Search */}
@@ -266,14 +262,14 @@ const Assets = () => {
             />
             <input
               type="text"
-              placeholder="Search by name or ID..."
+              placeholder="Search by asset name or tag..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{
                 width: "100%",
                 paddingLeft: "36px",
                 paddingRight: "12px",
-                height: "36px",
+                height: "38px",
                 border: "1px solid #e2e8f0",
                 borderRadius: "6px",
                 background: "#f8fafc",
@@ -299,12 +295,10 @@ const Assets = () => {
               cursor: "pointer",
             }}
           >
-            <option>All Categories</option>
-            <option>Laptops</option>
-            <option>A/V Equipment</option>
-            <option>Vehicles</option>
-            <option>Tablets</option>
-            <option>Furniture</option>
+            <option value="All">All Categories</option>
+            {categories.filter(c => c !== "All").map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
           </select>
           {/* Status Filter */}
           <select
@@ -321,218 +315,131 @@ const Assets = () => {
               cursor: "pointer",
             }}
           >
-            <option>All Statuses</option>
-            <option>Available</option>
-            <option>Allocated</option>
-            <option>Reserved</option>
-            <option>Under Maintenance</option>
-            <option>Lost</option>
+            <option value="All">All Statuses</option>
+            {statuses.filter(s => s !== "All").map(stat => (
+              <option key={stat} value={stat}>{stat.replace(/_/g, ' ')}</option>
+            ))}
           </select>
         </div>
 
         {/* Table */}
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid #e2e8f0" }}>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "10px 0",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Tag
-                </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "10px 12px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Name
-                </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "10px 12px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Category
-                </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "10px 12px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Department
-                </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "10px 12px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Location
-                </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "10px 12px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Status
-                </th>
-                <th
-                  style={{
-                    textAlign: "center",
-                    padding: "10px 12px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((asset) => {
-                const statusColor = getStatusColor(asset.status);
-                return (
-                  <tr
-                    key={asset.id}
-                    style={{
-                      borderBottom: "1px solid #e2e8f0",
-                      transition: "background 0.2s",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.background = "#f8fafc")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.background = "transparent")
-                    }
-                  >
-                    <td
+        {filtered.length === 0 ? (
+          <div style={{ padding: '36px 0', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
+            No assets match your search parameters.
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid #e2e8f0", textAlign: "left" }}>
+                  <th style={{ padding: "12px 8px", fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Tag ID</th>
+                  <th style={{ padding: "12px 8px", fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Name</th>
+                  <th style={{ padding: "12px 8px", fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Category</th>
+                  <th style={{ padding: "12px 8px", fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Location</th>
+                  <th style={{ padding: "12px 8px", fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Condition</th>
+                  <th style={{ padding: "12px 8px", fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Status</th>
+                  {!isEmployee && (
+                    <th style={{ padding: "12px 8px", fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase", textAlign: "center" }}>Custodian</th>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((asset) => {
+                  const statusColor = getStatusColor(asset.status);
+                  return (
+                    <tr
+                      key={asset.id}
                       style={{
-                        padding: "12px 0",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        color: "#1e3a8a",
-                        fontFamily: "monospace",
+                        borderBottom: "1px solid #f1f5f9",
+                        transition: "background 0.2s",
                       }}
+                      onMouseOver={(e) => (e.currentTarget.style.background = "#f8fafc")}
+                      onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
                     >
-                      {asset.id}
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        fontSize: "13px",
-                        fontWeight: 500,
-                        color: "#1e293b",
-                      }}
-                    >
-                      {asset.name}
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        fontSize: "13px",
-                        color: "#64748b",
-                      }}
-                    >
-                      {asset.category}
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        fontSize: "13px",
-                        color: "#64748b",
-                      }}
-                    >
-                      {asset.department}
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        fontSize: "13px",
-                        color: "#64748b",
-                      }}
-                    >
-                      {asset.location}
-                    </td>
-                    <td style={{ padding: "12px" }}>
-                      <span
+                      <td
                         style={{
-                          background: statusColor.bg,
-                          color: statusColor.text,
-                          padding: "4px 10px",
-                          borderRadius: "6px",
-                          fontSize: "11px",
+                          padding: "12px 8px",
+                          fontSize: "12.5px",
                           fontWeight: 600,
-                          display: "inline-block",
+                          color: "#1e3a8a",
+                          fontFamily: "monospace",
                         }}
                       >
-                        {asset.status}
-                      </span>
-                    </td>
-                    <td style={{ textAlign: "center", padding: "12px" }}>
-                      <button
+                        {asset.assetTag}
+                      </td>
+                      <td
                         style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "#94a3b8",
-                          padding: "4px",
+                          padding: "12px 8px",
+                          fontSize: "13px",
+                          fontWeight: 500,
+                          color: "#0f172a",
                         }}
-                        onMouseOver={(e) =>
-                          (e.currentTarget.style.color = "#1e293b")
-                        }
-                        onMouseOut={(e) =>
-                          (e.currentTarget.style.color = "#94a3b8")
-                        }
                       >
-                        <MoreHorizontal size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                        {asset.name}
+                      </td>
+                      <td
+                        style={{
+                          padding: "12px 8px",
+                          fontSize: "13px",
+                          color: "#475569",
+                        }}
+                      >
+                        {asset.category?.name || "General"}
+                      </td>
+                      <td
+                        style={{
+                          padding: "12px 8px",
+                          fontSize: "13px",
+                          color: "#475569",
+                        }}
+                      >
+                        {asset.location || "N/A"}
+                      </td>
+                      <td
+                        style={{
+                          padding: "12px 8px",
+                          fontSize: "13px",
+                          color: "#0f766e",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {asset.condition}
+                      </td>
+                      <td style={{ padding: "12px 8px" }}>
+                        <span
+                          style={{
+                            background: statusColor.bg,
+                            color: statusColor.text,
+                            padding: "3px 8px",
+                            borderRadius: "6px",
+                            fontSize: "11px",
+                            fontWeight: 600,
+                            display: "inline-block",
+                            textTransform: "capitalize"
+                          }}
+                        >
+                          {asset.status.toLowerCase().replace(/_/g, ' ')}
+                        </span>
+                      </td>
+                      {!isEmployee && (
+                        <td
+                          style={{
+                            padding: "12px 8px",
+                            fontSize: "13px",
+                            color: "#475569",
+                            textAlign: "center"
+                          }}
+                        >
+                          {asset.currentEmployee?.name || "Unassigned"}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
