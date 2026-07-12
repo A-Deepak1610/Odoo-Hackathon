@@ -1,5 +1,4 @@
 import React, { Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ASSET_MANAGER_ROUTES } from './constants';
 import { AssetManagerLayout } from '../components/layout';

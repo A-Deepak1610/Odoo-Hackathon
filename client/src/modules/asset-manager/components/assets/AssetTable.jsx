@@ -1,23 +1,14 @@
 import React, { useState } from 'react';
-<<<<<<< HEAD
-=======
 import { useNavigate } from 'react-router-dom';
->>>>>>> c6229ab (resolved bug in imports)
 import { MoreVertical, ArrowUpDown, QrCode, FileEdit, Trash2, ShieldAlert } from 'lucide-react';
 import { AssetStatusBadge } from './AssetStatusBadge';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, EmptyState, Button } from '../ui';
 
 export const AssetTable = ({ data, isLoading }) => {
-<<<<<<< HEAD
-  const [selectedAll, setSelectedAll] = useState(false);
-  const [selectedItems, setSelectedItems] = useState([]);
-
-=======
   const navigate = useNavigate();
   const [selectedAll, setSelectedAll] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
   
->>>>>>> c6229ab (resolved bug in imports)
   const toggleAll = () => {
     if (selectedAll) {
       setSelectedItems([]);
@@ -109,11 +100,7 @@ export const AssetTable = ({ data, isLoading }) => {
               <TableCell className="font-mono font-medium text-slate-700">{asset.tag}</TableCell>
               <TableCell 
                 className="font-medium text-slate-900 hover:text-blue-600 cursor-pointer transition-colors"
-<<<<<<< HEAD
-                onClick={() => window.location.href = `/asset-manager/directory/${asset.id}`}
-=======
                 onClick={() => navigate(`/asset-manager/directory/${asset.id}`)}
->>>>>>> c6229ab (resolved bug in imports)
               >
                 {asset.name}
               </TableCell>

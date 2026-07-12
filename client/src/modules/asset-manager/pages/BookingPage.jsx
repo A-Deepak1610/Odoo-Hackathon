@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import React, { useState } from 'react';
-=======
 import React, { useState, useEffect } from 'react';
->>>>>>> c6229ab (resolved bug in imports)
 import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -12,82 +8,29 @@ import {
 } from 'lucide-react';
 import { DashboardCard } from '../components/dashboard';
 import { Button, Badge, Input, Select, Label, Card, CardContent, CardHeader, CardTitle } from '../components/ui';
-<<<<<<< HEAD
-=======
 import { getAllBookingsApi, getBookableResourcesApi, createBookingApi, cancelBookingApi } from '../api';
 import { useForm } from 'react-hook-form';
->>>>>>> c6229ab (resolved bug in imports)
 
 // Setup localizer for react-big-calendar
 const localizer = momentLocalizer(moment);
 
 const BookingStatusBadge = ({ status }) => {
   const variantMap = {
-<<<<<<< HEAD
-    'Confirmed': 'success',
-    'Pending': 'warning',
-    'Conflict': 'danger',
-    'Completed': 'neutral',
-=======
     'UPCOMING': 'success',
     'ONGOING': 'success',
     'PENDING': 'warning',
     'CONFLICT': 'danger',
     'COMPLETED': 'neutral',
     'CANCELLED': 'neutral',
->>>>>>> c6229ab (resolved bug in imports)
   };
   return <Badge variant={variantMap[status] || 'neutral'}>{status}</Badge>;
 };
 
-<<<<<<< HEAD
-// Placeholder Data
-const EVENTS = [
-  {
-    id: 1,
-    title: 'Marketing Pitch - Conf Projector A',
-    start: new Date(new Date().setHours(10, 0, 0, 0)),
-    end: new Date(new Date().setHours(12, 0, 0, 0)),
-    status: 'Confirmed',
-    user: 'Sarah Jenkins',
-    type: 'booked',
-    desc: 'Using the main projector for Q3 marketing pitch.'
-  },
-  {
-    id: 2,
-    title: 'Monthly Review (CONFLICT)',
-    start: new Date(new Date().setHours(11, 30, 0, 0)),
-    end: new Date(new Date().setHours(13, 0, 0, 0)),
-    status: 'Conflict',
-    user: 'Mike Ross',
-    type: 'conflict',
-    desc: 'Requested projector but slot is overlapping with Marketing.'
-  },
-  {
-    id: 3,
-    title: 'Available Slot - Drone Kit',
-    start: new Date(new Date().setHours(14, 0, 0, 0)),
-    end: new Date(new Date().setHours(16, 0, 0, 0)),
-    type: 'available',
-    desc: 'Standard maintenance window cleared.'
-  }
-];
-
-const UPCOMING_BOOKINGS = [
-  { id: 10, resource: 'Conference Projector A', user: 'Sarah Jenkins', time: 'Today, 10:00 AM - 12:00 PM', status: 'Confirmed' },
-  { id: 11, resource: 'Sony A7IV Camera Kit', user: 'Alex Chen', time: 'Tomorrow, 09:00 AM - 05:00 PM', status: 'Pending' },
-  { id: 12, resource: 'Conference Projector A', user: 'Mike Ross', time: 'Today, 11:30 AM - 01:00 PM', status: 'Conflict' }
-];
-
-=======
->>>>>>> c6229ab (resolved bug in imports)
 
 const BookingPage = () => {
   const [isBookDialogOpen, setIsBookDialogOpen] = useState(false);
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-<<<<<<< HEAD
-=======
   
   const [bookings, setBookings] = useState([]);
   const [resources, setResources] = useState([]);
@@ -165,7 +108,6 @@ const BookingPage = () => {
       }
     }
   };
->>>>>>> c6229ab (resolved bug in imports)
 
   // Custom Event Styling
   const eventStyleGetter = (event) => {
@@ -304,11 +246,7 @@ const BookingPage = () => {
                   >
                     <Edit size={14} /> Reschedule
                   </Button>
-<<<<<<< HEAD
-                  <Button variant="danger" size="sm" className="gap-1.5">
-=======
                   <Button variant="danger" size="sm" className="gap-1.5" onClick={handleCancelBooking}>
->>>>>>> c6229ab (resolved bug in imports)
                     <Trash2 size={14} /> Cancel
                   </Button>
                 </div>
@@ -319,10 +257,7 @@ const BookingPage = () => {
           {/* Upcoming Bookings Cards */}
           <DashboardCard title="Upcoming Bookings">
             <div className="space-y-3">
-<<<<<<< HEAD
-=======
               {UPCOMING_BOOKINGS.length === 0 && <p className="text-xs text-slate-400 italic">No upcoming bookings.</p>}
->>>>>>> c6229ab (resolved bug in imports)
               {UPCOMING_BOOKINGS.map(booking => (
                 <div key={booking.id} className="p-3 border border-slate-100 rounded-lg hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-sm transition-all cursor-pointer group bg-white">
                   <div className="flex justify-between items-start mb-2">
@@ -342,62 +277,21 @@ const BookingPage = () => {
                 </div>
               ))}
             </div>
-<<<<<<< HEAD
-            <Button variant="ghost" className="w-full mt-4 gap-1 text-blue-600">
-              View All Bookings <ChevronRight size={14} />
-            </Button>
-=======
             {UPCOMING_BOOKINGS.length > 0 && (
               <Button variant="ghost" className="w-full mt-4 gap-1 text-blue-600">
                 View All Bookings <ChevronRight size={14} />
               </Button>
             )}
->>>>>>> c6229ab (resolved bug in imports)
           </DashboardCard>
         </div>
       </div>
 
-<<<<<<< HEAD
-      {/* Book Resource Dialog (Simplified for UI Preview) */}
-=======
       {/* Book Resource Dialog */}
->>>>>>> c6229ab (resolved bug in imports)
       {isBookDialogOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center">
               <h3 className="font-bold text-slate-900">Book a Resource</h3>
-<<<<<<< HEAD
-              <button onClick={() => setIsBookDialogOpen(false)} className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-1 rounded-md transition-colors"><X size={18}/></button>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="space-y-1.5">
-                <Label>Select Resource *</Label>
-                <Select>
-                  <option>Conference Projector A</option>
-                  <option>Sony A7IV Camera Kit</option>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label>Start Date & Time</Label>
-                  <Input type="datetime-local" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>End Date & Time</Label>
-                  <Input type="datetime-local" />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Purpose / Notes</Label>
-                <textarea rows="2" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"></textarea>
-              </div>
-            </div>
-            <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
-              <Button variant="secondary" onClick={() => setIsBookDialogOpen(false)}>Cancel</Button>
-              <Button onClick={() => setIsBookDialogOpen(false)}>Confirm Booking</Button>
-            </div>
-=======
               <button onClick={() => {setIsBookDialogOpen(false); reset();}} className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-1 rounded-md transition-colors"><X size={18}/></button>
             </div>
             <form onSubmit={handleSubmit(onBookSubmit)}>
@@ -427,7 +321,6 @@ const BookingPage = () => {
                 <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Booking...' : 'Confirm Booking'}</Button>
               </div>
             </form>
->>>>>>> c6229ab (resolved bug in imports)
           </div>
         </div>
       )}
