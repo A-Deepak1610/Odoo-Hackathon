@@ -10,6 +10,7 @@ import Maintenance from './modules/maintenance/pages/Maintenance';
 import Audit from './modules/audit/pages/Audit';
 import Reports from './modules/reports/pages/Reports';
 import Notifications from './modules/notifications/pages/Notifications';
+import DbAssistant from './modules/db-assistant/pages/DbAssistant';
 
 // Auth Module exports
 import { AuthProvider, ProtectedRoute, LoginPage, SignupPage } from './modules/auth';
@@ -17,6 +18,22 @@ import { AuthProvider, ProtectedRoute, LoginPage, SignupPage } from './modules/a
 function App() {
   return (
     <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<AppLayout />}>
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="organization" element={<Organization />} />
+          <Route path="assets" element={<Assets />} />
+          <Route path="allocations" element={<Allocations />} />
+          <Route path="booking" element={<Booking />} />
+          <Route path="maintenance" element={<Maintenance />} />
+          <Route path="audit" element={<Audit />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="notifications" element={<Notifications />} />
+          <Route path="db-assistant" element={<DbAssistant />} />
+          <Route path="*" element={<div className="p-8">Work in progress</div>} />
+        </Route>
+      </Routes>
       <AuthProvider>
         <Routes>
           {/* Public Authentication Routes */}
