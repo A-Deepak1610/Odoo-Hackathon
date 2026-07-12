@@ -1,278 +1,373 @@
-import React, { useState } from 'react';
-import { Wrench, Plus, ChevronRight, Activity } from 'lucide-react';
-import PageHeader from '../../../shared/components/PageHeader';
-import StatCard from '../../../shared/components/StatCard';
-import Button from '../../../shared/components/Button';
-import Modal from '../../../shared/components/Modal';
-import StatusPill from '../../../shared/components/StatusPill';
-
-// --- MOCK DATA ---
-const initialMaintenance = [
-  { id: 'MNT-4021', asset: 'HVAC System Unit B', issue: 'Not cooling properly', reportedBy: 'Facilities', priority: 'High', stage: 'In Progress', progress: 60 },
-  { id: 'MNT-4022', asset: 'Delivery Van #4', issue: 'Brake pad replacement', reportedBy: 'Logistics', priority: 'Medium', stage: 'Technician Assigned', progress: 40 },
-  { id: 'MNT-4023', asset: 'Projector A1', issue: 'Bulb burned out', reportedBy: 'Marketing', priority: 'Low', stage: 'Pending', progress: 20 },
-  { id: 'MNT-4024', asset: 'MacBook Pro 16"', issue: 'Keyboard keys sticky', reportedBy: 'Sarah Jenkins', priority: 'Medium', stage: 'Resolved', progress: 100 },
-];
+import React, { useState, useEffect } from "react";
+import { Wrench, Loader2, AlertTriangle, CheckCircle, Plus, Clipboard, Clock, HeartCrack } from "lucide-react";
+import { apiFetch } from "../../../services/api";
 
 const Maintenance = () => {
-  const [requests, setRequests] = useState(initialMaintenance);
-  
-  // Modal State
-  const [isRaiseModalOpen, setIsRaiseModalOpen] = useState(false);
-  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  
-  // Forms
-  const [raiseForm, setRaiseForm] = useState({
-    asset: '', issue: '', reportedBy: '', priority: 'Medium'
-  });
-  const [updateForm, setUpdateForm] = useState(null);
+  const [activeTab, setActiveTab] = useState("tickets"); // tickets | report
+  const [myAssets, setMyAssets] = useState([]);
+  const [tickets, setTickets] = useState([]);
 
-  // Stats Calculation
-  const totalRequests = requests.length;
-  const inProgressCount = requests.filter(r => r.stage === 'In Progress' || r.stage === 'Technician Assigned').length;
-  const resolvedCount = requests.filter(r => r.stage === 'Resolved').length;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Actions
-  const handleRaiseSubmit = () => {
-    const newReq = {
-      ...raiseForm,
-      id: `MNT-${4000 + requests.length + 1}`,
-      stage: 'Pending',
-      progress: 0,
-    };
-    setRequests([newReq, ...requests]);
-    setIsRaiseModalOpen(false);
-    setRaiseForm({ asset: '', issue: '', reportedBy: '', priority: 'Medium' });
+  // Form State
+  const [selectedAssetId, setSelectedAssetId] = useState("");
+  const [priority, setPriority] = useState("MEDIUM");
+  const [description, setDescription] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
+
+  const [submitting, setSubmitting] = useState(false);
+  const [formMsg, setFormMsg] = useState({ text: "", type: "" });
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [assetsRes, ticketsRes] = await Promise.all([
+        apiFetch("/api/v1/assets/my"),
+        apiFetch("/api/v1/maintenance/my-requests")
+      ]);
+
+      const assetsResult = await assetsRes.json();
+      const ticketsResult = await ticketsRes.json();
+
+      if (assetsRes.ok && ticketsRes.ok) {
+        setMyAssets(assetsResult.data);
+        setTickets(ticketsResult.data);
+      } else {
+        setError(assetsResult.message || ticketsResult.message || "Failed to load maintenance dashboard.");
+      }
+    } catch (err) {
+      setError("Failed to connect to server.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const openUpdateModal = (req) => {
-    setUpdateForm({ ...req });
-    setIsUpdateModalOpen(true);
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleReportIssue = async (e) => {
+    e.preventDefault();
+    setFormMsg({ text: "", type: "" });
+
+    if (!selectedAssetId) {
+      setFormMsg({ text: "Please select an asset.", type: "error" });
+      return;
+    }
+
+    if (!description || description.trim() === "") {
+      setFormMsg({ text: "Please enter an issue description.", type: "error" });
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const res = await apiFetch("/api/v1/maintenance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assetId: selectedAssetId,
+          description,
+          priority,
+          photoUrl: photoUrl || undefined
+        })
+      });
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        setFormMsg({ text: "Maintenance request reported successfully!", type: "success" });
+        setSelectedAssetId("");
+        setPriority("MEDIUM");
+        setDescription("");
+        setPhotoUrl("");
+
+        // Reload lists
+        const refreshed = await apiFetch("/api/v1/maintenance/my-requests");
+        const refData = await refreshed.json();
+        if (refreshed.ok) setTickets(refData.data);
+        setTimeout(() => setActiveTab("tickets"), 1500);
+      } else {
+        setFormMsg({ text: result.message || "Failed to submit request.", type: "error" });
+      }
+    } catch (err) {
+      setFormMsg({ text: "Network error occurred.", type: "error" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleUpdateSubmit = () => {
-    setRequests(requests.map(r => r.id === updateForm.id ? updateForm : r));
-    setIsUpdateModalOpen(false);
+  const getPriorityStyle = (pri) => {
+    if (pri === "HIGH") return { color: "#dc2626", bg: "#fef2f2", label: "High" };
+    if (pri === "MEDIUM") return { color: "#d97706", bg: "#fffbeb", label: "Medium" };
+    return { color: "#2563eb", bg: "#eff6ff", label: "Low" };
   };
 
-  // Helpers
-  const getPriorityStyle = (priority) => {
-    if (priority === 'High') return 'bg-red-50 text-red-600';
-    if (priority === 'Medium') return 'bg-amber-50 text-amber-600';
-    return 'bg-green-50 text-green-700';
+  const getStatusBadge = (status) => {
+    if (status === "PENDING") return { bg: "#f1f5f9", text: "#475569" };
+    if (status === "APPROVED") return { bg: "#e0f2fe", text: "#0369a1" };
+    if (status === "IN_PROGRESS") return { bg: "#fef3c7", text: "#b45309" };
+    if (status === "RESOLVED") return { bg: "#dcfce7", text: "#15803d" };
+    return { bg: "#fee2e2", text: "#b91c1c" };
   };
 
-  const getStageStyle = (stage) => {
-    if (stage === 'In Progress') return 'bg-amber-50 text-amber-600';
-    if (stage === 'Resolved') return 'bg-green-50 text-green-700';
-    if (stage === 'Technician Assigned') return 'bg-blue-50 text-blue-700';
-    return 'bg-slate-100 text-slate-600';
-  };
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '75vh', gap: '16px', fontFamily: 'Inter, sans-serif' }}>
+        <Loader2 size={36} className="animate-spin" style={{ color: '#1e3a8a' }} />
+        <p style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Loading maintenance dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '75vh', padding: '24px', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>
+        <AlertTriangle size={36} color="#ef4444" style={{ marginBottom: "16px" }} />
+        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 8px 0' }}>Failed to Load Dashboard</h3>
+        <p style={{ fontSize: '14px', color: '#64748b', maxWidth: '380px', margin: '0 0 20px 0' }}>{error}</p>
+        <button onClick={fetchData} style={{ padding: '8px 16px', backgroundColor: '#1e3a8a', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Retry</button>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8 pb-20 max-w-7xl mx-auto font-sans">
-      <PageHeader 
-        title="Maintenance Requests" 
-        description="Track repair requests, assign technicians, and monitor maintenance workflows."
-        actions={<Button onClick={() => setIsRaiseModalOpen(true)} icon={Plus}>Raise Request</Button>}
-      />
-
-      {/* STAT CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard title="Total Requests" value={totalRequests} subtitle="This month" color="indigo" icon={Wrench} />
-        <StatCard title="In Progress" value={inProgressCount} subtitle="Being worked on" color="amber" icon={Activity} />
-        <StatCard title="Resolved" value={resolvedCount} subtitle="Successfully fixed" color="emerald" icon={Wrench} />
-        <StatCard title="Avg. Time" value="2.3d" subtitle="Days to resolve" color="purple" icon={Wrench} />
-      </div>
-
-      {/* MAINTENANCE CARDS LIST */}
-      <div className="flex flex-col gap-3">
-        {requests.map((req) => (
-          <div 
-            key={req.id} 
-            className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:border-primary-700 hover:shadow-md transition-all group"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-5 items-start">
-              
-              {/* Left: Asset & Issue */}
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-[11px] font-mono text-primary-800 font-semibold">{req.id}</span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${getStageStyle(req.stage)}`}>
-                    {req.stage}
-                  </span>
-                </div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-1">{req.asset}</h3>
-                <p className="text-[13px] text-gray-500 mb-1.5">{req.issue}</p>
-                <p className="text-[11px] text-gray-400 m-0">Reported by {req.reportedBy}</p>
-              </div>
-
-              {/* Center: Priority & Progress */}
-              <div className="flex flex-col justify-center h-full">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${getPriorityStyle(req.priority)}`}>
-                    {req.priority} Priority
-                  </span>
-                </div>
-                <div>
-                  <div className="text-[10px] text-gray-400 font-semibold mb-1">
-                    Workflow Progress: {req.progress}%
-                  </div>
-                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full transition-all duration-300 ${req.progress === 100 ? 'bg-emerald-500' : 'bg-primary-700'}`}
-                      style={{ width: `${req.progress}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Right: Action */}
-              <div className="flex items-center justify-center h-full">
-                <button 
-                  onClick={() => openUpdateModal(req)}
-                  className="w-8 h-8 rounded-md bg-white border border-gray-200 flex items-center justify-center text-gray-500 transition-all group-hover:bg-primary-50 group-hover:border-primary-700 group-hover:text-primary-700 hover:!bg-primary-100"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* --- RAISE REQUEST MODAL --- */}
-      <Modal
-        isOpen={isRaiseModalOpen}
-        onClose={() => setIsRaiseModalOpen(false)}
-        title="Raise Maintenance Request"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setIsRaiseModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleRaiseSubmit}>Submit Request</Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Asset Name / Tag</label>
-            <input 
-              value={raiseForm.asset} 
-              onChange={e => setRaiseForm({...raiseForm, asset: e.target.value})} 
-              className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-primary-500 outline-none" 
-              placeholder="e.g. HVAC System Unit B"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Issue Description</label>
-            <textarea 
-              value={raiseForm.issue} 
-              onChange={e => setRaiseForm({...raiseForm, issue: e.target.value})} 
-              className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-primary-500 outline-none h-20 resize-none" 
-              placeholder="Describe the problem..."
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Reported By</label>
-              <input 
-                value={raiseForm.reportedBy} 
-                onChange={e => setRaiseForm({...raiseForm, reportedBy: e.target.value})} 
-                className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-primary-500 outline-none" 
-                placeholder="Name or Dept"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-              <select 
-                value={raiseForm.priority} 
-                onChange={e => setRaiseForm({...raiseForm, priority: e.target.value})} 
-                className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm focus:ring-primary-500 outline-none"
-              >
-                <option>Low</option>
-                <option>Medium</option>
-                <option>High</option>
-              </select>
-            </div>
-          </div>
+    <div style={{ padding: "24px 32px", maxWidth: "1400px", margin: "0 auto", fontFamily: "Inter, sans-serif" }}>
+      
+      {/* Header */}
+      <div style={{ display: "flex", justifyContext: "space-between", alignItems: "center", marginBottom: "28px", justifyContent: "space-between" }}>
+        <div>
+          <h1 style={{ fontSize: "26px", fontWeight: 700, margin: "0 0 6px 0", color: "#1e293b" }}>Maintenance Portal</h1>
+          <p style={{ fontSize: "14px", color: "#64748b", margin: 0 }}>Report equipment issues and track technician progress.</p>
         </div>
-      </Modal>
+        
+        <div style={{ display: "flex", backgroundColor: "#f1f5f9", padding: "4px", borderRadius: "8px" }}>
+          <button 
+            onClick={() => setActiveTab("tickets")}
+            style={{
+              padding: "6px 16px",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "13px",
+              fontWeight: 600,
+              cursor: "pointer",
+              backgroundColor: activeTab === "tickets" ? "white" : "transparent",
+              color: activeTab === "tickets" ? "#1e3a8a" : "#64748b",
+              boxShadow: activeTab === "tickets" ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
+            }}
+          >
+            Issue Tickets
+          </button>
+          <button 
+            onClick={() => setActiveTab("report")}
+            style={{
+              padding: "6px 16px",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "13px",
+              fontWeight: 600,
+              cursor: "pointer",
+              backgroundColor: activeTab === "report" ? "white" : "transparent",
+              color: activeTab === "report" ? "#1e3a8a" : "#64748b",
+              boxShadow: activeTab === "report" ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
+            }}
+          >
+            Report New Issue
+          </button>
+        </div>
+      </div>
 
-      {/* --- UPDATE REQUEST MODAL --- */}
-      {updateForm && (
-        <Modal
-          isOpen={isUpdateModalOpen}
-          onClose={() => setIsUpdateModalOpen(false)}
-          title={`Update Request ${updateForm.id}`}
-          footer={
-            <>
-              <Button variant="secondary" onClick={() => setIsUpdateModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleUpdateSubmit}>Save Changes</Button>
-            </>
-          }
-        >
-          <div className="space-y-4">
-            <div className="p-3 bg-gray-50 border border-gray-200 rounded-md mb-4">
-              <p className="text-sm font-semibold text-gray-900">{updateForm.asset}</p>
-              <p className="text-xs text-gray-500">{updateForm.issue}</p>
+      {/* Tab: Tickets list */}
+      {activeTab === "tickets" && (
+        <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "20px" }}>
+          <h2 style={{ fontSize: "15px", fontWeight: 600, color: "#1e293b", margin: "0 0 16px 0" }}>Reported Issues</h2>
+          {tickets.length === 0 ? (
+            <div style={{ padding: "36px 0", textAlign: "center", color: "#64748b", fontSize: "14px" }}>
+              No maintenance requests submitted. Click "Report New Issue" to file a ticket.
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Stage</label>
-              <select 
-                value={updateForm.stage} 
-                onChange={e => {
-                  const newStage = e.target.value;
-                  let newProgress = updateForm.progress;
-                  // Auto-update progress based on stage selection
-                  if (newStage === 'Pending') newProgress = 0;
-                  if (newStage === 'Technician Assigned') newProgress = 25;
-                  if (newStage === 'In Progress') newProgress = 50;
-                  if (newStage === 'Resolved') newProgress = 100;
-
-                  setUpdateForm({...updateForm, stage: newStage, progress: newProgress});
-                }} 
-                className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm focus:ring-primary-500 outline-none"
-              >
-                <option>Pending</option>
-                <option>Technician Assigned</option>
-                <option>In Progress</option>
-                <option>Resolved</option>
-              </select>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
+                    <th style={{ padding: "12px 8px" }}>Asset</th>
+                    <th style={{ padding: "12px 8px" }}>Asset Tag</th>
+                    <th style={{ padding: "12px 8px" }}>Issue Description</th>
+                    <th style={{ padding: "12px 8px" }}>Priority</th>
+                    <th style={{ padding: "12px 8px" }}>Reported Date</th>
+                    <th style={{ padding: "12px 8px" }}>Status</th>
+                    <th style={{ padding: "12px 8px" }}>Assigned Tech</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tickets.map((ticket) => {
+                    const statusBadge = getStatusBadge(ticket.status);
+                    const pri = getPriorityStyle(ticket.priority);
+                    return (
+                      <tr key={ticket.id} style={{ borderBottom: "1px solid #f8fafc" }}>
+                        <td style={{ padding: "12px 8px", fontWeight: 500, color: "#0f172a" }}>{ticket.asset?.name}</td>
+                        <td style={{ padding: "12px 8px", fontFamily: "monospace", color: "#64748b" }}>{ticket.asset?.assetTag}</td>
+                        <td style={{ padding: "12px 8px", color: "#475569" }}>{ticket.description}</td>
+                        <td style={{ padding: "12px 8px" }}>
+                          <span style={{ backgroundColor: pri.bg, color: pri.color, padding: "2px 6px", borderRadius: "4px", fontSize: "11px", fontWeight: 600 }}>
+                            {pri.label}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px 8px" }}>{new Date(ticket.createdAt).toLocaleDateString()}</td>
+                        <td style={{ padding: "12px 8px" }}>
+                          <span style={{ backgroundColor: statusBadge.bg, color: statusBadge.text, padding: "3px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: 600 }}>
+                            {ticket.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px 8px", color: "#64748b" }}>{ticket.assignedTechnician || "Unassigned"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
+          )}
+        </div>
+      )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 flex justify-between">
-                <span>Workflow Progress</span>
-                <span className="text-primary-700 font-semibold">{updateForm.progress}%</span>
-              </label>
-              <input 
-                type="range"
-                min="0"
-                max="100"
-                step="5"
-                value={updateForm.progress} 
-                onChange={e => {
-                  const newProgress = parseInt(e.target.value);
-                  let newStage = updateForm.stage;
-                  // Auto-update stage based on progress slider
-                  if (newProgress === 100) newStage = 'Resolved';
-                  else if (newProgress === 0) newStage = 'Pending';
-                  else if (newProgress > 0 && newStage === 'Pending') newStage = 'In Progress';
-                  
-                  setUpdateForm({...updateForm, progress: newProgress, stage: newStage});
-                }} 
-                className="w-full accent-primary-600"
-              />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>0%</span>
-                <span>50%</span>
-                <span>100%</span>
+      {/* Tab: Report new issue */}
+      {activeTab === "report" && (
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px" }}>
+          
+          {/* Form */}
+          <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "24px" }}>
+            <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#0f172a", margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Wrench size={18} color="#1e3a8a" /> Raise Maintenance Request
+            </h2>
+
+            {formMsg.text && (
+              <div style={{
+                padding: "10px 14px",
+                borderRadius: "6px",
+                fontSize: "13px",
+                marginBottom: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                backgroundColor: formMsg.type === "success" ? "#dcfce7" : "#fee2e2",
+                color: formMsg.type === "success" ? "#15803d" : "#b91c1c"
+              }}>
+                {formMsg.type === "success" ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
+                {formMsg.text}
               </div>
+            )}
+
+            <form onSubmit={handleReportIssue} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "12px", color: "#64748b", fontWeight: 600, marginBottom: "6px" }}>Select Damaged/Defective Asset</label>
+                <select 
+                  value={selectedAssetId} 
+                  onChange={(e) => setSelectedAssetId(e.target.value)}
+                  required
+                  style={{ width: "100%", height: "38px", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "0 8px", fontSize: "13px" }}
+                >
+                  <option value="">-- Select Assigned Asset --</option>
+                  {myAssets.map((asset) => (
+                    <option key={asset.id} value={asset.id}>
+                      {asset.name} [{asset.assetTag}]
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "12px", color: "#64748b", fontWeight: 600, marginBottom: "6px" }}>Ticket Priority</label>
+                <select 
+                  value={priority} 
+                  onChange={(e) => setPriority(e.target.value)}
+                  style={{ width: "100%", height: "38px", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "0 8px", fontSize: "13px" }}
+                >
+                  <option value="LOW">Low (Non-blocking bug)</option>
+                  <option value="MEDIUM">Medium (Degraded performance)</option>
+                  <option value="HIGH">High (Equipment unusable/broken)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "12px", color: "#64748b", fontWeight: 600, marginBottom: "6px" }}>Issue Description</label>
+                <textarea 
+                  value={description} 
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Detail the defect (e.g. screen has vertical lines, laptop shuts down randomly after 15 mins)..."
+                  rows={4}
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "6px",
+                    fontSize: "13px",
+                    resize: "none",
+                    fontFamily: "Inter, sans-serif"
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "12px", color: "#64748b", fontWeight: 600, marginBottom: "6px" }}>Image Link / Reference URL (Optional)</label>
+                <input 
+                  type="text" 
+                  value={photoUrl} 
+                  onChange={(e) => setPhotoUrl(e.target.value)}
+                  placeholder="https://example.com/defect-photo.jpg"
+                  style={{
+                    width: "100%",
+                    height: "36px",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "6px",
+                    padding: "0 10px",
+                    fontSize: "13px"
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                style={{
+                  alignSelf: "flex-end",
+                  padding: "10px 20px",
+                  backgroundColor: "#1e3a8a",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}
+              >
+                {submitting && <Loader2 size={14} className="animate-spin" />}
+                File Ticket
+              </button>
+            </form>
+          </div>
+
+          {/* Right Info Box */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "20px" }}>
+              <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+                <Clipboard size={16} color="#b45309" /> Issue Reporting
+              </h3>
+              <p style={{ fontSize: "12.5px", color: "#64748b", lineHeight: "1.6", margin: 0 }}>
+                Tickets are assigned to our IT Helpdesk or Facilities teams. Standard turnaround is 24 hours for Medium tickets and under 4 hours for High priority tickets. You will receive notifications when a technician is assigned.
+              </p>
             </div>
           </div>
-        </Modal>
+
+        </div>
       )}
+
     </div>
   );
 };

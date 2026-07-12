@@ -28,7 +28,16 @@ const authenticateJWT = async (req, res, next) => {
     // Optional: Double check user exists in DB to prevent active tokens of deleted accounts
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, email: true, role: true, name: true },
+      select: { 
+        id: true, 
+        email: true, 
+        role: true, 
+        name: true,
+        phone: true,
+        address: true,
+        avatarUrl: true,
+        departmentId: true
+      },
     });
 
     if (!user) {

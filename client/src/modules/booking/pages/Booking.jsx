@@ -1,233 +1,452 @@
-import React, { useState } from 'react';
-import { CalendarClock, Plus, Clock, Filter, CheckCircle2, XCircle } from 'lucide-react';
-import PageHeader from '../../../shared/components/PageHeader';
-import StatCard from '../../../shared/components/StatCard';
-import Button from '../../../shared/components/Button';
-import Modal from '../../../shared/components/Modal';
-import StatusPill from '../../../shared/components/StatusPill';
-
-// --- MOCK DATA ---
-const initialBookings = [
-  { id: 'BK-001', resource: 'Conf Room A', user: 'Tom Hanks', time: '10:00 AM - 11:30 AM', date: 'Today', dateNum: '12', status: 'Ongoing', type: 'Rooms' },
-  { id: 'BK-002', resource: 'Projector A1', user: 'Mike Ross', time: '2:00 PM - 4:00 PM', date: 'Today', dateNum: '12', status: 'Upcoming', type: 'Equipment' },
-  { id: 'BK-003', resource: 'Delivery Van #2', user: 'Logistics', time: '9:00 AM - 5:00 PM', date: 'Tomorrow', dateNum: '13', status: 'Upcoming', type: 'Vehicles' },
-  { id: 'BK-004', resource: 'Conf Room B', user: 'Sarah Jenkins', time: '9:00 AM - 10:00 AM', date: 'Yesterday', dateNum: '11', status: 'Completed', type: 'Rooms' },
-];
+import React, { useState, useEffect } from "react";
+import { CalendarClock, AlertTriangle, Loader2, CheckCircle, Plus, Calendar, Clock, XCircle, RefreshCw } from "lucide-react";
+import { apiFetch } from "../../../services/api";
 
 const Booking = () => {
-  const [bookings, setBookings] = useState(initialBookings);
-  const [typeFilter, setTypeFilter] = useState('All Resources');
+  const [activeTab, setActiveTab] = useState("history"); // history | new
+  const [bookings, setBookings] = useState([]);
+  const [resources, setResources] = useState([]);
   
-  // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    resource: '', user: '', time: '10:00 AM - 11:00 AM', date: 'Tomorrow', dateNum: '13', type: 'Rooms', status: 'Upcoming'
-  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Derived Stats
-  const totalBookings = bookings.length;
-  const ongoingCount = bookings.filter(b => b.status === 'Ongoing').length;
-  const upcomingCount = bookings.filter(b => b.status === 'Upcoming').length;
-  
-  const completedCount = bookings.filter(b => b.status === 'Completed').length;
-  const completionRate = totalBookings > 0 ? Math.round((completedCount / (completedCount + ongoingCount + upcomingCount)) * 100) : 100;
+  // Form state
+  const [selectedAssetId, setSelectedAssetId] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [formMsg, setFormMsg] = useState({ text: "", type: "" });
+  const [submitting, setSubmitting] = useState(false);
 
-  // Filtering
-  const filteredBookings = bookings.filter(b => typeFilter === 'All Resources' || b.type === typeFilter);
+  // Reschedule state
+  const [reschedulingId, setReschedulingId] = useState(null);
+  const [rescheduleStart, setRescheduleStart] = useState("");
+  const [rescheduleEnd, setRescheduleEnd] = useState("");
+  const [rescheduleMsg, setRescheduleMsg] = useState({ text: "", type: "" });
+  const [updatingReschedule, setUpdatingReschedule] = useState(false);
 
-  // Actions
-  const handleOpenModal = () => {
-    setFormData({ resource: '', user: '', time: '10:00 AM - 11:00 AM', date: 'Tomorrow', dateNum: '13', type: 'Rooms', status: 'Upcoming' });
-    setIsModalOpen(true);
+  const fetchBookingsAndResources = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const [bookingsRes, resourcesRes] = await Promise.all([
+        apiFetch("/api/v1/bookings"),
+        apiFetch("/api/v1/bookings/resources")
+      ]);
+
+      const bookingsResult = await bookingsRes.json();
+      const resourcesResult = await resourcesRes.json();
+
+      if (bookingsRes.ok && resourcesRes.ok) {
+        setBookings(bookingsResult.data);
+        setResources(resourcesResult.data);
+      } else {
+        setError(bookingsResult.message || resourcesResult.message || "Failed to load booking details.");
+      }
+    } catch (err) {
+      setError("Failed to connect to backend server.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSaveBooking = () => {
-    const newBooking = {
-      ...formData,
-      id: `BK-00${bookings.length + 1}`
-    };
-    setBookings([newBooking, ...bookings]);
-    setIsModalOpen(false);
+  useEffect(() => {
+    fetchBookingsAndResources();
+  }, []);
+
+  const handleCreateBooking = async (e) => {
+    e.preventDefault();
+    setFormMsg({ text: "", type: "" });
+
+    if (!selectedAssetId || !startTime || !endTime) {
+      setFormMsg({ text: "Please select a resource and time range.", type: "error" });
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const res = await apiFetch("/api/v1/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assetId: selectedAssetId, startTime, endTime }),
+      });
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        setFormMsg({ text: "Booking created successfully!", type: "success" });
+        setSelectedAssetId("");
+        setStartTime("");
+        setEndTime("");
+        // Reload booking list
+        const refreshed = await apiFetch("/api/v1/bookings");
+        const refreshedData = await refreshed.json();
+        if (refreshed.ok) setBookings(refreshedData.data);
+        setTimeout(() => setActiveTab("history"), 1500);
+      } else {
+        setFormMsg({ text: result.message || "Failed to create booking", type: "error" });
+      }
+    } catch (err) {
+      setFormMsg({ text: "Network error occurred.", type: "error" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const updateBookingStatus = (id, newStatus) => {
-    setBookings(bookings.map(b => b.id === id ? { ...b, status: newStatus } : b));
+  const handleCancelBooking = async (bookingId) => {
+    if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+
+    try {
+      const res = await apiFetch(`/api/v1/bookings/${bookingId}/cancel`, {
+        method: "PUT",
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        setBookings(bookings.map(b => b.id === bookingId ? { ...b, status: "CANCELLED" } : b));
+      } else {
+        alert(result.message || "Failed to cancel booking.");
+      }
+    } catch (err) {
+      alert("Network error.");
+    }
   };
+
+  const handleReschedule = async (e) => {
+    e.preventDefault();
+    setRescheduleMsg({ text: "", type: "" });
+    setUpdatingReschedule(true);
+
+    try {
+      const res = await apiFetch(`/api/v1/bookings/${reschedulingId}/reschedule`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ startTime: rescheduleStart, endTime: rescheduleEnd }),
+      });
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        setRescheduleMsg({ text: "Booking rescheduled successfully!", type: "success" });
+        // Update list
+        setBookings(bookings.map(b => b.id === reschedulingId ? result.data : b));
+        setTimeout(() => {
+          setReschedulingId(null);
+          setRescheduleStart("");
+          setRescheduleEnd("");
+          setRescheduleMsg({ text: "", type: "" });
+        }, 1500);
+      } else {
+        setRescheduleMsg({ text: result.message || "Failed to reschedule booking.", type: "error" });
+      }
+    } catch (err) {
+      setRescheduleMsg({ text: "Network error.", type: "error" });
+    } finally {
+      setUpdatingReschedule(false);
+    }
+  };
+
+  const getBookingStatusBadge = (status) => {
+    if (status === "UPCOMING") return { bg: "#e0f2fe", text: "#0369a1" };
+    if (status === "ONGOING") return { bg: "#dcfce7", text: "#15803d" };
+    if (status === "CANCELLED") return { bg: "#fee2e2", text: "#b91c1c" };
+    return { bg: "#f1f5f9", text: "#475569" };
+  };
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '75vh', gap: '16px', fontFamily: 'Inter, sans-serif' }}>
+        <Loader2 size={36} className="animate-spin" style={{ color: '#1e3a8a' }} />
+        <p style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Loading bookings schedule...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '75vh', padding: '24px', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>
+        <AlertTriangle size={36} color="#ef4444" style={{ marginBottom: "16px" }} />
+        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 8px 0' }}>Failed to Load Bookings</h3>
+        <p style={{ fontSize: '14px', color: '#64748b', maxWidth: '380px', margin: '0 0 20px 0' }}>{error}</p>
+        <button onClick={fetchBookingsAndResources} style={{ padding: '8px 16px', backgroundColor: '#1e3a8a', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Retry</button>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8 pb-20 max-w-7xl mx-auto font-sans">
-      <PageHeader 
-        title="Resource Booking" 
-        description="Schedule and manage bookings for shared assets and facilities."
-        actions={<Button onClick={handleOpenModal} icon={Plus}>Book Resource</Button>}
-      />
-
-      {/* STAT CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard title="Total Bookings" value={totalBookings} subtitle="Active this month" color="indigo" icon={CalendarClock} />
-        <StatCard title="Ongoing" value={ongoingCount} subtitle="Right now" color="blue" icon={CalendarClock} />
-        <StatCard title="Upcoming" value={upcomingCount} subtitle="Next 7 days" color="purple" icon={CalendarClock} />
-        <StatCard title="Completion" value={`${completionRate}%`} subtitle="On-time rate" color="emerald" icon={CheckCircle2} />
+    <div style={{ padding: "24px 32px", maxWidth: "1400px", margin: "0 auto", fontFamily: "Inter, sans-serif" }}>
+      
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px" }}>
+        <div>
+          <h1 style={{ fontSize: "26px", fontWeight: 700, margin: "0 0 6px 0", color: "#1e293b" }}>Resource Booking</h1>
+          <p style={{ fontSize: "14px", color: "#64748b", margin: 0 }}>Schedule and manage rooms, vehicles, and shared equipment.</p>
+        </div>
+        <div style={{ display: "flex", backgroundColor: "#f1f5f9", padding: "4px", borderRadius: "8px" }}>
+          <button 
+            onClick={() => setActiveTab("history")}
+            style={{
+              padding: "6px 16px",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "13px",
+              fontWeight: 600,
+              cursor: "pointer",
+              backgroundColor: activeTab === "history" ? "white" : "transparent",
+              color: activeTab === "history" ? "#1e3a8a" : "#64748b",
+              boxShadow: activeTab === "history" ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
+            }}
+          >
+            My Bookings
+          </button>
+          <button 
+            onClick={() => setActiveTab("new")}
+            style={{
+              padding: "6px 16px",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "13px",
+              fontWeight: 600,
+              cursor: "pointer",
+              backgroundColor: activeTab === "new" ? "white" : "transparent",
+              color: activeTab === "new" ? "#1e3a8a" : "#64748b",
+              boxShadow: activeTab === "new" ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
+            }}
+          >
+            New Reservation
+          </button>
+        </div>
       </div>
 
-      {/* BOOKING LIST */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-            <CalendarClock size={16} className="text-primary-700" />
-            Booking Slots
-          </h3>
-          <div className="flex items-center gap-2">
-            <Filter size={14} className="text-gray-400" />
-            <select 
-              value={typeFilter}
-              onChange={e => setTypeFilter(e.target.value)}
-              className="text-xs border border-gray-300 rounded-md px-2 py-1.5 bg-white text-gray-700 focus:ring-primary-500 outline-none cursor-pointer"
-            >
-              <option>All Resources</option>
-              <option>Rooms</option>
-              <option>Vehicles</option>
-              <option>Equipment</option>
-            </select>
+      {/* Reschedule Modal Overlay */}
+      {reschedulingId && (
+        <div style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(15, 23, 42, 0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 100,
+          backdropFilter: "blur(4px)"
+        }}>
+          <div style={{
+            background: "white",
+            borderRadius: "12px",
+            border: "1px solid #e2e8f0",
+            padding: "24px",
+            width: "420px",
+            boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)"
+          }}>
+            <h3 style={{ fontSize: "16px", fontWeight: 600, margin: "0 0 16px 0", color: "#0f172a" }}>Reschedule Reservation</h3>
+            {rescheduleMsg.text && (
+              <div style={{
+                padding: "8px 12px",
+                borderRadius: "6px",
+                fontSize: "12px",
+                marginBottom: "12px",
+                backgroundColor: rescheduleMsg.type === "success" ? "#dcfce7" : "#fee2e2",
+                color: rescheduleMsg.type === "success" ? "#15803d" : "#b91c1c"
+              }}>{rescheduleMsg.text}</div>
+            )}
+            <form onSubmit={handleReschedule} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "11px", color: "#64748b", fontWeight: 600, marginBottom: "4px" }}>Start Time</label>
+                <input type="datetime-local" value={rescheduleStart} onChange={(e) => setRescheduleStart(e.target.value)} required style={{ width: "100%", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "13px" }} />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "11px", color: "#64748b", fontWeight: 600, marginBottom: "4px" }}>End Time</label>
+                <input type="datetime-local" value={rescheduleEnd} onChange={(e) => setRescheduleEnd(e.target.value)} required style={{ width: "100%", padding: "8px", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "13px" }} />
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "12px" }}>
+                <button type="button" onClick={() => setReschedulingId(null)} style={{ padding: "8px 14px", backgroundColor: "#f1f5f9", color: "#64748b", border: "none", borderRadius: "6px", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                <button type="submit" disabled={updatingReschedule} style={{ padding: "8px 14px", backgroundColor: "#1e3a8a", color: "white", border: "none", borderRadius: "6px", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}>
+                  {updatingReschedule && <Loader2 size={12} className="animate-spin" />}
+                  Save Reschedule
+                </button>
+              </div>
+            </form>
           </div>
         </div>
+      )}
 
-        <div className="divide-y divide-gray-100">
-          {filteredBookings.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 text-sm">No bookings found.</div>
+      {/* Tab: History */}
+      {activeTab === "history" && (
+        <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "20px" }}>
+          <h2 style={{ fontSize: "15px", fontWeight: 600, color: "#1e293b", margin: "0 0 16px 0" }}>Your Bookings</h2>
+          {bookings.length === 0 ? (
+            <div style={{ padding: "36px 0", textAlign: "center", color: "#64748b", fontSize: "14px" }}>
+              You have no active or past bookings. Click "New Reservation" to book a resource.
+            </div>
           ) : (
-            filteredBookings.map((booking) => (
-              <div key={booking.id} className="p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-gray-50 transition-colors">
-                
-                <div className="flex items-center gap-4 flex-1">
-                  {/* Calendar Box */}
-                  <div className="w-12 h-12 rounded-lg bg-primary-50 border border-primary-100 flex flex-col items-center justify-center shrink-0">
-                    <div className="text-[10px] font-bold text-primary-700 uppercase">{booking.date.slice(0, 3)}</div>
-                    <div className="text-lg font-bold text-primary-700 leading-none mt-0.5">{booking.dateNum}</div>
-                  </div>
-                  
-                  {/* Content */}
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-1">{booking.resource}</h4>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                      <span className="flex items-center gap-1.5">
-                        <Clock size={12} className="text-gray-400" />
-                        {booking.time}
-                      </span>
-                      <span>•</span>
-                      <span className="font-medium text-gray-600">{booking.user}</span>
-                      <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px]">{booking.type}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions & Status */}
-                <div className="flex items-center gap-4 w-full md:w-auto justify-end">
-                  <StatusPill status={booking.status} />
-                  
-                  <div className="flex items-center gap-1 min-w-[120px] justify-end">
-                    {(booking.status === 'Upcoming' || booking.status === 'Ongoing') && (
-                      <>
-                        <button 
-                          onClick={() => updateBookingStatus(booking.id, 'Completed')}
-                          title="Mark Completed"
-                          className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
-                        >
-                          <CheckCircle2 size={18} />
-                        </button>
-                        <button 
-                          onClick={() => updateBookingStatus(booking.id, 'Cancelled')}
-                          title="Cancel Booking"
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                        >
-                          <XCircle size={18} />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-              </div>
-            ))
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
+                    <th style={{ padding: "12px 8px" }}>Resource</th>
+                    <th style={{ padding: "12px 8px" }}>Location</th>
+                    <th style={{ padding: "12px 8px" }}>Start Time</th>
+                    <th style={{ padding: "12px 8px" }}>End Time</th>
+                    <th style={{ padding: "12px 8px" }}>Status</th>
+                    <th style={{ padding: "12px 8px", textAlign: "center" }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bookings.map((booking) => {
+                    const badge = getBookingStatusBadge(booking.status);
+                    const isUpcoming = booking.status === "UPCOMING" && new Date(booking.startTime) > new Date();
+                    return (
+                      <tr key={booking.id} style={{ borderBottom: "1px solid #f8fafc" }}>
+                        <td style={{ padding: "12px 8px", fontWeight: 500, color: "#0f172a" }}>{booking.asset?.name}</td>
+                        <td style={{ padding: "12px 8px", color: "#64748b" }}>{booking.asset?.location || "N/A"}</td>
+                        <td style={{ padding: "12px 8px" }}>{new Date(booking.startTime).toLocaleString()}</td>
+                        <td style={{ padding: "12px 8px" }}>{new Date(booking.endTime).toLocaleString()}</td>
+                        <td style={{ padding: "12px 8px" }}>
+                          <span style={{ backgroundColor: badge.bg, color: badge.text, padding: "3px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: 600 }}>
+                            {booking.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                          {isUpcoming ? (
+                            <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                              <button 
+                                onClick={() => {
+                                  setReschedulingId(booking.id);
+                                  setRescheduleStart(booking.startTime.substring(0, 16));
+                                  setRescheduleEnd(booking.endTime.substring(0, 16));
+                                }}
+                                style={{ display: "flex", alignItems: "center", gap: "4px", padding: "5px 10px", backgroundColor: "#fffbeb", color: "#b45309", border: "1px solid #fef3c7", borderRadius: "6px", fontSize: "11.5px", fontWeight: 600, cursor: "pointer" }}
+                              >
+                                <RefreshCw size={12} /> Reschedule
+                              </button>
+                              <button 
+                                onClick={() => handleCancelBooking(booking.id)}
+                                style={{ display: "flex", alignItems: "center", gap: "4px", padding: "5px 10px", backgroundColor: "#fef2f2", color: "#b91c1c", border: "1px solid #fee2e2", borderRadius: "6px", fontSize: "11.5px", fontWeight: 600, cursor: "pointer" }}
+                              >
+                                <XCircle size={12} /> Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <span style={{ color: "#94a3b8", fontSize: "12px" }}>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
-      </div>
+      )}
 
-      {/* --- ADD BOOKING MODAL --- */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Book a Resource"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveBooking}>Confirm Booking</Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Resource Type</label>
-            <select 
-              value={formData.type} 
-              onChange={e => setFormData({...formData, type: e.target.value})} 
-              className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm focus:ring-primary-500 outline-none"
-            >
-              <option>Rooms</option>
-              <option>Vehicles</option>
-              <option>Equipment</option>
-            </select>
-          </div>
+      {/* Tab: New Reservation */}
+      {activeTab === "new" && (
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px" }}>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Resource Name</label>
-            <input 
-              value={formData.resource} 
-              onChange={e => setFormData({...formData, resource: e.target.value})} 
-              className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-primary-500 outline-none" 
-              placeholder="e.g. Conf Room A"
-            />
+          {/* Form */}
+          <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "24px" }}>
+            <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#0f172a", margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Plus size={18} color="#1e3a8a" /> Make a Reservation
+            </h2>
+
+            {formMsg.text && (
+              <div style={{
+                padding: "10px 14px",
+                borderRadius: "6px",
+                fontSize: "13px",
+                marginBottom: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                backgroundColor: formMsg.type === "success" ? "#dcfce7" : "#fee2e2",
+                color: formMsg.type === "success" ? "#15803d" : "#b91c1c"
+              }}>
+                {formMsg.type === "success" ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
+                {formMsg.text}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateBooking} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "12px", color: "#64748b", fontWeight: 600, marginBottom: "6px" }}>Select Resource</label>
+                <select 
+                  value={selectedAssetId} 
+                  onChange={(e) => setSelectedAssetId(e.target.value)}
+                  required
+                  style={{ width: "100%", height: "38px", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "0 8px", fontSize: "13px" }}
+                >
+                  <option value="">-- Select Shared Room or Equipment --</option>
+                  {resources.map((res) => (
+                    <option key={res.id} value={res.id}>
+                      [{res.category?.name || "Shared"}] {res.name} — {res.location || "No Location"}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", color: "#64748b", fontWeight: 600, marginBottom: "6px" }}>Start Time</label>
+                  <input 
+                    type="datetime-local" 
+                    value={startTime} 
+                    onChange={(e) => setStartTime(e.target.value)} 
+                    required 
+                    style={{ width: "100%", height: "36px", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "0 10px", fontSize: "13px" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", color: "#64748b", fontWeight: 600, marginBottom: "6px" }}>End Time</label>
+                  <input 
+                    type="datetime-local" 
+                    value={endTime} 
+                    onChange={(e) => setEndTime(e.target.value)} 
+                    required 
+                    style={{ width: "100%", height: "36px", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "0 10px", fontSize: "13px" }}
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                style={{
+                  alignSelf: "flex-end",
+                  padding: "10px 20px",
+                  backgroundColor: "#1e3a8a",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}
+              >
+                {submitting && <Loader2 size={14} className="animate-spin" />}
+                Confirm Booking
+              </button>
+            </form>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">User / Department</label>
-            <input 
-              value={formData.user} 
-              onChange={e => setFormData({...formData, user: e.target.value})} 
-              className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-primary-500 outline-none" 
-              placeholder="e.g. Marketing Team"
-            />
+          {/* Guidelines */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "20px" }}>
+              <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a", margin: "0 0 12px 0", display: "flex", alignItems: "center", gap: "6px" }}>
+                <Clock size={16} color="#7c3aed" /> Reservation Guidelines
+              </h3>
+              <ul style={{ fontSize: "12.5px", color: "#64748b", paddingLeft: "16px", margin: 0, lineHeight: "1.6" }}>
+                <li style={{ marginBottom: "6px" }}>Bookings are immediate and run collision checks instantly.</li>
+                <li style={{ marginBottom: "6px" }}>Cancellations can be made up to the start time of the reservation.</li>
+                <li style={{ marginBottom: "6px" }}>Rescheduling is blocked if the new slot overlaps with another reservation.</li>
+              </ul>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-              <input 
-                type="date"
-                onChange={e => {
-                  const d = new Date(e.target.value);
-                  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                  setFormData({
-                    ...formData, 
-                    date: days[d.getDay()] || 'Day',
-                    dateNum: d.getDate().toString() || '00'
-                  });
-                }} 
-                className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-primary-500 outline-none text-gray-600" 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Time Block</label>
-              <input 
-                value={formData.time} 
-                onChange={e => setFormData({...formData, time: e.target.value})} 
-                className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-primary-500 outline-none" 
-                placeholder="10:00 AM - 11:00 AM"
-              />
-            </div>
-          </div>
         </div>
-      </Modal>
+      )}
+
     </div>
   );
 };
