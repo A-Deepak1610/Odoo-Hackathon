@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AssetFilters, AssetTable, RegisterAssetModal } from '../components/assets';
+import { Button } from '../components/ui';
+import { Download, Plus, X } from 'lucide-react';
 
 // Placeholder Data
 const MOCK_ASSETS = [
@@ -85,6 +87,7 @@ const MOCK_ASSETS = [
 const AssetsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   // Simulate network loading state so you can see the skeleton!
   useEffect(() => {
@@ -101,6 +104,14 @@ const AssetsPage = () => {
           <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Asset Directory</h2>
           <p className="text-sm font-medium text-slate-500 mt-1">Manage, filter, and track all company assets in one place.</p>
         </div>
+        <div className="flex gap-3">
+          <Button variant="secondary" className="gap-2" onClick={() => setIsExportModalOpen(true)}>
+            <Download size={16} /> Export Directory
+          </Button>
+          <Button className="gap-2" onClick={() => setIsRegisterModalOpen(true)}>
+            <Plus size={16} /> Register Asset
+          </Button>
+        </div>
       </div>
 
       <AssetFilters onRegisterClick={() => setIsRegisterModalOpen(true)} />
@@ -111,6 +122,45 @@ const AssetsPage = () => {
         isOpen={isRegisterModalOpen} 
         onClose={() => setIsRegisterModalOpen(false)} 
       />
+
+      {/* Export Directory Dialog */}
+      {isExportModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-900 text-lg">Export Directory</h3>
+              <button onClick={() => setIsExportModalOpen(false)} className="text-slate-400 hover:text-slate-700 hover:bg-slate-200 p-1 rounded-md transition-colors"><X size={20}/></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Format</label>
+                <select className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                  <option>CSV (Excel)</option>
+                  <option>JSON</option>
+                  <option>PDF Summary</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Data Scope</label>
+                <select className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                  <option>All Assets (1,248)</option>
+                  <option>Current Filter Results</option>
+                  <option>Active Assets Only</option>
+                </select>
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setIsExportModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => setIsExportModalOpen(false)} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                <Download size={16} /> Export
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

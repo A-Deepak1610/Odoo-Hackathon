@@ -33,6 +33,7 @@ const MOCK_AUDIT_ASSETS = [
 
 const AuditPage = () => {
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
+  const [isStartModalOpen, setIsStartModalOpen] = useState(false);
 
   const stats = {
     total: 145,
@@ -57,7 +58,7 @@ const AuditPage = () => {
           <Button variant="secondary" className="flex-1 sm:flex-none gap-2">
             <History size={16} /> Audit History
           </Button>
-          <Button className="flex-1 sm:flex-none gap-2">
+          <Button className="flex-1 sm:flex-none gap-2" onClick={() => setIsStartModalOpen(true)}>
             <ClipboardCheck size={16} /> Start New Cycle
           </Button>
         </div>
@@ -295,6 +296,44 @@ const AuditPage = () => {
               </Button>
               <Button onClick={() => setIsCloseModalOpen(false)} className="bg-slate-900 hover:bg-slate-800 text-white">
                 Confirm Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Start Audit Dialog */}
+      {isStartModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-900 text-lg">Start New Audit Cycle</h3>
+              <button onClick={() => setIsStartModalOpen(false)} className="text-slate-400 hover:text-slate-700 hover:bg-slate-200 p-1 rounded-md transition-colors"><X size={20}/></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <Label>Audit Name / Reference</Label>
+                <Input type="text" placeholder="e.g., Q1 2025 Comprehensive Audit" />
+              </div>
+              <div className="space-y-2">
+                <Label>Target Scope</Label>
+                <select className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                  <option>All Assets</option>
+                  <option>IT Equipment Only</option>
+                  <option>Facilities & Furniture</option>
+                  <option>Specific Department</option>
+                </select>
+              </div>
+              <p className="text-xs text-slate-500 mt-2">
+                Starting a new cycle will archive the current active audit and generate a new verification list based on your selected scope.
+              </p>
+            </div>
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setIsStartModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => setIsStartModalOpen(false)} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                <ClipboardCheck size={16} /> Start Audit
               </Button>
             </div>
           </div>

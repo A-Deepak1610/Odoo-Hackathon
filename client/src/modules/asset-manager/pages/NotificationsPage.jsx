@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Bell, AlertTriangle, Calendar, Wrench, ArrowRightLeft, 
   ClipboardCheck, Search, Filter, Check, CheckCircle2, 
-  Clock, Box, ShieldAlert, ArrowDownToLine
+  Clock, Box, ShieldAlert, ArrowDownToLine, X
 } from 'lucide-react';
 import { DashboardCard } from '../components/dashboard';
 import { Button, Input } from '../components/ui';
@@ -101,6 +101,7 @@ const NotificationsPage = () => {
 
   const markAllRead = () => {
     setNotifications(notifications.map(n => ({ ...n, unread: false })));
+    setIsMarkReadModalOpen(false);
   };
 
   const markRead = (id) => {
@@ -122,6 +123,14 @@ const NotificationsPage = () => {
             )}
           </h2>
           <p className="text-sm font-medium text-slate-500 mt-1">Monitor system alerts, requests, and historical activity logs.</p>
+        </div>
+        <div className="flex gap-3 w-full sm:w-auto">
+          <Button variant="secondary" className="flex-1 sm:flex-none gap-2">
+            <Filter size={16} /> Filter Logs
+          </Button>
+          <Button className="flex-1 sm:flex-none gap-2" onClick={() => setIsMarkReadModalOpen(true)}>
+            <CheckCircle2 size={16} /> Mark All as Read
+          </Button>
         </div>
       </div>
 
@@ -267,6 +276,31 @@ const NotificationsPage = () => {
         </div>
 
       </div>
+      {/* Mark All Read Confirmation Dialog */}
+      {isMarkReadModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-900 text-lg">Mark All Read</h3>
+              <button onClick={() => setIsMarkReadModalOpen(false)} className="text-slate-400 hover:text-slate-700 hover:bg-slate-200 p-1 rounded-md transition-colors"><X size={20}/></button>
+            </div>
+            <div className="p-6">
+              <p className="text-sm font-medium text-slate-700 leading-relaxed">
+                Are you sure you want to mark all 24 unread notifications as read? This action cannot be undone.
+              </p>
+            </div>
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setIsMarkReadModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => setIsMarkReadModalOpen(false)} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                <CheckCircle2 size={16} /> Confirm
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

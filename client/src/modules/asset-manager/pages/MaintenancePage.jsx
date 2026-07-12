@@ -100,6 +100,7 @@ const PriorityBadge = ({ priority }) => {
 
 const MaintenancePage = () => {
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
 
   return (
     <div className="flex flex-col h-full bg-slate-50 relative overflow-hidden">
@@ -110,7 +111,7 @@ const MaintenancePage = () => {
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Maintenance & Repairs</h2>
           <p className="text-sm font-medium text-slate-500 mt-1">Track and manage asset maintenance requests through the Kanban board.</p>
         </div>
-        <Button className="gap-2 shadow-sm">
+        <Button className="gap-2 shadow-sm" onClick={() => setIsLogModalOpen(true)}>
           <Plus size={16} />
           Log Maintenance
         </Button>
@@ -316,6 +317,52 @@ const MaintenancePage = () => {
             <div className="p-5 border-t border-slate-200 bg-slate-50 shrink-0">
               <Button className="w-full">
                 Update Ticket Status
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Log Maintenance Dialog */}
+      {isLogModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-900 text-lg">Log Maintenance Request</h3>
+              <button onClick={() => setIsLogModalOpen(false)} className="text-slate-400 hover:text-slate-700 hover:bg-slate-200 p-1 rounded-md transition-colors"><X size={20}/></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Select Asset</label>
+                <select className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                  <option>Select an asset...</option>
+                  <option>MacBook Pro 16" (AST-2024-001)</option>
+                  <option>Dell UltraSharp 32" (AST-2024-002)</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Priority</label>
+                <select className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                  <option>Low - Routine Check</option>
+                  <option>Medium - Minor Issue</option>
+                  <option>High - Urgent Repair</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Issue Description</label>
+                <textarea 
+                  rows="4" 
+                  placeholder="Describe the issue or reason for maintenance..."
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+                ></textarea>
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setIsLogModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => setIsLogModalOpen(false)} className="bg-blue-600 hover:bg-blue-700 text-white">
+                Submit Request
               </Button>
             </div>
           </div>

@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
-import { Download, TrendingUp, TrendingDown, Wrench, Building2, Calendar, FileText, ArrowRight } from 'lucide-react';
+import { Download, TrendingUp, TrendingDown, Wrench, Building2, Calendar, FileText, ArrowRight, Filter, X } from 'lucide-react';
 import { DashboardCard } from '../components/dashboard';
 import { Button } from '../components/ui';
 
@@ -56,6 +56,8 @@ const generateHeatmap = () => {
 const heatmapData = generateHeatmap();
 
 const ReportsPage = () => {
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
   return (
     <div className="p-6 max-w-[1600px] mx-auto space-y-6">
       
@@ -63,11 +65,16 @@ const ReportsPage = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Reports & Analytics</h2>
-          <p className="text-sm font-medium text-slate-500 mt-1">Visualize asset utilization, departmental allocation, and maintenance metrics.</p>
+          <p className="text-sm font-medium text-slate-500 mt-1">Visualize asset utilization, maintenance frequencies, and department costs.</p>
         </div>
-        <Button className="w-full sm:w-auto gap-2 bg-slate-900 hover:bg-slate-800">
-          <Download size={16} /> Export Full Report
-        </Button>
+        <div className="flex gap-3 w-full sm:w-auto">
+          <Button variant="secondary" className="flex-1 sm:flex-none gap-2">
+            <Filter size={16} /> Filter
+          </Button>
+          <Button className="flex-1 sm:flex-none gap-2" onClick={() => setIsExportModalOpen(true)}>
+            <Download size={16} /> Export PDF Report
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -277,6 +284,43 @@ const ReportsPage = () => {
 
         </div>
       </div>
+      {/* Export Report Dialog */}
+      {isExportModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-900 text-lg">Export Report</h3>
+              <button onClick={() => setIsExportModalOpen(false)} className="text-slate-400 hover:text-slate-700 hover:bg-slate-200 p-1 rounded-md transition-colors"><X size={20}/></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Format</label>
+                <select className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                  <option>PDF Document</option>
+                  <option>Excel Spreadsheet (CSV)</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Time Range</label>
+                <select className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                  <option>Last 6 Months</option>
+                  <option>This Year (YTD)</option>
+                  <option>Last 30 Days</option>
+                </select>
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setIsExportModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => setIsExportModalOpen(false)} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                <Download size={16} /> Download
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
