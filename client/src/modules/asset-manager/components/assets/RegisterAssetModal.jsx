@@ -1,16 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { X, UploadCloud, AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerAssetSchema } from '../../schemas/assetSchema';
 import { Input, Select, Label, Button } from '../ui';
-import { createAssetApi, getAssetCategoriesApi } from '../../api';
 
-export const RegisterAssetModal = ({ isOpen, onClose, onAssetCreated }) => {
-  const [categories, setCategories] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState('');
-
+export const RegisterAssetModal = ({ isOpen, onClose }) => {
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm({
     resolver: zodResolver(registerAssetSchema),
     defaultValues: {
@@ -22,43 +17,14 @@ export const RegisterAssetModal = ({ isOpen, onClose, onAssetCreated }) => {
   useEffect(() => {
     if (isOpen) {
       setValue('tag', 'AST-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000));
-      
-      // Fetch categories
-      getAssetCategoriesApi().then(res => {
-        if (res.success) {
-          setCategories(res.data);
-        }
-      }).catch(err => console.error("Failed to load categories", err));
     }
   }, [isOpen, setValue]);
 
-  const onSubmit = async (data) => {
-    setIsSubmitting(true);
-    setSubmitError('');
-    try {
-      const res = await createAssetApi({
-        name: data.name,
-        serialNumber: data.serialNumber,
-        categoryId: data.category,
-        acquisitionDate: data.acquisitionDate,
-        acquisitionCost: data.acquisitionCost,
-        condition: data.condition,
-        location: data.location,
-        isSharedBookable: data.isBookable
-      });
-
-      if (res.success) {
-        reset();
-        onClose();
-        if (onAssetCreated) onAssetCreated();
-      } else {
-        setSubmitError(res.message || 'Failed to create asset');
-      }
-    } catch (err) {
-      setSubmitError('An error occurred while creating the asset.');
-    } finally {
-      setIsSubmitting(false);
-    }
+  const onSubmit = (data) => {
+    console.log("Form Data Submitted:", data);
+    // TODO: Implement API submission
+    reset();
+    onClose();
   };
 
   const handleClose = () => {
@@ -120,9 +86,10 @@ export const RegisterAssetModal = ({ isOpen, onClose, onAssetCreated }) => {
                     className={errors.category ? 'border-red-300 focus:ring-red-500' : ''}
                   >
                     <option value="">Select a category</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
+                    <option value="Electronics">Electronics</option>
+                    <option value="Furniture">Furniture</option>
+                    <option value="Vehicles">Vehicles</option>
+                    <option value="Software">Software</option>
                   </Select>
                   {errors.category && <p className="text-red-500 text-xs font-medium">{errors.category.message}</p>}
                 </div>
@@ -258,11 +225,16 @@ export const RegisterAssetModal = ({ isOpen, onClose, onAssetCreated }) => {
               </div>
             )}
             
-          <Button type="button" variant="secondary" onClick={handleClose} disabled={isSubmitting}>
+          </form>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-slate-200 p-5 bg-slate-50 flex justify-end gap-3 shrink-0">
+          <Button type="button" variant="secondary" onClick={handleClose}>
             Cancel
           </Button>
-          <Button type="submit" form="register-asset-form" disabled={isSubmitting}>
-            {isSubmitting ? 'Registering...' : 'Register Asset'}
+          <Button type="submit" form="register-asset-form">
+            Register Asset
           </Button>
         </div>
       </div>
