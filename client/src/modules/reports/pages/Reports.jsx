@@ -1,77 +1,329 @@
-import React from 'react';
-import { Download, BarChart3, LineChart, PieChart } from 'lucide-react';
-import PageHeader from '../../../shared/components/PageHeader';
-import Button from '../../../shared/components/Button';
+import React from "react";
+import { Download, BarChart3, LineChart } from "lucide-react";
 
 const Reports = () => {
-  return (
-    <div className="p-8 pb-20 max-w-7xl mx-auto">
-      <PageHeader 
-        title="Reports & Analytics" 
-        description="Gain insights into asset utilization, costs, and departmental distribution."
-        actions={<Button icon={Download}>Export All Reports</Button>}
-      />
+  const statsCards = [
+    {
+      label: "Total Assets Value",
+      value: "$2.4M",
+      subtitle: "Organization-wide",
+      color: "#1e3a8a",
+      bg: "#eff6ff",
+    },
+    {
+      label: "Maintenance Spend",
+      value: "$84K",
+      subtitle: "YTD",
+      color: "#dc2626",
+      bg: "#fef2f2",
+    },
+    {
+      label: "Utilization Rate",
+      value: "67%",
+      subtitle: "Average across assets",
+      color: "#16a34a",
+      bg: "#ecfdf5",
+    },
+    {
+      label: "ROI",
+      value: "156%",
+      subtitle: "Asset lifecycle efficiency",
+      color: "#7c3aed",
+      bg: "#f3e8ff",
+    },
+  ];
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Mock Bar Chart */}
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <BarChart3 size={18} className="text-primary-600"/>
+  return (
+    <div
+      style={{
+        padding: "24px 32px",
+        maxWidth: "1400px",
+        margin: "0 auto",
+        fontFamily: "Inter, sans-serif",
+      }}
+    >
+      {/* ── PAGE HEADER ─── */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: "28px",
+        }}
+      >
+        <div>
+          <h1
+            style={{
+              fontSize: "26px",
+              fontWeight: 700,
+              margin: "0 0 8px 0",
+              color: "#1e293b",
+            }}
+          >
+            Reports & Analytics
+          </h1>
+          <p style={{ fontSize: "14px", color: "#64748b", margin: 0 }}>
+            Gain insights into asset utilization, costs, and departmental
+            distribution.
+          </p>
+        </div>
+        <button
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "10px 18px",
+            background: "white",
+            color: "#64748b",
+            border: "1px solid #e2e8f0",
+            borderRadius: "8px",
+            fontSize: "13px",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          <Download size={16} />
+          Export All Reports
+        </button>
+      </div>
+
+      {/* ── STAT CARDS (4-col) ─── */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: "16px",
+          marginBottom: "28px",
+        }}
+      >
+        {statsCards.map((stat, i) => (
+          <div
+            key={i}
+            style={{
+              background: "white",
+              borderRadius: "12px",
+              padding: "20px",
+              border: "1px solid #e2e8f0",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "12px",
+                color: "#64748b",
+                fontWeight: 500,
+                marginBottom: "4px",
+              }}
+            >
+              {stat.label}
+            </div>
+            <div
+              style={{
+                fontSize: "24px",
+                fontWeight: 700,
+                color: "#1e293b",
+                marginBottom: "2px",
+              }}
+            >
+              {stat.value}
+            </div>
+            <div style={{ fontSize: "12px", color: "#94a3b8" }}>
+              {stat.subtitle}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── CHARTS (2-col) ─── */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, 1fr)",
+          gap: "20px",
+        }}
+      >
+        {/* Bar Chart */}
+        <div
+          style={{
+            background: "white",
+            borderRadius: "12px",
+            border: "1px solid #e2e8f0",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "16px",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "15px",
+                fontWeight: 600,
+                color: "#1e293b",
+                margin: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <BarChart3 size={16} color="#1e3a8a" />
               Assets by Department
             </h3>
-            <button className="text-sm text-gray-500 hover:text-primary-600">Export CSV</button>
+            <button
+              style={{
+                fontSize: "12px",
+                color: "#64748b",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              Export CSV
+            </button>
           </div>
-          <div className="h-64 flex items-end justify-between gap-2 border-b border-l border-gray-200 p-4">
-            {/* Mock bars */}
-            <div className="w-1/6 bg-primary-200 hover:bg-primary-300 rounded-t-sm h-[40%] transition-colors relative group"><span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-gray-500 opacity-0 group-hover:opacity-100">120</span></div>
-            <div className="w-1/6 bg-primary-400 hover:bg-primary-500 rounded-t-sm h-[80%] transition-colors relative group"><span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-gray-500 opacity-0 group-hover:opacity-100">340</span></div>
-            <div className="w-1/6 bg-primary-300 hover:bg-primary-400 rounded-t-sm h-[60%] transition-colors relative group"><span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-gray-500 opacity-0 group-hover:opacity-100">210</span></div>
-            <div className="w-1/6 bg-primary-500 hover:bg-primary-600 rounded-t-sm h-[95%] transition-colors relative group"><span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-gray-500 opacity-0 group-hover:opacity-100">450</span></div>
-            <div className="w-1/6 bg-primary-200 hover:bg-primary-300 rounded-t-sm h-[30%] transition-colors relative group"><span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-gray-500 opacity-0 group-hover:opacity-100">90</span></div>
+          <div
+            style={{
+              height: "240px",
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              gap: "8px",
+              padding: "8px 0 16px 0",
+              borderLeft: "1px solid #e2e8f0",
+              borderBottom: "1px solid #e2e8f0",
+            }}
+          >
+            {[120, 340, 210, 450, 90].map((val, i) => {
+              const maxHeight = 450;
+              const height = (val / maxHeight) * 100;
+              return (
+                <div
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: `${height}%`,
+                    background: "#3b82f6",
+                    borderRadius: "4px 4px 0 0",
+                    transition: "background 0.2s",
+                    cursor: "pointer",
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.background = "#2563eb")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.background = "#3b82f6")
+                  }
+                  title={`${val} assets`}
+                />
+              );
+            })}
           </div>
-          <div className="flex justify-between mt-2 px-4 text-xs text-gray-500">
-            <span>HR</span>
-            <span>Eng</span>
-            <span>Mktg</span>
-            <span>IT</span>
-            <span>Sales</span>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              paddingTop: "8px",
+              fontSize: "11px",
+              color: "#64748b",
+            }}
+          >
+            {["HR", "Eng", "Mktg", "IT", "Sales"].map((dept) => (
+              <span key={dept}>{dept}</span>
+            ))}
           </div>
         </div>
 
-        {/* Mock Line Chart */}
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <LineChart size={18} className="text-emerald-600"/>
+        {/* Line Chart */}
+        <div
+          style={{
+            background: "white",
+            borderRadius: "12px",
+            border: "1px solid #e2e8f0",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "16px",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "15px",
+                fontWeight: 600,
+                color: "#1e293b",
+                margin: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <LineChart size={16} color="#16a34a" />
               Maintenance Costs (YTD)
             </h3>
-            <button className="text-sm text-gray-500 hover:text-primary-600">Export CSV</button>
+            <button
+              style={{
+                fontSize: "12px",
+                color: "#64748b",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              Export CSV
+            </button>
           </div>
-          <div className="h-64 border-b border-l border-gray-200 relative p-4">
-            {/* Mock SVG Line */}
-            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <polyline 
-                fill="none" 
-                stroke="#10b981" 
-                strokeWidth="3"
+          <div
+            style={{
+              height: "240px",
+              position: "relative",
+              padding: "8px 0 16px 0",
+              borderLeft: "1px solid #e2e8f0",
+              borderBottom: "1px solid #e2e8f0",
+            }}
+          >
+            <svg
+              style={{ width: "100%", height: "100%" }}
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+            >
+              <polyline
+                fill="none"
+                stroke="#16a34a"
+                strokeWidth="2"
                 points="0,80 20,70 40,75 60,40 80,50 100,20"
               />
-              <circle cx="0" cy="80" r="2" fill="#10b981"/>
-              <circle cx="20" cy="70" r="2" fill="#10b981"/>
-              <circle cx="40" cy="75" r="2" fill="#10b981"/>
-              <circle cx="60" cy="40" r="2" fill="#10b981"/>
-              <circle cx="80" cy="50" r="2" fill="#10b981"/>
-              <circle cx="100" cy="20" r="2" fill="#10b981"/>
+              {[0, 20, 40, 60, 80, 100].map((x, i) => (
+                <circle
+                  key={x}
+                  cx={x}
+                  cy={[80, 70, 75, 40, 50, 20][i]}
+                  r="1.5"
+                  fill="#16a34a"
+                />
+              ))}
             </svg>
           </div>
-          <div className="flex justify-between mt-2 px-4 text-xs text-gray-500">
-            <span>Jan</span>
-            <span>Feb</span>
-            <span>Mar</span>
-            <span>Apr</span>
-            <span>May</span>
-            <span>Jun</span>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              paddingTop: "8px",
+              fontSize: "11px",
+              color: "#64748b",
+            }}
+          >
+            {["Jan", "Feb", "Mar", "Apr", "May", "Jun"].map((month) => (
+              <span key={month}>{month}</span>
+            ))}
           </div>
         </div>
       </div>
