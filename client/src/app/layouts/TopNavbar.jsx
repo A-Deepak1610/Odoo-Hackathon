@@ -1,6 +1,7 @@
 import React from "react";
-import { Search, Bell, Moon, ChevronDown } from "lucide-react";
+import { Search, Bell, Moon, ChevronDown, UserSquare2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "../../modules/auth";
 
 const getPageTitle = (pathname) => {
   const path = pathname.split("/")[1];
@@ -11,6 +12,7 @@ const getPageTitle = (pathname) => {
 const TopNavbar = () => {
   const location = useLocation();
   const pageTitle = getPageTitle(location.pathname);
+  const { user, devSwitchRole } = useAuth();
 
   return (
     <header
@@ -50,7 +52,7 @@ const TopNavbar = () => {
           }}
           className="sm:block"
         >
-          AssetFlow Organization Admin
+          AssetFlow {user?.role ? user.role.replace(/_/g, ' ') : 'Employee'}
         </p>
       </div>
 
@@ -173,54 +175,22 @@ const TopNavbar = () => {
           className="sm:block"
         />
 
-        {/* Context Switcher */}
-        <div
-          style={{
-            display: "none",
-            alignItems: "center",
-            gap: "8px",
-            cursor: "pointer",
-            padding: "6px 12px",
-            borderRadius: "8px",
-            border: "1px solid transparent",
-            transition: "all 0.2s",
-          }}
-          className="sm:flex"
-          onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = "#f8fafc";
-            e.currentTarget.style.borderColor = "#e2e8f0";
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = "transparent";
-            e.currentTarget.style.borderColor = "transparent";
-          }}
-        >
-          <div
-            style={{
-              width: "24px",
-              height: "24px",
-              borderRadius: "4px",
-              backgroundColor: "#1e3a8a",
-              color: "#ffffff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "11px",
-              fontWeight: "700",
-            }}
-          >
-            AC
+        {/* Context Switcher (Role Switcher for Dev) */}
+        <div className="hidden sm:flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 bg-slate-50">
+          <div className="w-6 h-6 rounded bg-primary-600 text-white flex items-center justify-center">
+            <UserSquare2 size={14} />
           </div>
-          <span
-            style={{
-              fontSize: "14px",
-              fontWeight: "500",
-              color: "#0f172a",
-            }}
+          <select 
+            className="bg-transparent text-sm font-medium text-slate-700 outline-none cursor-pointer"
+            value={user?.role || 'EMPLOYEE'}
+            onChange={(e) => devSwitchRole(e.target.value)}
           >
-            Acme Corp
-          </span>
-          <ChevronDown size={16} style={{ color: "#94a3b8" }} />
+            <option value="SUPERADMIN">Superadmin</option>
+            <option value="ADMIN">Admin View</option>
+            <option value="DEPARTMENT_HEAD">Dept Head View</option>
+            <option value="ASSET_MANAGER">Asset Manager View</option>
+            <option value="EMPLOYEE">Employee View</option>
+          </select>
         </div>
       </div>
     </header>
