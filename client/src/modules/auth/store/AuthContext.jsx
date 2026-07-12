@@ -19,47 +19,30 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Register global auth error handler for token expiration
     registerAuthErrorHandler(handleUnauthenticated);
-
-    const initializeAuth = async () => {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
+    
+    const restoreSession = async () => {
+      const token = localStorage.getItem('refreshToken');
+      if (!token) {
+        setUser(null);
         setLoading(false);
         return;
       }
 
       try {
-        // Attempt to call refresh token endpoint on mount to retrieve new access token
-        const refreshUrl = buildApiUrl('/api/v1/auth/refresh');
-        const refreshResponse = await fetch(refreshUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refreshToken }),
-        });
-
-        if (refreshResponse.ok) {
-          const result = await refreshResponse.json();
-          if (result.success && result.data.accessToken) {
-            setAccessToken(result.data.accessToken);
-            localStorage.setItem('refreshToken', result.data.refreshToken);
-
-            // Retrieve user profile
-            const profileData = await getMeApi();
-            setUser(profileData.data.user);
-          } else {
-            handleUnauthenticated();
-          }
+        const result = await getMeApi();
+        if (result && result.success && result.data?.user) {
+          setUser(result.data.user);
         } else {
           handleUnauthenticated();
         }
       } catch (err) {
-        console.error('Failed to initialize session:', err);
         handleUnauthenticated();
       } finally {
         setLoading(false);
       }
     };
 
-    initializeAuth();
+    restoreSession();
   }, []);
 
   const login = async (email, password, rememberMe) => {
@@ -95,7 +78,7 @@ export const AuthProvider = ({ children }) => {
       const result = await signupApi(email, password);
       return result;
     } finally {
-      setLoading(false);
+      setLoading(false);  
     }
   };
 

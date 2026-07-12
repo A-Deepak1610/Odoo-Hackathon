@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Building2, 
@@ -60,6 +60,7 @@ const navGroups = [
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const displayName = user?.name || (user?.email ? user.email.split('@')[0] : 'User');
   const initials = displayName.substring(0, 2).toUpperCase();
@@ -240,6 +241,7 @@ const Sidebar = () => {
           cursor: 'pointer',
           transition: 'background-color 0.2s',
         }}
+        onClick={() => navigate('/profile')}
         onMouseOver={(e) => {
           e.currentTarget.style.backgroundColor = '#f8fafc';
         }}
@@ -282,7 +284,10 @@ const Sidebar = () => {
             }}>{displayRole}</p>
           </div>
           <button 
-            onClick={logout}
+            onClick={(e) => {
+              e.stopPropagation();
+              logout();
+            }}
             title="Log Out"
             style={{
               padding: '6px',

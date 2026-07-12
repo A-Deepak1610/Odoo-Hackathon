@@ -12,13 +12,18 @@ import {
   AlertTriangle,
   FileText,
   User,
-  ArrowLeftRight
+  ArrowLeftRight,
+  AlertCircle,
+  Package
 } from "lucide-react";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useAuth } from "../../auth";
 import { apiFetch } from "../../../services/api";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   // States for Employee Dashboard
   const [data, setData] = useState(null);
@@ -170,6 +175,7 @@ const Dashboard = () => {
         icon: CalendarClock,
         label: "Book Resource",
         description: "Schedule a shared room or equipment",
+        path: "/booking",
         color: "#7c3aed",
         bg: "#f3e8ff",
       },
@@ -177,6 +183,7 @@ const Dashboard = () => {
         icon: Wrench,
         label: "Raise Maintenance",
         description: "Report an issue with your materials",
+        path: "/maintenance",
         color: "#b45309",
         bg: "#fef3c7",
       },
@@ -184,6 +191,7 @@ const Dashboard = () => {
         icon: ArrowLeftRight,
         label: "Request Transfer",
         description: "Reallocate an asset to another user",
+        path: "/allocations",
         color: "#16a34a",
         bg: "#ecfdf5",
       },
@@ -274,6 +282,7 @@ const Dashboard = () => {
             {employeeQuickActions.map((action, i) => (
               <div
                 key={i}
+                onClick={() => navigate(action.path)}
                 style={{
                   background: "white",
                   borderRadius: "12px",
@@ -625,39 +634,13 @@ const Dashboard = () => {
   }
 
   // ── DEFAULT ADMIN DASHBOARD VIEW ───
-  const statsCards = [
-    {
-      icon: "lucide:box",
-      label: "Assets Available",
-      value: "1,245",
-      subtitle: "4.2% increase",
-      color: "#1e3a8a",
-      bg: "#eff6ff",
-    },
-    {
-      icon: "lucide:arrow-right-left",
-      label: "Assets Allocated",
-      value: "3,812",
-      subtitle: "2.1% increase",
-      color: "#16a34a",
-      bg: "#ecfdf5",
-    },
-    {
-      icon: "lucide:wrench",
-      label: "Maintenance Today",
-      value: "18",
-      subtitle: "12% decrease",
-      color: "#b45309",
-      bg: "#fef3c7",
-    },
-    {
-      icon: "lucide:calendar-clock",
-      label: "Active Bookings",
-      value: "64",
-      subtitle: "8.4% increase",
-      color: "#7c3aed",
-      bg: "#f3e8ff",
-    },
+  const adminStats = [
+    { label: "Available", value: "128", icon: BoxIcon, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Allocated", value: "76", icon: Package, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Under Maintenance", value: "4", icon: Wrench, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: "Active Bookings", value: "9", icon: CalendarClock, color: "text-purple-600", bg: "bg-purple-50" },
+    { label: "Pending Transfers", value: "3", icon: ArrowRightLeft, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { label: "Upcoming Returns", value: "12", icon: RotateCcw, color: "text-rose-600", bg: "bg-rose-50" },
   ];
 
   const quickActions = [
@@ -665,7 +648,7 @@ const Dashboard = () => {
       icon: Plus,
       label: "Register Asset",
       description: "Add a new asset to the registry",
-      path: "#",
+      path: "/assets",
       color: "#1e3a8a",
       bg: "#eff6ff",
     },
@@ -673,7 +656,7 @@ const Dashboard = () => {
       icon: CalendarClock,
       label: "Book Resource",
       description: "Schedule a shared resource",
-      path: "#",
+      path: "/booking",
       color: "#16a34a",
       bg: "#ecfdf5",
     },
@@ -681,178 +664,51 @@ const Dashboard = () => {
       icon: Wrench,
       label: "Raise Maintenance",
       description: "Report an issue or repair",
-      path: "#",
+      path: "/maintenance",
       color: "#b45309",
       bg: "#fef3c7",
     },
   ];
 
   const recentActivity = [
-    {
-      id: 1,
-      user: "Sarah Jenkins",
-      action: "allocated",
-      item: 'MacBook Pro 16"',
-      time: "10 mins ago",
-      status: "Allocated",
-    },
-    {
-      id: 2,
-      user: "Mike Ross",
-      action: "returned",
-      item: "Projector A1",
-      time: "1 hour ago",
-      status: "Available",
-    },
-    {
-      id: 3,
-      user: "System",
-      action: "flagged for maintenance",
-      item: "Delivery Van #4",
-      time: "2 hours ago",
-      status: "Under Maintenance",
-    },
+    { log: "Laptop AF-0114 - allocated to Priya Shah - IT dept", time: "10 mins ago", color: "bg-blue-500" },
+    { log: "Room B2 - booking confirmed - 2:00 to 3:00 PM", time: "1 hour ago", color: "bg-purple-500" },
+    { log: "Projector AF-0062 - maintenance resolved", time: "2 hours ago", color: "bg-emerald-500" },
   ];
 
-  const getStatusColor = (status) => {
-    if (status === "Allocated") return { bg: "#dcfce7", text: "#15803d" };
-    if (status === "Available") return { bg: "#dcfce7", text: "#15803d" };
-    if (status === "Under Maintenance")
-      return { bg: "#fef3c7", text: "#b45309" };
-    return { bg: "#f1f5f9", text: "#475569" };
-  };
+  const allocationData = [
+    { name: 'Engineering', value: 45 },
+    { name: 'Marketing', value: 25 },
+    { name: 'Sales', value: 20 },
+    { name: 'HR', value: 10 },
+  ];
+  const COLORS = ['#1e3a8a', '#3b82f6', '#60a5fa', '#93c5fd'];
+
+  const categoryData = [
+    { name: 'Laptops', count: 120 },
+    { name: 'Phones', count: 80 },
+    { name: 'Desktops', count: 40 },
+    { name: 'Vehicles', count: 15 },
+  ];
 
   return (
-    <div
-      style={{
-        padding: "24px 32px",
-        maxWidth: "1400px",
-        margin: "0 auto",
-        fontFamily: "Inter, sans-serif",
-      }}
-    >
-      {/* ── PAGE HEADER ─── */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          marginBottom: "28px",
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              fontSize: "26px",
-              fontWeight: 700,
-              margin: "0 0 8px 0",
-              color: "#1e293b",
-            }}
-          >
-            Dashboard
-          </h1>
-          <p style={{ fontSize: "14px", color: "#64748b", margin: 0 }}>
-            Overview of your organization's assets and resource utilization.
-          </p>
-        </div>
-        <button
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "10px 18px",
-            background: "#1e3a8a",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "13px",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          <Plus size={16} />
-          Register Asset
-        </button>
+    <div className="p-8 pb-20 max-w-[1400px] mx-auto font-sans">
+      <div className="mb-6">  
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">Today's Overview</h1>
+        <p className="text-sm text-slate-500">Real-time snapshot of your organization's resources.</p>
       </div>
 
-      {/* ── STAT CARDS (4-col) ─── */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "16px",
-          marginBottom: "28px",
-        }}
-      >
-        {statsCards.map((stat, i) => (
-          <div
-            key={i}
-            style={{
-              background: "white",
-              borderRadius: "12px",
-              padding: "20px",
-              border: "1px solid #e2e8f0",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "14px",
-            }}
-          >
-            <div
-              style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "10px",
-                background: stat.bg,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              {stat.icon === "lucide:box" && (
-                <BoxIcon size={22} color={stat.color} />
-              )}
-              {stat.icon === "lucide:arrow-right-left" && (
-                <ArrowRightLeft size={22} color={stat.color} />
-              )}
-              {stat.icon === "lucide:wrench" && (
-                <Wrench size={22} color={stat.color} />
-              )}
-              {stat.icon === "lucide:calendar-clock" && (
-                <CalendarClock size={22} color={stat.color} />
-              )}
+      {/* STAT CARDS (6-col grid) */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        {adminStats.map((stat, i) => (
+          <div key={i} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-sm">
+            <div className="flex justify-between items-start mb-2">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{stat.label}</span>
             </div>
-            <div style={{ flex: 1 }}>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "#64748b",
-                  fontWeight: 500,
-                  marginBottom: "4px",
-                }}
-              >
-                {stat.label}
-              </div>
-              <div
-                style={{
-                  fontSize: "24px",
-                  fontWeight: 700,
-                  color: "#1e293b",
-                  marginBottom: "2px",
-                }}
-              >
-                {stat.value}
-              </div>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "#94a3b8",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                }}
-              >
-                <TrendingUp size={12} /> {stat.subtitle}
+            <div className="flex items-end justify-between">
+              <div className="text-3xl font-bold text-slate-900">{stat.value}</div>
+              <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center`}>
+                <stat.icon size={16} className={stat.color} />
               </div>
             </div>
           </div>
@@ -881,6 +737,7 @@ const Dashboard = () => {
           {quickActions.map((action, i) => (
             <div
               key={i}
+              onClick={() => navigate(action.path)}
               style={{
                 background: "white",
                 borderRadius: "12px",
@@ -936,178 +793,72 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* ── MAIN CONTENT (2:1 split) ─── */}
-      <div
-        style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "20px" }}
-      >
-        {/* Left column — primary content */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          <div
-            style={{
-              background: "white",
-              borderRadius: "12px",
-              border: "1px solid #e2e8f0",
-              padding: "20px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "16px",
-              }}
-            >
-              <h3
-                style={{
-                  fontSize: "15px",
-                  fontWeight: 600,
-                  color: "#1e293b",
-                  margin: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-              >
-                <Activity size={16} color="#1e3a8a" />
-                Recent Activity
-              </h3>
-              <a
-                href="#"
-                style={{
-                  fontSize: "12px",
-                  color: "#1e3a8a",
-                  textDecoration: "none",
-                  fontWeight: 500,
-                }}
-              >
-                View All →
-              </a>
+      {/* QUICK ACTIONS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {quickActions.map((action, i) => (
+          <button key={i} className={`bg-white border-2 rounded-xl p-4 flex items-center justify-center gap-3 transition-all group ${action.color} shadow-sm`}>
+            <div className={`w-10 h-10 rounded-lg ${action.bg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+              <action.icon size={20} className={action.iconColor} />
             </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {recentActivity.map((activity, i) => {
-                const statusColor = getStatusColor(activity.status);
-                return (
-                  <div
-                    key={activity.id}
-                    style={{
-                      padding: "12px 0",
-                      borderBottom:
-                        i < recentActivity.length - 1
-                          ? "1px solid #e2e8f0"
-                          : "none",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "32px",
-                          height: "32px",
-                          borderRadius: "50%",
-                          background: "#f1f5f9",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "#64748b",
-                          fontSize: "12px",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {activity.user.charAt(0)}
-                        {activity.user.split(" ")[1]?.charAt(0)}
-                      </div>
-                      <div>
-                        <div
-                          style={{
-                            fontSize: "13px",
-                            fontWeight: 500,
-                            color: "#1e293b",
-                            marginBottom: "2px",
-                          }}
-                        >
-                          {activity.user} {activity.action} {activity.item}
-                        </div>
-                        <div style={{ fontSize: "11px", color: "#94a3b8" }}>
-                          {activity.time}
-                        </div>
-                      </div>
-                    </div>
-                    <span
-                      style={{
-                        background: statusColor.bg,
-                        color: statusColor.text,
-                        padding: "4px 10px",
-                        borderRadius: "6px",
-                        fontSize: "11px",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {activity.status}
-                    </span>
-                  </div>
-                );
-              })}
+            <span className="font-semibold text-slate-700">{action.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* MAIN CONTENT GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* RECENT ACTIVITY */}
+        <div className="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+          <h3 className="text-base font-bold text-slate-900 mb-6 flex items-center gap-2">
+            <Activity size={18} className="text-blue-700" /> Recent Activity
+          </h3>
+          <div className="space-y-6">
+            {recentActivity.map((act, i) => (
+              <div key={i} className="flex gap-3">
+                <div className={`w-2.5 h-2.5 mt-1.5 rounded-full shrink-0 ${act.color} shadow-sm`} />
+                <div>
+                  <p className="text-sm text-slate-700 leading-snug font-medium">{act.log}</p>
+                  <p className="text-xs text-slate-400 mt-1.5 font-medium">{act.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* INSIGHTS (Recharts) */}
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Allocation by Dept</h3>
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={allocationData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                    {allocationData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }}/>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Asset Categories</h3>
+            <div className="h-56 mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={categoryData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
+                  <Tooltip cursor={{fill: '#f1f5f9'}} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
 
-        {/* Right column — secondary content */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          <div
-            style={{
-              background: "linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)",
-              borderRadius: "12px",
-              padding: "20px",
-              color: "white",
-            }}
-          >
-            <h3
-              style={{ fontSize: "15px", fontWeight: 600, margin: "0 0 8px 0" }}
-            >
-              Need help?
-            </h3>
-            <p
-              style={{
-                fontSize: "12px",
-                color: "#bfdbfe",
-                margin: "0 0 12px 0",
-                lineHeight: "1.5",
-              }}
-            >
-              Check out our documentation on asset tracking and maintenance
-              workflows.
-            </p>
-            <button
-              style={{
-                width: "100%",
-                padding: "8px 12px",
-                background: "white",
-                color: "#1e3a8a",
-                border: "none",
-                borderRadius: "6px",
-                fontSize: "12px",
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-              onMouseOver={(e) =>
-                (e.currentTarget.style.background = "#f1f5f9")
-              }
-              onMouseOut={(e) => (e.currentTarget.style.background = "white")}
-            >
-              Read Documentation
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

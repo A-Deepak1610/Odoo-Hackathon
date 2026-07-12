@@ -1,370 +1,373 @@
-import React from "react";
-import { Wrench, Plus, ChevronRight } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Wrench, Loader2, AlertTriangle, CheckCircle, Plus, Clipboard, Clock, HeartCrack } from "lucide-react";
+import { apiFetch } from "../../../services/api";
 
 const Maintenance = () => {
-  const statsCards = [
-    {
-      label: "Total Requests",
-      value: "128",
-      subtitle: "This month",
-      color: "#1e3a8a",
-      bg: "#eff6ff",
-    },
-    {
-      label: "In Progress",
-      value: "12",
-      subtitle: "Being worked on",
-      color: "#b45309",
-      bg: "#fef3c7",
-    },
-    {
-      label: "Resolved",
-      value: "94",
-      subtitle: "Successfully fixed",
-      color: "#16a34a",
-      bg: "#ecfdf5",
-    },
-    {
-      label: "Avg. Time",
-      value: "2.3d",
-      subtitle: "Days to resolve",
-      color: "#7c3aed",
-      bg: "#f3e8ff",
-    },
-  ];
+  const [activeTab, setActiveTab] = useState("tickets"); // tickets | report
+  const [myAssets, setMyAssets] = useState([]);
+  const [tickets, setTickets] = useState([]);
 
-  const mockMaintenance = [
-    {
-      id: "MNT-4021",
-      asset: "HVAC System Unit B",
-      issue: "Not cooling properly",
-      reportedBy: "Facilities",
-      priority: "High",
-      stage: "In Progress",
-      progress: 60,
-    },
-    {
-      id: "MNT-4022",
-      asset: "Delivery Van #4",
-      issue: "Brake pad replacement",
-      reportedBy: "Logistics",
-      priority: "Medium",
-      stage: "Technician Assigned",
-      progress: 40,
-    },
-    {
-      id: "MNT-4023",
-      asset: "Projector A1",
-      issue: "Bulb burned out",
-      reportedBy: "Marketing",
-      priority: "Low",
-      stage: "Pending",
-      progress: 20,
-    },
-    {
-      id: "MNT-4024",
-      asset: 'MacBook Pro 16"',
-      issue: "Keyboard keys sticky",
-      reportedBy: "Sarah Jenkins",
-      priority: "Medium",
-      stage: "Resolved",
-      progress: 100,
-    },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const getPriorityColor = (priority) => {
-    if (priority === "High") return { bg: "#fef2f2", text: "#dc2626" };
-    if (priority === "Medium") return { bg: "#fef3c7", text: "#b45309" };
-    return { bg: "#dcfce7", text: "#15803d" };
+  // Form State
+  const [selectedAssetId, setSelectedAssetId] = useState("");
+  const [priority, setPriority] = useState("MEDIUM");
+  const [description, setDescription] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
+
+  const [submitting, setSubmitting] = useState(false);
+  const [formMsg, setFormMsg] = useState({ text: "", type: "" });
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [assetsRes, ticketsRes] = await Promise.all([
+        apiFetch("/api/v1/assets/my"),
+        apiFetch("/api/v1/maintenance/my-requests")
+      ]);
+
+      const assetsResult = await assetsRes.json();
+      const ticketsResult = await ticketsRes.json();
+
+      if (assetsRes.ok && ticketsRes.ok) {
+        setMyAssets(assetsResult.data);
+        setTickets(ticketsResult.data);
+      } else {
+        setError(assetsResult.message || ticketsResult.message || "Failed to load maintenance dashboard.");
+      }
+    } catch (err) {
+      setError("Failed to connect to server.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getStageColor = (stage) => {
-    if (stage === "In Progress") return { bg: "#fef3c7", text: "#b45309" };
-    if (stage === "Resolved") return { bg: "#dcfce7", text: "#15803d" };
-    if (stage === "Technician Assigned")
-      return { bg: "#dbeafe", text: "#1d4ed8" };
-    return { bg: "#f1f5f9", text: "#475569" };
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleReportIssue = async (e) => {
+    e.preventDefault();
+    setFormMsg({ text: "", type: "" });
+
+    if (!selectedAssetId) {
+      setFormMsg({ text: "Please select an asset.", type: "error" });
+      return;
+    }
+
+    if (!description || description.trim() === "") {
+      setFormMsg({ text: "Please enter an issue description.", type: "error" });
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const res = await apiFetch("/api/v1/maintenance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assetId: selectedAssetId,
+          description,
+          priority,
+          photoUrl: photoUrl || undefined
+        })
+      });
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        setFormMsg({ text: "Maintenance request reported successfully!", type: "success" });
+        setSelectedAssetId("");
+        setPriority("MEDIUM");
+        setDescription("");
+        setPhotoUrl("");
+
+        // Reload lists
+        const refreshed = await apiFetch("/api/v1/maintenance/my-requests");
+        const refData = await refreshed.json();
+        if (refreshed.ok) setTickets(refData.data);
+        setTimeout(() => setActiveTab("tickets"), 1500);
+      } else {
+        setFormMsg({ text: result.message || "Failed to submit request.", type: "error" });
+      }
+    } catch (err) {
+      setFormMsg({ text: "Network error occurred.", type: "error" });
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  const getPriorityStyle = (pri) => {
+    if (pri === "HIGH") return { color: "#dc2626", bg: "#fef2f2", label: "High" };
+    if (pri === "MEDIUM") return { color: "#d97706", bg: "#fffbeb", label: "Medium" };
+    return { color: "#2563eb", bg: "#eff6ff", label: "Low" };
+  };
+
+  const getStatusBadge = (status) => {
+    if (status === "PENDING") return { bg: "#f1f5f9", text: "#475569" };
+    if (status === "APPROVED") return { bg: "#e0f2fe", text: "#0369a1" };
+    if (status === "IN_PROGRESS") return { bg: "#fef3c7", text: "#b45309" };
+    if (status === "RESOLVED") return { bg: "#dcfce7", text: "#15803d" };
+    return { bg: "#fee2e2", text: "#b91c1c" };
+  };
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '75vh', gap: '16px', fontFamily: 'Inter, sans-serif' }}>
+        <Loader2 size={36} className="animate-spin" style={{ color: '#1e3a8a' }} />
+        <p style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Loading maintenance dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '75vh', padding: '24px', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>
+        <AlertTriangle size={36} color="#ef4444" style={{ marginBottom: "16px" }} />
+        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 8px 0' }}>Failed to Load Dashboard</h3>
+        <p style={{ fontSize: '14px', color: '#64748b', maxWidth: '380px', margin: '0 0 20px 0' }}>{error}</p>
+        <button onClick={fetchData} style={{ padding: '8px 16px', backgroundColor: '#1e3a8a', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Retry</button>
+      </div>
+    );
+  }
 
   return (
-    <div
-      style={{
-        padding: "24px 32px",
-        maxWidth: "1400px",
-        margin: "0 auto",
-        fontFamily: "Inter, sans-serif",
-      }}
-    >
-      {/* ── PAGE HEADER ─── */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          marginBottom: "28px",
-        }}
-      >
+    <div style={{ padding: "24px 32px", maxWidth: "1400px", margin: "0 auto", fontFamily: "Inter, sans-serif" }}>
+      
+      {/* Header */}
+      <div style={{ display: "flex", justifyContext: "space-between", alignItems: "center", marginBottom: "28px", justifyContent: "space-between" }}>
         <div>
-          <h1
-            style={{
-              fontSize: "26px",
-              fontWeight: 700,
-              margin: "0 0 8px 0",
-              color: "#1e293b",
-            }}
-          >
-            Maintenance Requests
-          </h1>
-          <p style={{ fontSize: "14px", color: "#64748b", margin: 0 }}>
-            Track repair requests, assign technicians, and monitor maintenance
-            workflows.
-          </p>
+          <h1 style={{ fontSize: "26px", fontWeight: 700, margin: "0 0 6px 0", color: "#1e293b" }}>Maintenance Portal</h1>
+          <p style={{ fontSize: "14px", color: "#64748b", margin: 0 }}>Report equipment issues and track technician progress.</p>
         </div>
-        <button
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "10px 18px",
-            background: "#1e3a8a",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "13px",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          <Plus size={16} />
-          Raise Request
-        </button>
-      </div>
-
-      {/* ── STAT CARDS (4-col) ─── */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "16px",
-          marginBottom: "28px",
-        }}
-      >
-        {statsCards.map((stat, i) => (
-          <div
-            key={i}
+        
+        <div style={{ display: "flex", backgroundColor: "#f1f5f9", padding: "4px", borderRadius: "8px" }}>
+          <button 
+            onClick={() => setActiveTab("tickets")}
             style={{
-              background: "white",
-              borderRadius: "12px",
-              padding: "20px",
-              border: "1px solid #e2e8f0",
+              padding: "6px 16px",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "13px",
+              fontWeight: 600,
+              cursor: "pointer",
+              backgroundColor: activeTab === "tickets" ? "white" : "transparent",
+              color: activeTab === "tickets" ? "#1e3a8a" : "#64748b",
+              boxShadow: activeTab === "tickets" ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
             }}
           >
-            <div
-              style={{
-                fontSize: "12px",
-                color: "#64748b",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              {stat.label}
-            </div>
-            <div
-              style={{
-                fontSize: "24px",
-                fontWeight: 700,
-                color: "#1e293b",
-                marginBottom: "2px",
-              }}
-            >
-              {stat.value}
-            </div>
-            <div style={{ fontSize: "12px", color: "#94a3b8" }}>
-              {stat.subtitle}
-            </div>
-          </div>
-        ))}
+            Issue Tickets
+          </button>
+          <button 
+            onClick={() => setActiveTab("report")}
+            style={{
+              padding: "6px 16px",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "13px",
+              fontWeight: 600,
+              cursor: "pointer",
+              backgroundColor: activeTab === "report" ? "white" : "transparent",
+              color: activeTab === "report" ? "#1e3a8a" : "#64748b",
+              boxShadow: activeTab === "report" ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
+            }}
+          >
+            Report New Issue
+          </button>
+        </div>
       </div>
 
-      {/* ── MAINTENANCE CARDS ─── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        {mockMaintenance.map((req) => {
-          const priorityColor = getPriorityColor(req.priority);
-          const stageColor = getStageColor(req.stage);
-          return (
-            <div
-              key={req.id}
-              style={{
-                background: "white",
-                border: "1px solid #e2e8f0",
-                borderRadius: "12px",
-                padding: "16px",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
-                transition: "all 0.2s",
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.borderColor = "#1e3a8a";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 12px rgba(30, 58, 138, 0.15)";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.borderColor = "#e2e8f0";
-                e.currentTarget.style.boxShadow = "0 1px 2px rgba(0,0,0,0.03)";
-              }}
-            >
-              <div
+      {/* Tab: Tickets list */}
+      {activeTab === "tickets" && (
+        <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "20px" }}>
+          <h2 style={{ fontSize: "15px", fontWeight: 600, color: "#1e293b", margin: "0 0 16px 0" }}>Reported Issues</h2>
+          {tickets.length === 0 ? (
+            <div style={{ padding: "36px 0", textAlign: "center", color: "#64748b", fontSize: "14px" }}>
+              No maintenance requests submitted. Click "Report New Issue" to file a ticket.
+            </div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
+                    <th style={{ padding: "12px 8px" }}>Asset</th>
+                    <th style={{ padding: "12px 8px" }}>Asset Tag</th>
+                    <th style={{ padding: "12px 8px" }}>Issue Description</th>
+                    <th style={{ padding: "12px 8px" }}>Priority</th>
+                    <th style={{ padding: "12px 8px" }}>Reported Date</th>
+                    <th style={{ padding: "12px 8px" }}>Status</th>
+                    <th style={{ padding: "12px 8px" }}>Assigned Tech</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tickets.map((ticket) => {
+                    const statusBadge = getStatusBadge(ticket.status);
+                    const pri = getPriorityStyle(ticket.priority);
+                    return (
+                      <tr key={ticket.id} style={{ borderBottom: "1px solid #f8fafc" }}>
+                        <td style={{ padding: "12px 8px", fontWeight: 500, color: "#0f172a" }}>{ticket.asset?.name}</td>
+                        <td style={{ padding: "12px 8px", fontFamily: "monospace", color: "#64748b" }}>{ticket.asset?.assetTag}</td>
+                        <td style={{ padding: "12px 8px", color: "#475569" }}>{ticket.description}</td>
+                        <td style={{ padding: "12px 8px" }}>
+                          <span style={{ backgroundColor: pri.bg, color: pri.color, padding: "2px 6px", borderRadius: "4px", fontSize: "11px", fontWeight: 600 }}>
+                            {pri.label}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px 8px" }}>{new Date(ticket.createdAt).toLocaleDateString()}</td>
+                        <td style={{ padding: "12px 8px" }}>
+                          <span style={{ backgroundColor: statusBadge.bg, color: statusBadge.text, padding: "3px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: 600 }}>
+                            {ticket.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px 8px", color: "#64748b" }}>{ticket.assignedTechnician || "Unassigned"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab: Report new issue */}
+      {activeTab === "report" && (
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px" }}>
+          
+          {/* Form */}
+          <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "24px" }}>
+            <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#0f172a", margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Wrench size={18} color="#1e3a8a" /> Raise Maintenance Request
+            </h2>
+
+            {formMsg.text && (
+              <div style={{
+                padding: "10px 14px",
+                borderRadius: "6px",
+                fontSize: "13px",
+                marginBottom: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                backgroundColor: formMsg.type === "success" ? "#dcfce7" : "#fee2e2",
+                color: formMsg.type === "success" ? "#15803d" : "#b91c1c"
+              }}>
+                {formMsg.type === "success" ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
+                {formMsg.text}
+              </div>
+            )}
+
+            <form onSubmit={handleReportIssue} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "12px", color: "#64748b", fontWeight: 600, marginBottom: "6px" }}>Select Damaged/Defective Asset</label>
+                <select 
+                  value={selectedAssetId} 
+                  onChange={(e) => setSelectedAssetId(e.target.value)}
+                  required
+                  style={{ width: "100%", height: "38px", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "0 8px", fontSize: "13px" }}
+                >
+                  <option value="">-- Select Assigned Asset --</option>
+                  {myAssets.map((asset) => (
+                    <option key={asset.id} value={asset.id}>
+                      {asset.name} [{asset.assetTag}]
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "12px", color: "#64748b", fontWeight: 600, marginBottom: "6px" }}>Ticket Priority</label>
+                <select 
+                  value={priority} 
+                  onChange={(e) => setPriority(e.target.value)}
+                  style={{ width: "100%", height: "38px", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "0 8px", fontSize: "13px" }}
+                >
+                  <option value="LOW">Low (Non-blocking bug)</option>
+                  <option value="MEDIUM">Medium (Degraded performance)</option>
+                  <option value="HIGH">High (Equipment unusable/broken)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "12px", color: "#64748b", fontWeight: 600, marginBottom: "6px" }}>Issue Description</label>
+                <textarea 
+                  value={description} 
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Detail the defect (e.g. screen has vertical lines, laptop shuts down randomly after 15 mins)..."
+                  rows={4}
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "6px",
+                    fontSize: "13px",
+                    resize: "none",
+                    fontFamily: "Inter, sans-serif"
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "12px", color: "#64748b", fontWeight: 600, marginBottom: "6px" }}>Image Link / Reference URL (Optional)</label>
+                <input 
+                  type="text" 
+                  value={photoUrl} 
+                  onChange={(e) => setPhotoUrl(e.target.value)}
+                  placeholder="https://example.com/defect-photo.jpg"
+                  style={{
+                    width: "100%",
+                    height: "36px",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "6px",
+                    padding: "0 10px",
+                    fontSize: "13px"
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={submitting}
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr auto",
-                  gap: "20px",
-                  alignItems: "flex-start",
+                  alignSelf: "flex-end",
+                  padding: "10px 20px",
+                  backgroundColor: "#1e3a8a",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
                 }}
               >
-                {/* Left: Asset & Issue */}
-                <div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      marginBottom: "6px",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        fontFamily: "monospace",
-                        color: "#1e3a8a",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {req.id}
-                    </span>
-                    <span
-                      style={{
-                        background: stageColor.bg,
-                        color: stageColor.text,
-                        padding: "2px 8px",
-                        borderRadius: "4px",
-                        fontSize: "10px",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {req.stage}
-                    </span>
-                  </div>
-                  <h3
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: 600,
-                      color: "#1e293b",
-                      margin: "0 0 4px 0",
-                    }}
-                  >
-                    {req.asset}
-                  </h3>
-                  <p
-                    style={{
-                      fontSize: "13px",
-                      color: "#64748b",
-                      margin: "0 0 6px 0",
-                    }}
-                  >
-                    {req.issue}
-                  </p>
-                  <p style={{ fontSize: "11px", color: "#94a3b8", margin: 0 }}>
-                    Reported by {req.reportedBy}
-                  </p>
-                </div>
+                {submitting && <Loader2 size={14} className="animate-spin" />}
+                File Ticket
+              </button>
+            </form>
+          </div>
 
-                {/* Center: Priority & Progress */}
-                <div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    <span
-                      style={{
-                        background: priorityColor.bg,
-                        color: priorityColor.text,
-                        padding: "2px 8px",
-                        borderRadius: "4px",
-                        fontSize: "10px",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {req.priority}
-                    </span>
-                  </div>
-                  <div style={{ marginBottom: "6px" }}>
-                    <div
-                      style={{
-                        fontSize: "10px",
-                        color: "#94a3b8",
-                        fontWeight: 600,
-                        marginBottom: "4px",
-                      }}
-                    >
-                      Workflow Progress: {req.progress}%
-                    </div>
-                    <div
-                      style={{
-                        height: "4px",
-                        background: "#e2e8f0",
-                        borderRadius: "2px",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <div
-                        style={{
-                          height: "100%",
-                          background: "#1e3a8a",
-                          width: `${req.progress}%`,
-                          borderRadius: "2px",
-                          transition: "width 0.3s",
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: Action */}
-                <button
-                  style={{
-                    background: "white",
-                    border: "1px solid #e2e8f0",
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "6px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    color: "#64748b",
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = "#f8fafc";
-                    e.currentTarget.style.borderColor = "#1e3a8a";
-                    e.currentTarget.style.color = "#1e3a8a";
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = "white";
-                    e.currentTarget.style.borderColor = "#e2e8f0";
-                    e.currentTarget.style.color = "#64748b";
-                  }}
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+          {/* Right Info Box */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "20px" }}>
+              <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+                <Clipboard size={16} color="#b45309" /> Issue Reporting
+              </h3>
+              <p style={{ fontSize: "12.5px", color: "#64748b", lineHeight: "1.6", margin: 0 }}>
+                Tickets are assigned to our IT Helpdesk or Facilities teams. Standard turnaround is 24 hours for Medium tickets and under 4 hours for High priority tickets. You will receive notifications when a technician is assigned.
+              </p>
             </div>
-          );
-        })}
-      </div>
+          </div>
+
+        </div>
+      )}
+
     </div>
   );
 };

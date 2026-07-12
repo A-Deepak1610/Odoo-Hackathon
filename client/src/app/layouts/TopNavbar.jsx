@@ -4,9 +4,21 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "../../modules/auth";
 
 const getPageTitle = (pathname) => {
-  const path = pathname.split("/")[1];
-  if (!path) return "Dashboard";
-  return path.charAt(0).toUpperCase() + path.slice(1).replace("-", " ");
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length === 0) return "Dashboard";
+  const lastSegment = segments[segments.length - 1];
+  
+  const titleMap = {
+    "db-assistant": "DB Assistant",
+    "organization": "Organization Setup",
+    "asset-tracking": "Asset Tracking",
+    "inventory": "Inventory",
+    "procurement": "Procurement",
+    "users": "User Management",
+    "reports": "Reports",
+  };
+
+  return titleMap[lastSegment] || lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1).replace(/-/g, " ");
 };
 
 const TopNavbar = () => {

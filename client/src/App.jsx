@@ -2,15 +2,15 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './app/layouts/AppLayout';
 import Dashboard from './modules/dashboard/pages/Dashboard';
-import Organization from './modules/organization/pages/Organization';
-import Assets from './modules/assets/pages/Assets';
+import Organization from './modules/admin-modules/organization/pages/Organization';
+import Assets from './modules/admin-modules/assets/pages/Assets';
 import Allocations from './modules/allocations/pages/Allocations';
 import Booking from './modules/booking/pages/Booking';
 import Maintenance from './modules/maintenance/pages/Maintenance';
-import Audit from './modules/audit/pages/Audit';
-import Reports from './modules/reports/pages/Reports';
+import Audit from './modules/admin-modules/audit/pages/Audit';
+import Reports from './modules/admin-modules/reports/pages/Reports';
 import Notifications from './modules/notifications/pages/Notifications';
-import DbAssistant from './modules/db-assistant/pages/DbAssistant';
+import DbAssistant from './modules/admin-modules/db-assistant/pages/DbAssistant';
 import DeptDashboard from './modules/department-head/pages/DeptDashboard';
 import Approvals from './modules/department-head/pages/Approvals';
 import ResourceBooking from './modules/department-head/pages/ResourceBooking';
@@ -21,6 +21,7 @@ import { SuperAdminProvider } from './modules/super-admin/store/SuperAdminContex
 
 // Auth Module exports
 import { AuthProvider, ProtectedRoute, LoginPage, SignupPage } from './modules/auth';
+import ProfilePage from './modules/auth/pages/ProfilePage';
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="db-assistant" element={<DbAssistant />} />
+            <Route path="profile" element={<ProfilePage />} />
 
             {/* Super Admin Exclusives */}
             <Route path="superadmin-dashboard" element={
