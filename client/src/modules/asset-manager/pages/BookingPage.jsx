@@ -6,25 +6,20 @@ import {
   Clock, Users, MapPin, Calendar as CalendarIcon, 
   X, Plus, ChevronRight, AlertCircle, Edit, Trash2, Box, CalendarClock
 } from 'lucide-react';
-import { DashboardCard } from '../components';
+import { DashboardCard } from '../components/dashboard';
+import { Button, Badge, Input, Select, Label, Card, CardContent, CardHeader, CardTitle } from '../components/ui';
 
 // Setup localizer for react-big-calendar
 const localizer = momentLocalizer(moment);
 
-// Small custom Badge component requested
 const BookingStatusBadge = ({ status }) => {
-  const statusConfig = {
-    'Confirmed': 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    'Pending': 'bg-amber-100 text-amber-700 border-amber-200',
-    'Conflict': 'bg-red-100 text-red-700 border-red-200',
-    'Completed': 'bg-slate-100 text-slate-700 border-slate-200',
+  const variantMap = {
+    'Confirmed': 'success',
+    'Pending': 'warning',
+    'Conflict': 'danger',
+    'Completed': 'neutral',
   };
-  const configClass = statusConfig[status] || 'bg-slate-100 text-slate-700 border-slate-200';
-  return (
-    <span className={`px-2 py-1 text-xs font-bold rounded-md border ${configClass}`}>
-      {status}
-    </span>
-  );
+  return <Badge variant={variantMap[status] || 'neutral'}>{status}</Badge>;
 };
 
 // Placeholder Data
@@ -116,16 +111,13 @@ const BookingPage = () => {
     <div className="p-6 max-w-[1600px] mx-auto space-y-6">
       <div className="flex justify-between items-end mb-2">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Resource Booking</h2>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Resource Booking</h2>
           <p className="text-sm font-medium text-slate-500 mt-1">Manage reservations, resolve conflicts, and schedule asset usage.</p>
         </div>
-        <button 
-          onClick={() => setIsBookDialogOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-        >
+        <Button onClick={() => setIsBookDialogOpen(true)} className="gap-2">
           <Plus size={16} />
           Book Resource
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
@@ -155,7 +147,7 @@ const BookingPage = () => {
             </div>
             
             {/* Legend */}
-            <div className="flex gap-4 mt-6 pt-4 border-t border-slate-100 text-xs font-medium text-slate-600">
+            <div className="flex gap-4 mt-6 pt-4 border-t border-slate-100 text-xs font-semibold text-slate-600">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-blue-100 border-l-2 border-blue-500 rounded-sm"></div>
                 Booked Slot
@@ -177,61 +169,63 @@ const BookingPage = () => {
           
           {/* Selected Booking Details */}
           {selectedEvent && selectedEvent.type !== 'available' && (
-            <div className="bg-white rounded-xl border border-blue-200 shadow-md overflow-hidden ring-1 ring-blue-50">
-              <div className="bg-blue-50 px-4 py-3 border-b border-blue-100 flex justify-between items-center">
-                <h3 className="font-bold text-blue-900 text-sm">Booking Details</h3>
+            <Card className="border-blue-200 shadow-md ring-1 ring-blue-50">
+              <CardHeader className="bg-blue-50/50 py-3 flex flex-row items-center justify-between border-b border-blue-100">
+                <CardTitle className="text-blue-900 text-sm">Booking Details</CardTitle>
                 <button onClick={() => setSelectedEvent(null)} className="text-blue-400 hover:text-blue-700"><X size={16}/></button>
-              </div>
-              <div className="p-4 space-y-4">
+              </CardHeader>
+              <CardContent className="p-4 space-y-4">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="font-bold text-slate-800 text-sm">{selectedEvent.title}</p>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="font-bold text-slate-900 text-sm">{selectedEvent.title}</p>
                     <BookingStatusBadge status={selectedEvent.status} />
                   </div>
-                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{selectedEvent.desc}</p>
+                  <p className="text-xs font-medium text-slate-500 mt-1 line-clamp-2">{selectedEvent.desc}</p>
                 </div>
                 
                 <div className="space-y-2 border-t border-slate-100 pt-3">
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
                     <User size={14} className="text-slate-400" />
-                    <span className="font-medium">{selectedEvent.user}</span>
+                    <span>{selectedEvent.user}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
                     <Clock size={14} className="text-slate-400" />
                     <span>{moment(selectedEvent.start).format('h:mm A')} - {moment(selectedEvent.end).format('h:mm A')}</span>
                   </div>
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <button 
+                  <Button 
+                    variant="secondary"
+                    size="sm"
                     onClick={() => setIsRescheduleDialogOpen(true)}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded text-xs font-semibold hover:bg-slate-50 transition-colors"
+                    className="flex-1 gap-1.5"
                   >
                     <Edit size={14} /> Reschedule
-                  </button>
-                  <button className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-red-200 text-red-600 rounded text-xs font-semibold hover:bg-red-50 transition-colors">
+                  </Button>
+                  <Button variant="danger" size="sm" className="gap-1.5">
                     <Trash2 size={14} /> Cancel
-                  </button>
+                  </Button>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Upcoming Bookings Cards */}
           <DashboardCard title="Upcoming Bookings">
             <div className="space-y-3">
               {UPCOMING_BOOKINGS.map(booking => (
-                <div key={booking.id} className="p-3 border border-slate-100 rounded-lg hover:border-blue-200 hover:bg-blue-50/30 transition-all cursor-pointer group">
+                <div key={booking.id} className="p-3 border border-slate-100 rounded-lg hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-sm transition-all cursor-pointer group bg-white">
                   <div className="flex justify-between items-start mb-2">
-                    <p className="font-semibold text-sm text-slate-800 group-hover:text-blue-700 transition-colors">{booking.resource}</p>
+                    <p className="font-semibold text-sm text-slate-900 group-hover:text-blue-700 transition-colors">{booking.resource}</p>
                     <BookingStatusBadge status={booking.status} />
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
                       <User size={12} className="text-slate-400" />
                       {booking.user}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
                       <Clock size={12} className="text-slate-400" />
                       {booking.time}
                     </div>
@@ -239,9 +233,9 @@ const BookingPage = () => {
                 </div>
               ))}
             </div>
-            <button className="w-full mt-4 py-2 text-sm text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition-colors flex items-center justify-center gap-1">
+            <Button variant="ghost" className="w-full mt-4 gap-1 text-blue-600">
               View All Bookings <ChevronRight size={14} />
-            </button>
+            </Button>
           </DashboardCard>
         </div>
       </div>
@@ -251,35 +245,35 @@ const BookingPage = () => {
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="font-bold text-slate-800">Book a Resource</h3>
-              <button onClick={() => setIsBookDialogOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={18}/></button>
+              <h3 className="font-bold text-slate-900">Book a Resource</h3>
+              <button onClick={() => setIsBookDialogOpen(false)} className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-1 rounded-md transition-colors"><X size={18}/></button>
             </div>
             <div className="p-5 space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">Select Resource *</label>
-                <select className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <div className="space-y-1.5">
+                <Label>Select Resource *</Label>
+                <Select>
                   <option>Conference Projector A</option>
                   <option>Sony A7IV Camera Kit</option>
-                </select>
+                </Select>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1.5">Start Date & Time</label>
-                  <input type="datetime-local" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <div className="space-y-1.5">
+                  <Label>Start Date & Time</Label>
+                  <Input type="datetime-local" />
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1.5">End Date & Time</label>
-                  <input type="datetime-local" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <div className="space-y-1.5">
+                  <Label>End Date & Time</Label>
+                  <Input type="datetime-local" />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">Purpose / Notes</label>
+              <div className="space-y-1.5">
+                <Label>Purpose / Notes</Label>
                 <textarea rows="2" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"></textarea>
               </div>
             </div>
-            <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
-              <button onClick={() => setIsBookDialogOpen(false)} className="px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Cancel</button>
-              <button onClick={() => setIsBookDialogOpen(false)} className="px-5 py-1.5 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors shadow-sm">Confirm Booking</button>
+            <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setIsBookDialogOpen(false)}>Cancel</Button>
+              <Button onClick={() => setIsBookDialogOpen(false)}>Confirm Booking</Button>
             </div>
           </div>
         </div>
@@ -289,27 +283,27 @@ const BookingPage = () => {
       {isRescheduleDialogOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-blue-50">
+            <div className="px-5 py-4 border-b border-blue-100 flex justify-between items-center bg-blue-50">
               <h3 className="font-bold text-blue-900">Reschedule Booking</h3>
-              <button onClick={() => setIsRescheduleDialogOpen(false)} className="text-blue-400 hover:text-blue-600"><X size={18}/></button>
+              <button onClick={() => setIsRescheduleDialogOpen(false)} className="text-blue-400 hover:text-blue-700 hover:bg-blue-100 p-1 rounded-md transition-colors"><X size={18}/></button>
             </div>
             <div className="p-5 space-y-4">
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
                 <AlertCircle size={16} className="text-amber-600 mt-0.5 shrink-0" />
-                <p className="text-xs font-medium text-amber-800">You are requesting to move an already confirmed booking. The new slot must be available.</p>
+                <p className="text-xs font-semibold text-amber-800">You are requesting to move an already confirmed booking. The new slot must be available.</p>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">New Start</label>
-                <input type="datetime-local" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+              <div className="space-y-1.5">
+                <Label>New Start</Label>
+                <Input type="datetime-local" />
               </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">New End</label>
-                <input type="datetime-local" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+              <div className="space-y-1.5">
+                <Label>New End</Label>
+                <Input type="datetime-local" />
               </div>
             </div>
-            <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
-              <button onClick={() => setIsRescheduleDialogOpen(false)} className="px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Cancel</button>
-              <button onClick={() => setIsRescheduleDialogOpen(false)} className="px-5 py-1.5 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors shadow-sm">Submit Request</button>
+            <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setIsRescheduleDialogOpen(false)}>Cancel</Button>
+              <Button onClick={() => setIsRescheduleDialogOpen(false)}>Submit Request</Button>
             </div>
           </div>
         </div>

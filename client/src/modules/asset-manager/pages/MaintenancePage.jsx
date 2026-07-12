@@ -3,7 +3,8 @@ import {
   Plus, MoreHorizontal, AlertCircle, Wrench, Clock, Paperclip, 
   MessageSquare, User, X, CheckCircle2, ChevronRight
 } from 'lucide-react';
-import { ActivityCard } from '../components';
+import { ActivityCard } from '../components/dashboard';
+import { Button, Badge } from '../components/ui';
 
 // Placeholder Data
 const COLUMNS = [
@@ -83,16 +84,16 @@ const MOCK_TICKETS = [
 ];
 
 const PriorityBadge = ({ priority }) => {
-  const colors = {
-    'High': 'bg-red-100 text-red-700',
-    'Medium': 'bg-amber-100 text-amber-700',
-    'Low': 'bg-blue-100 text-blue-700'
+  const variantMap = {
+    'High': 'danger',
+    'Medium': 'warning',
+    'Low': 'info'
   };
   
   return (
-    <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded ${colors[priority]}`}>
+    <Badge variant={variantMap[priority] || 'neutral'}>
       {priority}
-    </span>
+    </Badge>
   );
 };
 
@@ -106,13 +107,13 @@ const MaintenancePage = () => {
       {/* Header */}
       <div className="px-6 py-5 border-b border-slate-200 bg-white flex justify-between items-center shrink-0">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Maintenance & Repairs</h2>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Maintenance & Repairs</h2>
           <p className="text-sm font-medium text-slate-500 mt-1">Track and manage asset maintenance requests through the Kanban board.</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <Button className="gap-2 shadow-sm">
           <Plus size={16} />
           Log Maintenance
-        </button>
+        </Button>
       </div>
 
       {/* Kanban Board Container */}
@@ -120,17 +121,17 @@ const MaintenancePage = () => {
         <div className="flex gap-6 h-full items-start w-max pb-4">
           
           {COLUMNS.map(column => (
-            <div key={column.id} className="w-[320px] flex flex-col max-h-full bg-slate-100/50 rounded-xl border border-slate-200">
+            <div key={column.id} className="w-[340px] flex flex-col max-h-full bg-slate-100/50 rounded-xl border border-slate-200 shadow-sm">
               
               {/* Column Header */}
-              <div className={`px-4 py-3 border-b-2 ${column.color} flex justify-between items-center bg-white rounded-t-xl`}>
+              <div className={`px-4 py-3.5 border-b-2 ${column.color} flex justify-between items-center bg-white rounded-t-xl`}>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-slate-800 text-sm">{column.title}</h3>
-                  <span className="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">
+                  <h3 className="font-bold text-slate-900 text-sm">{column.title}</h3>
+                  <span className="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full border border-slate-200">
                     {MOCK_TICKETS.filter(t => t.status === column.id).length}
                   </span>
                 </div>
-                <button className="text-slate-400 hover:text-slate-600"><MoreHorizontal size={16}/></button>
+                <button className="text-slate-400 hover:text-slate-700 hover:bg-slate-50 p-1 rounded transition-colors"><MoreHorizontal size={16}/></button>
               </div>
 
               {/* Column Cards */}
@@ -140,22 +141,22 @@ const MaintenancePage = () => {
                   <div 
                     key={ticket.id} 
                     onClick={() => setSelectedTicket(ticket)}
-                    className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group"
+                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-xs font-mono font-bold text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded">{ticket.id}</span>
+                    <div className="flex justify-between items-start mb-2.5">
+                      <span className="text-xs font-mono font-bold text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">{ticket.id}</span>
                       <PriorityBadge priority={ticket.priority} />
                     </div>
                     
-                    <h4 className="font-bold text-slate-800 text-sm mb-1 group-hover:text-blue-600 transition-colors">{ticket.asset}</h4>
-                    <p className="text-xs text-slate-500 line-clamp-2 mb-3 leading-relaxed">{ticket.issue}</p>
+                    <h4 className="font-bold text-slate-900 text-sm mb-1 group-hover:text-blue-700 transition-colors">{ticket.asset}</h4>
+                    <p className="text-xs font-medium text-slate-500 line-clamp-2 mb-3 leading-relaxed">{ticket.issue}</p>
                     
-                    <div className="flex items-center gap-2 text-xs font-medium text-slate-600 bg-slate-50 px-2 py-1.5 rounded-md mb-3 border border-slate-100">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 bg-slate-50/80 px-2.5 py-1.5 rounded-md mb-3 border border-slate-100">
                       <User size={12} className="text-slate-400" />
-                      {ticket.technician ? ticket.technician : <span className="text-slate-400 italic">Unassigned</span>}
+                      {ticket.technician ? ticket.technician : <span className="text-slate-400 font-medium italic">Unassigned</span>}
                     </div>
 
-                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs font-medium text-slate-400">
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs font-semibold text-slate-400">
                       <div className="flex items-center gap-3">
                         {ticket.attachments > 0 && (
                           <div className="flex items-center gap-1 hover:text-slate-600">
@@ -178,8 +179,8 @@ const MaintenancePage = () => {
                 
                 {/* Empty State for Column */}
                 {MOCK_TICKETS.filter(t => t.status === column.id).length === 0 && (
-                  <div className="p-4 border-2 border-dashed border-slate-200 rounded-lg text-center">
-                    <p className="text-xs font-medium text-slate-400">No tickets in this column</p>
+                  <div className="p-4 border-2 border-dashed border-slate-200 rounded-xl text-center bg-slate-50/50">
+                    <p className="text-xs font-semibold text-slate-400">No tickets in this column</p>
                   </div>
                 )}
               </div>
@@ -201,47 +202,47 @@ const MaintenancePage = () => {
           {/* Drawer Panel */}
           <div className="relative w-full max-w-md h-full bg-white shadow-2xl border-l border-slate-200 flex flex-col animate-in slide-in-from-right duration-300 z-10">
             
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <div className="flex items-center gap-3">
-                <button onClick={() => setSelectedTicket(null)} className="p-1 text-slate-400 hover:text-slate-600 rounded hover:bg-slate-200"><ChevronRight size={20}/></button>
-                <h3 className="font-bold text-slate-800 text-lg">{selectedTicket.id}</h3>
+                <button onClick={() => setSelectedTicket(null)} className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-200 transition-colors"><ChevronRight size={20}/></button>
+                <h3 className="font-bold text-slate-900 text-lg">{selectedTicket.id}</h3>
               </div>
               <PriorityBadge priority={selectedTicket.priority} />
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white">
               
               <div>
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Asset Information</h4>
-                <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between cursor-pointer hover:bg-blue-100 transition-colors">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Asset Information</h4>
+                <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-xl flex items-center justify-between cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors">
                   <div>
                     <p className="font-bold text-blue-900 text-sm">{selectedTicket.asset}</p>
-                    <p className="text-xs text-blue-600 font-mono mt-0.5">{selectedTicket.assetTag}</p>
+                    <p className="text-xs text-blue-600 font-mono font-medium mt-0.5">{selectedTicket.assetTag}</p>
                   </div>
                   <ChevronRight size={16} className="text-blue-400" />
                 </div>
               </div>
 
               <div>
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Issue Description</h4>
-                <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Issue Description</h4>
+                <p className="text-sm font-medium text-slate-700 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                   {selectedTicket.issue}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Requester</h4>
-                  <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Requester</h4>
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                     <User size={14} className="text-slate-400" />
                     {selectedTicket.requester}
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Assigned Tech</h4>
-                  <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Assigned Tech</h4>
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                     <Wrench size={14} className="text-slate-400" />
-                    {selectedTicket.technician || <span className="text-slate-400 italic">Unassigned</span>}
+                    {selectedTicket.technician || <span className="text-slate-400 font-medium italic">Unassigned</span>}
                   </div>
                 </div>
               </div>
@@ -249,17 +250,17 @@ const MaintenancePage = () => {
               <div>
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-100 pb-2">Attachments ({selectedTicket.attachments})</h4>
                 {selectedTicket.attachments > 0 ? (
-                   <div className="flex items-center p-2 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
-                     <div className="p-2 bg-blue-50 text-blue-600 rounded mr-3">
+                   <div className="flex items-center p-3 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-blue-200 cursor-pointer transition-colors group">
+                     <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg mr-3 group-hover:bg-blue-100 transition-colors border border-blue-100">
                        <Paperclip size={16} />
                      </div>
                      <div>
-                       <p className="text-sm font-semibold text-slate-800">issue_screenshot.jpg</p>
-                       <p className="text-xs text-slate-500">1.2 MB</p>
+                       <p className="text-sm font-bold text-slate-900">issue_screenshot.jpg</p>
+                       <p className="text-xs font-medium text-slate-500 mt-0.5">1.2 MB</p>
                      </div>
                    </div>
                 ) : (
-                  <p className="text-sm text-slate-400 italic">No attachments provided.</p>
+                  <p className="text-sm font-medium text-slate-400 italic">No attachments provided.</p>
                 )}
               </div>
 
@@ -312,10 +313,10 @@ const MaintenancePage = () => {
 
             </div>
 
-            <div className="p-4 border-t border-slate-200 bg-slate-50 shrink-0">
-              <button className="w-full py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div className="p-5 border-t border-slate-200 bg-slate-50 shrink-0">
+              <Button className="w-full">
                 Update Ticket Status
-              </button>
+              </Button>
             </div>
           </div>
         </div>

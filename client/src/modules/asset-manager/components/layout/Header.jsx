@@ -1,186 +1,51 @@
 import React from 'react';
 import { Search, Bell, Moon, ChevronDown } from 'lucide-react';
 import { Breadcrumb } from './Breadcrumb';
+import { Input, Button } from '../ui';
 
 export const Header = () => {
   return (
-    <header
-      style={{
-        height: "64px",
-        backgroundColor: "#ffffff",
-        borderBottom: "1px solid #e2e8f0",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingLeft: "24px",
-        paddingRight: "24px",
-        flexShrink: 0,
-        fontFamily: "Inter, sans-serif",
-      }}
-    >
+    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 font-sans">
       <Breadcrumb />
 
       {/* Right Actions */}
-      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+      <div className="flex items-center gap-4">
         {/* Global Search */}
-        <div style={{ position: "relative" }}>
+        <div className="relative">
           <Search
             size={18}
-            style={{
-              position: "absolute",
-              left: "12px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              color: "#94a3b8",
-              pointerEvents: "none",
-            }}
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"
           />
           <input
             type="text"
             placeholder="Search assets..."
-            style={{
-              paddingLeft: "36px",
-              paddingRight: "16px",
-              paddingTop: "6px",
-              paddingBottom: "6px",
-              width: "256px",
-              backgroundColor: "#f8fafc",
-              border: "1px solid #e2e8f0",
-              borderRadius: "8px",
-              fontSize: "13px",
-              color: "#0f172a",
-              outline: "none",
-              fontFamily: "Inter, sans-serif",
-              transition: "all 0.2s",
-            }}
-            onFocus={(e) => {
-              e.target.style.boxShadow = "0 0 0 2px #1e3a8a33";
-              e.target.style.backgroundColor = "#ffffff";
-              e.target.style.borderColor = "#1e3a8a";
-            }}
-            onBlur={(e) => {
-              e.target.style.boxShadow = "none";
-              e.target.style.backgroundColor = "#f8fafc";
-              e.target.style.borderColor = "#e2e8f0";
-            }}
+            className="pl-9 pr-4 py-1.5 w-64 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 outline-none transition-all focus:bg-white focus:border-blue-800 focus:ring-2 focus:ring-blue-800/20"
           />
         </div>
 
         {/* Action Icons */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <button
-            style={{
-              padding: "8px",
-              color: "#94a3b8",
-              backgroundColor: "transparent",
-              border: "none",
-              cursor: "pointer",
-              borderRadius: "50%",
-              position: "relative",
-              transition: "all 0.2s",
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.color = "#0f172a";
-              e.currentTarget.style.backgroundColor = "#f1f5f9";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.color = "#94a3b8";
-              e.currentTarget.style.backgroundColor = "transparent";
-            }}
-          >
+        <div className="flex items-center gap-2">
+          <button className="p-2 text-slate-400 bg-transparent border-none cursor-pointer rounded-full relative transition-all hover:text-slate-900 hover:bg-slate-100">
             <Bell size={20} />
-            <span
-              style={{
-                position: "absolute",
-                top: "6px",
-                right: "6px",
-                width: "8px",
-                height: "8px",
-                backgroundColor: "#dc2626",
-                borderRadius: "50%",
-                border: "2px solid #ffffff",
-              }}
-            />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-600 rounded-full border-2 border-white" />
           </button>
-          <button
-            style={{
-              padding: "8px",
-              color: "#94a3b8",
-              backgroundColor: "transparent",
-              border: "none",
-              cursor: "pointer",
-              borderRadius: "50%",
-              transition: "all 0.2s",
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.color = "#0f172a";
-              e.currentTarget.style.backgroundColor = "#f1f5f9";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.color = "#94a3b8";
-              e.currentTarget.style.backgroundColor = "transparent";
-            }}
-          >
+          <button className="p-2 text-slate-400 bg-transparent border-none cursor-pointer rounded-full transition-all hover:text-slate-900 hover:bg-slate-100">
             <Moon size={20} />
           </button>
         </div>
 
         {/* Divider */}
-        <div
-          style={{
-            height: "32px",
-            width: "1px",
-            backgroundColor: "#e2e8f0",
-          }}
-        />
+        <div className="h-8 w-px bg-slate-200" />
 
         {/* Context Switcher */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            cursor: "pointer",
-            padding: "6px 12px",
-            borderRadius: "8px",
-            border: "1px solid transparent",
-            transition: "all 0.2s",
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = "#f8fafc";
-            e.currentTarget.style.borderColor = "#e2e8f0";
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = "transparent";
-            e.currentTarget.style.borderColor = "transparent";
-          }}
-        >
-          <div
-            style={{
-              width: "24px",
-              height: "24px",
-              borderRadius: "4px",
-              backgroundColor: "#1e3a8a",
-              color: "#ffffff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "11px",
-              fontWeight: "700",
-            }}
-          >
+        <div className="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-lg border border-transparent transition-all hover:bg-slate-50 hover:border-slate-200">
+          <div className="w-6 h-6 rounded bg-blue-900 text-white flex items-center justify-center text-xs font-bold">
             AC
           </div>
-          <span
-            style={{
-              fontSize: "14px",
-              fontWeight: "500",
-              color: "#0f172a",
-            }}
-          >
+          <span className="text-sm font-semibold text-slate-900">
             Acme Corp
           </span>
-          <ChevronDown size={16} style={{ color: "#94a3b8" }} />
+          <ChevronDown size={16} className="text-slate-400" />
         </div>
       </div>
     </header>

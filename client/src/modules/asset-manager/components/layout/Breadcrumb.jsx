@@ -25,32 +25,15 @@ export const Breadcrumb = () => {
   const pageTitle = PAGE_TITLES[currentPath] || (currentPath.charAt(0).toUpperCase() + currentPath.slice(1).replace("-", " "));
 
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
+    <div className="flex flex-col">
       {/* Added breadcrumb hierarchy prefix as requested */}
-      <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "4px" }}>
-        Home &gt; <span style={{ color: "#1e3a8a", fontWeight: "500" }}>{pageTitle}</span>
+      <div className="text-xs text-slate-500 mb-1">
+        Home &gt; <span className="text-blue-900 font-semibold">{pageTitle}</span>
       </div>
-      <h1
-        style={{
-          fontSize: "18px",
-          fontWeight: "600",
-          color: "#0f172a",
-          lineHeight: "1.3",
-          margin: "0",
-        }}
-      >
+      <h1 className="text-lg font-bold text-slate-900 leading-tight m-0">
         {pageTitle}
       </h1>
-      <p
-        style={{
-          fontSize: "12px",
-          color: "#64748b",
-          display: "none",
-          marginTop: "4px",
-          margin: "4px 0 0 0",
-        }}
-        className="sm:block"
-      >
+      <p className="text-xs text-slate-500 hidden sm:block mt-1 m-0 font-medium">
         AssetFlow Organization Admin
       </p>
     </div>

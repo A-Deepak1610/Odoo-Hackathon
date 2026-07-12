@@ -5,10 +5,10 @@ import {
   CalendarClock, 
   CheckCircle2,
   PlusCircle,
-  FileText,
   Wrench,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  ChevronRight
 } from 'lucide-react';
 import { 
   StatsCard, 
@@ -17,17 +17,21 @@ import {
   QuickActionCard, 
   ActivityCard 
 } from '../components/dashboard';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge, Button, Card, CardContent } from '../components/ui';
 
 const DashboardPage = () => {
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-6 max-w-[1600px] mx-auto space-y-6">
       <div className="flex justify-between items-end mb-2">
-        <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Asset Manager Overview</h2>
-        <div className="text-sm font-medium text-slate-500">Last updated: Today, 09:41 AM</div>
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Asset Manager Overview</h2>
+          <p className="text-sm font-medium text-slate-500 mt-1">Monitor asset utilization and team activity.</p>
+        </div>
+        <div className="text-sm font-medium text-slate-500 hidden sm:block">Last updated: Today, 09:41 AM</div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard 
           title="Assets Available" 
           value="1,248" 
@@ -77,73 +81,78 @@ const DashboardPage = () => {
           {/* Pending Transfers */}
           <DashboardCard 
             title="Pending Transfers" 
-            action={<button className="text-sm text-blue-600 font-semibold hover:text-blue-800 transition-colors focus:outline-none">View All</button>}
+            action={
+              <Button variant="ghost" size="sm" className="text-blue-600 font-semibold gap-1">
+                View All <ChevronRight size={14} />
+              </Button>
+            }
           >
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold tracking-wider">
-                    <th className="pb-3 pl-2 font-medium">Asset</th>
-                    <th className="pb-3 font-medium">From</th>
-                    <th className="pb-3 font-medium">To</th>
-                    <th className="pb-3 font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="text-sm">
-                  <tr className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
-                    <td className="py-3.5 pl-2 font-medium text-slate-800">MacBook Pro 16"</td>
-                    <td className="py-3.5 text-slate-600">IT Dept</td>
-                    <td className="py-3.5 text-slate-600">Sarah Jenkins</td>
-                    <td className="py-3.5"><span className="px-2.5 py-1 bg-amber-100 text-amber-700 rounded-md text-xs font-semibold">Pending Approval</span></td>
-                  </tr>
-                  <tr className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
-                    <td className="py-3.5 pl-2 font-medium text-slate-800">Dell UltraSharp 27"</td>
-                    <td className="py-3.5 text-slate-600">Storage Room A</td>
-                    <td className="py-3.5 text-slate-600">Engineering</td>
-                    <td className="py-3.5"><span className="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-semibold">In Transit</span></td>
-                  </tr>
-                  <tr className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-3.5 pl-2 font-medium text-slate-800">Conference Mic Set</td>
-                    <td className="py-3.5 text-slate-600">Facilities</td>
-                    <td className="py-3.5 text-slate-600">Meeting Room 4</td>
-                    <td className="py-3.5"><span className="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-semibold">In Transit</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[30%]">Asset</TableHead>
+                  <TableHead>From</TableHead>
+                  <TableHead>To</TableHead>
+                  <TableHead className="text-right">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="font-semibold text-slate-800">MacBook Pro 16"</TableCell>
+                  <TableCell className="font-medium text-slate-600">IT Dept</TableCell>
+                  <TableCell className="font-medium text-slate-600">Sarah Jenkins</TableCell>
+                  <TableCell className="text-right">
+                    <Badge variant="warning">Pending Approval</Badge>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-semibold text-slate-800">Dell UltraSharp 27"</TableCell>
+                  <TableCell className="font-medium text-slate-600">Storage Room A</TableCell>
+                  <TableCell className="font-medium text-slate-600">Engineering</TableCell>
+                  <TableCell className="text-right">
+                    <Badge variant="info">In Transit</Badge>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-semibold text-slate-800">Conference Mic Set</TableCell>
+                  <TableCell className="font-medium text-slate-600">Facilities</TableCell>
+                  <TableCell className="font-medium text-slate-600">Meeting Room 4</TableCell>
+                  <TableCell className="text-right">
+                    <Badge variant="info">In Transit</Badge>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
           </DashboardCard>
 
           {/* Upcoming Returns */}
           <DashboardCard 
             title="Upcoming Returns"
-            action={<button className="text-sm text-blue-600 font-semibold hover:text-blue-800 transition-colors focus:outline-none">Schedule</button>}
+            action={<Button variant="ghost" size="sm">Schedule</Button>}
           >
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-blue-200 hover:shadow-sm hover:bg-blue-50/20 transition-all bg-white cursor-pointer">
-                <div className="flex items-center gap-4">
-                  <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-slate-500"><Clock size={18} /></div>
-                  <div>
-                    <p className="font-semibold text-sm text-slate-800">Sony A7IV Camera Kit</p>
-                    <p className="text-xs text-slate-500 mt-0.5">Allocated to: Marketing Dept</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-slate-700">Today, 5:00 PM</p>
-                  <p className="text-xs font-medium text-blue-600 mt-0.5">In 5 hours</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-blue-200 hover:shadow-sm hover:bg-blue-50/20 transition-all bg-white cursor-pointer">
-                <div className="flex items-center gap-4">
-                  <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-slate-500"><Clock size={18} /></div>
-                  <div>
-                    <p className="font-semibold text-sm text-slate-800">Projector Mobile Stand</p>
-                    <p className="text-xs text-slate-500 mt-0.5">Allocated to: John Doe</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-slate-700">Tomorrow, 10:00 AM</p>
-                </div>
-              </div>
+              {[
+                { name: 'Sony A7IV Camera Kit', alloc: 'Marketing Dept', time: 'Today, 5:00 PM', due: 'In 5 hours' },
+                { name: 'Projector Mobile Stand', alloc: 'John Doe', time: 'Tomorrow, 10:00 AM', due: null },
+              ].map((item, i) => (
+                <Card key={i} className="cursor-pointer hover:border-blue-300 hover:shadow-md transition-all group">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                        <Clock size={18} />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm text-slate-900">{item.name}</p>
+                        <p className="text-xs font-medium text-slate-500 mt-0.5">Allocated to: {item.alloc}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-slate-700">{item.time}</p>
+                      {item.due && <p className="text-xs font-semibold text-blue-600 mt-0.5">{item.due}</p>}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </DashboardCard>
 

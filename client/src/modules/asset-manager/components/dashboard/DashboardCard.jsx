@@ -1,17 +1,18 @@
 import React from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '../ui';
 
 export const DashboardCard = ({ title, children, action, className = '' }) => {
   return (
-    <div className={`bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col ${className}`}>
+    <Card className={`flex flex-col h-full ${className}`}>
       {(title || action) && (
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
-          {title && <h2 className="text-base font-semibold text-slate-800">{title}</h2>}
-          {action && <div>{action}</div>}
-        </div>
+        <CardHeader className="flex flex-row items-center justify-between shrink-0 py-4">
+          {title && <CardTitle>{title}</CardTitle>}
+          {action && <div className="ml-4">{action}</div>}
+        </CardHeader>
       )}
-      <div className="p-5 flex-1 overflow-auto">
+      <CardContent className="flex-1 overflow-auto">
         {children}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

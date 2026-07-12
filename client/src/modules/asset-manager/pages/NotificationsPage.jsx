@@ -4,7 +4,8 @@ import {
   ClipboardCheck, Search, Filter, Check, CheckCircle2, 
   Clock, Box, ShieldAlert, ArrowDownToLine
 } from 'lucide-react';
-import { DashboardCard } from '../components';
+import { DashboardCard } from '../components/dashboard';
+import { Button, Input } from '../components/ui';
 
 // Static Data
 const TABS = [
@@ -112,10 +113,10 @@ const NotificationsPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             Activity Logs & Notifications
             {unreadCount > 0 && (
-              <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full ml-2 border border-blue-200">
+              <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-0.5 rounded-full ml-2 border border-blue-200">
                 {unreadCount} New
               </span>
             )}
@@ -137,9 +138,9 @@ const NotificationsPage = () => {
                   <button 
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-colors focus:outline-none ${
+                    className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all focus:outline-none ${
                       activeTab === tab.id 
-                        ? 'bg-slate-800 text-white shadow-sm' 
+                        ? 'bg-slate-900 text-white shadow-sm' 
                         : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                     }`}
                   >
@@ -148,13 +149,14 @@ const NotificationsPage = () => {
                 ))}
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button 
+                <Button 
+                  variant="secondary"
                   onClick={markAllRead}
                   disabled={unreadCount === 0}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="gap-1.5"
                 >
                   <Check size={16} /> Mark All Read
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -166,7 +168,7 @@ const NotificationsPage = () => {
                     key={notif.id} 
                     className={`relative p-4 rounded-xl border transition-all ${
                       notif.unread 
-                        ? 'bg-blue-50/30 border-blue-200 hover:bg-blue-50/50 hover:shadow-sm' 
+                        ? 'bg-blue-50/50 border-blue-200 shadow-sm' 
                         : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50'
                     }`}
                   >
@@ -176,31 +178,32 @@ const NotificationsPage = () => {
                     )}
                     
                     <div className="flex items-start gap-4">
-                      <div className={`p-2.5 rounded-lg border shrink-0 mt-0.5 ${notif.bg} ${notif.color} ${notif.border}`}>
+                      <div className={`p-2.5 rounded-xl border shrink-0 mt-0.5 shadow-sm ${notif.bg} ${notif.color} ${notif.border}`}>
                         <notif.icon size={20} />
                       </div>
                       <div className="flex-1 pr-6">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className={`text-sm font-bold ${notif.unread ? 'text-slate-900' : 'text-slate-800'}`}>
+                          <h4 className={`text-sm font-bold ${notif.unread ? 'text-slate-900' : 'text-slate-700'}`}>
                             {notif.title}
                           </h4>
-                          <span className="text-xs font-medium text-slate-400">• {notif.timestamp}</span>
+                          <span className="text-xs font-semibold text-slate-400">• {notif.timestamp}</span>
                         </div>
-                        <p className={`text-sm ${notif.unread ? 'text-slate-700' : 'text-slate-600'}`}>
+                        <p className={`text-sm font-medium ${notif.unread ? 'text-slate-700' : 'text-slate-500'}`}>
                           {notif.message}
                         </p>
                         
                         {notif.unread && (
                           <div className="mt-3 flex gap-2">
-                            <button className="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 transition-colors">
+                            <Button size="sm">
                               View Details
-                            </button>
-                            <button 
+                            </Button>
+                            <Button 
+                              variant="secondary"
+                              size="sm"
                               onClick={() => markRead(notif.id)}
-                              className="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded hover:bg-slate-50 transition-colors"
                             >
                               Mark Read
-                            </button>
+                            </Button>
                           </div>
                         )}
                       </div>
@@ -211,7 +214,7 @@ const NotificationsPage = () => {
                 <div className="py-12 flex flex-col items-center justify-center text-slate-400">
                   <Bell size={48} className="mb-4 opacity-20" />
                   <p className="font-semibold text-slate-600">No notifications to display</p>
-                  <p className="text-sm">You're all caught up in this category!</p>
+                  <p className="text-sm font-medium">You're all caught up in this category!</p>
                 </div>
               )}
             </div>
@@ -224,17 +227,17 @@ const NotificationsPage = () => {
           <DashboardCard 
             title="System Activity Log" 
             action={
-              <button className="p-1.5 text-slate-400 hover:text-slate-600 rounded hover:bg-slate-100 transition-colors">
+              <button className="p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors">
                 <ArrowDownToLine size={16} />
               </button>
             }
           >
             <div className="relative mb-4 mt-2">
               <Search size={14} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
-              <input 
+              <Input 
                 type="text" 
                 placeholder="Search system logs..." 
-                className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 bg-slate-50"
+                className="pl-9"
               />
             </div>
 
@@ -243,23 +246,23 @@ const NotificationsPage = () => {
               <div className="absolute left-4 top-4 bottom-4 w-px bg-slate-200 -z-0"></div>
 
               {MOCK_LOGS.map((log, index) => (
-                <div key={log.id} className="relative z-10 flex items-start gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors group">
+                <div key={log.id} className="relative z-10 flex items-start gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors group">
                   <div className={`mt-1.5 w-2 h-2 rounded-full ring-4 ring-white shrink-0 ${log.status === 'Success' ? 'bg-slate-400 group-hover:bg-blue-500' : 'bg-red-500'}`}></div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-0.5">
-                      <p className="text-sm font-bold text-slate-800 truncate">{log.action}</p>
-                      <span className="text-xs font-mono text-slate-400 shrink-0 ml-2">{log.id}</span>
+                      <p className="text-sm font-bold text-slate-900 truncate">{log.action}</p>
+                      <span className="text-xs font-mono font-medium text-slate-400 shrink-0 ml-2">{log.id}</span>
                     </div>
-                    <p className="text-xs text-slate-500 truncate"><span className="font-medium text-slate-700">{log.user}</span> → {log.target}</p>
+                    <p className="text-xs font-medium text-slate-500 truncate"><span className="font-semibold text-slate-700">{log.user}</span> → {log.target}</p>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1.5">{log.time}</p>
                   </div>
                 </div>
               ))}
             </div>
 
-            <button className="w-full mt-4 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-semibold hover:bg-slate-100 transition-colors focus:outline-none">
+            <Button variant="secondary" className="w-full mt-4">
               Load More Logs
-            </button>
+            </Button>
           </DashboardCard>
         </div>
 

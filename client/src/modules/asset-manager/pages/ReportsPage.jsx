@@ -4,7 +4,8 @@ import {
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 import { Download, TrendingUp, TrendingDown, Wrench, Building2, Calendar, FileText, ArrowRight } from 'lucide-react';
-import { DashboardCard } from '../components';
+import { DashboardCard } from '../components/dashboard';
+import { Button } from '../components/ui';
 
 // Static Chart Data
 const utilizationData = [
@@ -61,12 +62,12 @@ const ReportsPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Reports & Analytics</h2>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Reports & Analytics</h2>
           <p className="text-sm font-medium text-slate-500 mt-1">Visualize asset utilization, departmental allocation, and maintenance metrics.</p>
         </div>
-        <button className="flex justify-center items-center gap-2 px-5 py-2.5 bg-slate-800 text-white rounded-lg text-sm font-medium hover:bg-slate-900 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 w-full sm:w-auto">
+        <Button className="w-full sm:w-auto gap-2 bg-slate-900 hover:bg-slate-800">
           <Download size={16} /> Export Full Report
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -149,25 +150,25 @@ const ReportsPage = () => {
             <div className="overflow-x-auto pb-2 mt-2">
               <div className="min-w-max flex gap-2">
                 {/* Y-Axis Labels */}
-                <div className="flex flex-col gap-1.5 pt-6 pr-2 text-xs text-slate-500 font-medium justify-between">
+                <div className="flex flex-col gap-1.5 pt-6 pr-2 text-xs text-slate-500 font-semibold justify-between">
                   {heatmapData.grid.map(row => <div key={row.day} className="h-[20px] flex items-center">{row.day}</div>)}
                 </div>
                 
                 {/* Heatmap Grid */}
                 <div className="flex flex-col gap-1.5">
                   <div className="flex gap-1.5 pl-0.5">
-                    {heatmapData.weeks.map(w => <div key={w} className="w-[20px] text-center text-[10px] text-slate-400 font-medium">{w.replace('W','')}</div>)}
+                    {heatmapData.weeks.map(w => <div key={w} className="w-[20px] text-center text-[10px] text-slate-400 font-semibold">{w.replace('W','')}</div>)}
                   </div>
                   
                   {heatmapData.grid.map((row, i) => (
-                    <div key={i} className="flex gap-1.5">
+                     <div key={i} className="flex gap-1.5">
                       {row.intensities.map((intensity, j) => {
                         // Tailwind color mapping based on intensity
                         const colors = ['bg-slate-100', 'bg-blue-200', 'bg-blue-400', 'bg-blue-600', 'bg-blue-800'];
                         return (
                           <div 
                             key={j} 
-                            className={`w-[20px] h-[20px] rounded-sm ${colors[intensity]} hover:ring-2 hover:ring-slate-400 cursor-pointer transition-all`}
+                            className={`w-[20px] h-[20px] rounded-sm ${colors[intensity]} hover:ring-2 hover:ring-slate-400 cursor-pointer transition-all shadow-sm`}
                             title={`${row.day}, Week ${j+1}: ${intensity} bookings`}
                           ></div>
                         )
@@ -177,7 +178,7 @@ const ReportsPage = () => {
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-2 mt-4 text-xs font-medium text-slate-500">
+            <div className="flex items-center justify-end gap-2 mt-4 text-xs font-semibold text-slate-500">
               <span>Less</span>
               <div className="flex gap-1">
                 <div className="w-3 h-3 rounded-sm bg-slate-100"></div>
@@ -203,9 +204,9 @@ const ReportsPage = () => {
                 { name: 'Dell XPS 15 (AST-042)', uses: 38, icon: TrendingUp, color: 'text-emerald-500' },
                 { name: 'Sony A7IV Camera', uses: 32, icon: TrendingUp, color: 'text-emerald-500' }
               ].map((asset, i) => (
-                <div key={i} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors">
-                  <div className="font-semibold text-sm text-slate-800">{asset.name}</div>
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-white px-2 py-1 rounded shadow-sm border border-slate-200">
+                <div key={i} className="flex justify-between items-center p-3.5 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
+                  <div className="font-bold text-sm text-slate-900">{asset.name}</div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-white px-2.5 py-1.5 rounded-lg shadow-sm border border-slate-200">
                     {asset.uses} <asset.icon size={12} className={asset.color} />
                   </div>
                 </div>
@@ -221,9 +222,9 @@ const ReportsPage = () => {
                 { name: 'iPad Pro (AST-011)', uses: 4, icon: TrendingDown, color: 'text-red-500' },
                 { name: 'Standing Desk Pro', uses: 5, icon: TrendingDown, color: 'text-red-500' }
               ].map((asset, i) => (
-                <div key={i} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors">
-                  <div className="font-semibold text-sm text-slate-800">{asset.name}</div>
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-white px-2 py-1 rounded shadow-sm border border-slate-200">
+                <div key={i} className="flex justify-between items-center p-3.5 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
+                  <div className="font-bold text-sm text-slate-900">{asset.name}</div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-white px-2.5 py-1.5 rounded-lg shadow-sm border border-slate-200">
                     {asset.uses} <asset.icon size={12} className={asset.color} />
                   </div>
                 </div>
@@ -237,7 +238,7 @@ const ReportsPage = () => {
               {departmentData.map((dept, i) => (
                 <div key={i}>
                   <div className="flex justify-between items-end mb-1.5">
-                    <span className="text-sm font-semibold text-slate-800">{dept.name}</span>
+                    <span className="text-sm font-bold text-slate-900">{dept.name}</span>
                     <span className="text-xs font-medium text-slate-500">{dept.value} Assets</span>
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
@@ -254,24 +255,24 @@ const ReportsPage = () => {
           {/* Upcoming Maintenance */}
           <DashboardCard title="Upcoming Maintenance">
             <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 border border-amber-200 bg-amber-50 rounded-lg">
-                <div className="p-2 bg-white rounded-md text-amber-600 shrink-0"><Calendar size={16} /></div>
+              <div className="flex items-center gap-3 p-3.5 border border-amber-200 bg-amber-50 rounded-xl shadow-sm">
+                <div className="p-2.5 bg-white rounded-lg text-amber-600 shrink-0 shadow-sm"><Calendar size={18} /></div>
                 <div>
                   <p className="text-sm font-bold text-amber-900">HVAC Inspection</p>
-                  <p className="text-xs text-amber-700">Scheduled for Tomorrow</p>
+                  <p className="text-xs font-medium text-amber-700 mt-0.5">Scheduled for Tomorrow</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 border border-slate-200 bg-slate-50 rounded-lg">
-                <div className="p-2 bg-white rounded-md text-slate-600 shrink-0"><Calendar size={16} /></div>
+              <div className="flex items-center gap-3 p-3.5 border border-slate-200 bg-slate-50 rounded-xl shadow-sm">
+                <div className="p-2.5 bg-white rounded-lg text-slate-600 shrink-0 shadow-sm"><Calendar size={18} /></div>
                 <div>
-                  <p className="text-sm font-bold text-slate-800">Server Rack Cleanup</p>
-                  <p className="text-xs text-slate-500">Scheduled for Friday</p>
+                  <p className="text-sm font-bold text-slate-900">Server Rack Cleanup</p>
+                  <p className="text-xs font-medium text-slate-500 mt-0.5">Scheduled for Friday</p>
                 </div>
               </div>
             </div>
-            <button className="w-full mt-4 flex items-center justify-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+            <Button variant="ghost" className="w-full mt-4 gap-1 text-blue-600 h-8">
               View Schedule <ArrowRight size={14} />
-            </button>
+            </Button>
           </DashboardCard>
 
         </div>

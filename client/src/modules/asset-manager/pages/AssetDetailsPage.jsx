@@ -2,11 +2,12 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Edit, Trash2, Image as ImageIcon, FileText, 
-  MapPin, Tag, Box, Hash, Calendar, DollarSign, Activity,
-  User, Building2, Wrench, ArrowRightLeft, Clock, CheckCircle2
+  MapPin, Box, Hash, Calendar, DollarSign, Activity,
+  Building2, Wrench, Clock, CheckCircle2
 } from 'lucide-react';
-import { DashboardCard, ActivityCard } from '../components';
+import { DashboardCard, ActivityCard } from '../components/dashboard';
 import { AssetStatusBadge } from '../components/assets';
+import { Button, Badge } from '../components/ui';
 
 // Placeholder data
 const ASSET = {
@@ -45,7 +46,7 @@ const AssetDetailsPage = () => {
             <ArrowLeft size={18} />
           </Link>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">{ASSET.name}</h2>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{ASSET.name}</h2>
             <div className="flex items-center gap-3 mt-1.5">
               <span className="text-sm font-mono font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{ASSET.tag}</span>
               <AssetStatusBadge status={ASSET.status} />
@@ -53,14 +54,14 @@ const AssetDetailsPage = () => {
           </div>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 text-slate-700 bg-white rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors focus:outline-none shadow-sm">
+          <Button variant="secondary" className="flex-1 sm:flex-none gap-2">
             <Edit size={16} />
             <span>Edit Asset</span>
-          </button>
-          <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-red-200 text-red-600 bg-red-50 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors focus:outline-none shadow-sm">
+          </Button>
+          <Button variant="danger" className="flex-1 sm:flex-none gap-2">
             <Trash2 size={16} />
             <span>Delete</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -82,7 +83,7 @@ const AssetDetailsPage = () => {
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
                 <div>
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Asset Name</div>
-                  <div className="text-sm font-semibold text-slate-800">{ASSET.name}</div>
+                  <div className="text-sm font-semibold text-slate-900">{ASSET.name}</div>
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Category</div>
@@ -107,7 +108,9 @@ const AssetDetailsPage = () => {
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Condition</div>
-                  <div className="text-sm font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md inline-block border border-emerald-100">{ASSET.condition}</div>
+                  <Badge variant={ASSET.condition === 'Good' ? 'success' : ASSET.condition === 'Fair' ? 'warning' : 'danger'}>
+                    {ASSET.condition}
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -119,22 +122,22 @@ const AssetDetailsPage = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-start pb-4 border-b border-slate-100">
                   <div>
-                    <p className="text-sm font-bold text-slate-800">Sarah Jenkins</p>
-                    <p className="text-xs text-slate-500 mt-1">Engineering Dept</p>
+                    <p className="text-sm font-bold text-slate-900">Sarah Jenkins</p>
+                    <p className="text-xs font-medium text-slate-500 mt-1">Engineering Dept</p>
                   </div>
                   <div className="text-right">
-                    <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded border border-blue-100 inline-block mb-1">Current</span>
-                    <p className="text-xs text-slate-400 font-medium">Jan 20, 2024 - Present</p>
+                    <Badge variant="info" className="mb-1.5">Current</Badge>
+                    <p className="text-xs text-slate-500 font-medium">Jan 20, 2024 - Present</p>
                   </div>
                 </div>
                 <div className="flex justify-between items-start pb-4 border-b border-slate-100">
                   <div>
-                    <p className="text-sm font-bold text-slate-800">IT Storage Room</p>
-                    <p className="text-xs text-slate-500 mt-1">Inventory</p>
+                    <p className="text-sm font-bold text-slate-900">IT Storage Room</p>
+                    <p className="text-xs font-medium text-slate-500 mt-1">Inventory</p>
                   </div>
                   <div className="text-right">
-                    <span className="px-2 py-1 bg-slate-50 text-slate-600 text-xs font-bold rounded border border-slate-200 inline-block mb-1">Returned</span>
-                    <p className="text-xs text-slate-400 font-medium">Jan 15 - Jan 20, 2024</p>
+                    <Badge variant="neutral" className="mb-1.5">Returned</Badge>
+                    <p className="text-xs text-slate-500 font-medium">Jan 15 - Jan 20, 2024</p>
                   </div>
                 </div>
               </div>
@@ -143,12 +146,12 @@ const AssetDetailsPage = () => {
             <DashboardCard title="Maintenance History">
               <div className="space-y-4">
                 <div className="flex items-start gap-3 pb-4 border-b border-slate-100">
-                  <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-500 shrink-0">
-                    <Wrench size={18} />
+                  <div className="p-2 bg-slate-50 border border-slate-100 rounded-lg text-slate-500 shrink-0">
+                    <Wrench size={16} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-800">Initial Setup & Config</p>
-                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">Installed corporate profile and security software.</p>
+                    <p className="text-sm font-bold text-slate-900">Initial Setup & Config</p>
+                    <p className="text-xs font-medium text-slate-600 mt-1 leading-relaxed">Installed corporate profile and security software.</p>
                     <p className="text-xs font-medium text-slate-400 mt-2">Jan 16, 2024 • by IT Support</p>
                   </div>
                 </div>
@@ -162,22 +165,22 @@ const AssetDetailsPage = () => {
           {/* Media & Documents */}
           <DashboardCard title="Files & Documents">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex items-center p-3 border border-slate-200 rounded-xl hover:border-blue-300 hover:shadow-sm hover:bg-blue-50/20 transition-all cursor-pointer group">
-                <div className="p-3 bg-blue-50 text-blue-600 rounded-lg mr-3 group-hover:bg-blue-100 group-hover:scale-105 transition-all">
+              <div className="flex items-center p-3 border border-slate-200 rounded-xl hover:border-blue-300 hover:shadow-sm hover:bg-blue-50/50 transition-all cursor-pointer group bg-white">
+                <div className="p-2.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg mr-3 group-hover:bg-blue-100 transition-colors">
                   <FileText size={20} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 truncate">Purchase_Invoice.pdf</p>
-                  <p className="text-xs text-slate-500 mt-0.5">2.4 MB • Jan 15, 2024</p>
+                  <p className="text-sm font-semibold text-slate-900 truncate">Purchase_Invoice.pdf</p>
+                  <p className="text-xs font-medium text-slate-500 mt-0.5">2.4 MB • Jan 15, 2024</p>
                 </div>
               </div>
-              <div className="flex items-center p-3 border border-slate-200 rounded-xl hover:border-blue-300 hover:shadow-sm hover:bg-blue-50/20 transition-all cursor-pointer group">
-                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg mr-3 group-hover:bg-emerald-100 group-hover:scale-105 transition-all">
+              <div className="flex items-center p-3 border border-slate-200 rounded-xl hover:border-emerald-300 hover:shadow-sm hover:bg-emerald-50/50 transition-all cursor-pointer group bg-white">
+                <div className="p-2.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg mr-3 group-hover:bg-emerald-100 transition-colors">
                   <FileText size={20} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 truncate">AppleCare_Warranty.pdf</p>
-                  <p className="text-xs text-slate-500 mt-0.5">1.1 MB • Jan 15, 2024</p>
+                  <p className="text-sm font-semibold text-slate-900 truncate">AppleCare_Warranty.pdf</p>
+                  <p className="text-xs font-medium text-slate-500 mt-0.5">1.1 MB • Jan 15, 2024</p>
                 </div>
               </div>
             </div>
@@ -192,14 +195,14 @@ const AssetDetailsPage = () => {
           <DashboardCard title="Status & Booking">
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-slate-600">Current Status</span>
+                <span className="text-sm font-bold text-slate-700">Current Status</span>
                 <AssetStatusBadge status={ASSET.status} />
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                <span className="text-sm font-bold text-slate-600">Available for Booking</span>
-                <span className={`px-2.5 py-1 text-xs font-bold rounded-md border ${ASSET.isBookable ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                <span className="text-sm font-bold text-slate-700">Available for Booking</span>
+                <Badge variant={ASSET.isBookable ? 'success' : 'neutral'}>
                   {ASSET.isBookable ? 'Yes' : 'No'}
-                </span>
+                </Badge>
               </div>
             </div>
           </DashboardCard>
@@ -208,22 +211,22 @@ const AssetDetailsPage = () => {
           <DashboardCard title="Assignment Information">
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-100 border border-blue-200 text-blue-700 rounded-full flex items-center justify-center font-bold text-lg shrink-0">
+                <div className="w-12 h-12 bg-blue-100 border border-blue-200 text-blue-700 rounded-full flex items-center justify-center font-bold text-lg shrink-0 shadow-sm">
                   {ASSET.holder.name.split(' ').map(n => n[0]).join('')}
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-800">{ASSET.holder.name}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{ASSET.holder.role}</p>
-                  <p className="text-xs font-medium text-blue-600 mt-0.5">{ASSET.holder.email}</p>
+                  <p className="text-sm font-bold text-slate-900">{ASSET.holder.name}</p>
+                  <p className="text-xs font-medium text-slate-500 mt-0.5">{ASSET.holder.role}</p>
+                  <p className="text-xs font-semibold text-blue-600 mt-0.5">{ASSET.holder.email}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
-                <div className="w-12 h-12 bg-slate-50 border border-slate-200 text-slate-500 rounded-xl flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 bg-slate-50 border border-slate-200 text-slate-500 rounded-xl flex items-center justify-center shrink-0 shadow-sm">
                   <Building2 size={20} />
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-0.5">Department</p>
-                  <p className="text-sm font-bold text-slate-800">{ASSET.department}</p>
+                  <p className="text-sm font-bold text-slate-900">{ASSET.department}</p>
                 </div>
               </div>
             </div>
@@ -234,21 +237,21 @@ const AssetDetailsPage = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
-                  <div className="p-1.5 bg-slate-50 rounded text-slate-400"><Calendar size={14} /></div>
+                  <div className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-500"><Calendar size={14} /></div>
                   Acquired On
                 </div>
-                <span className="text-sm font-bold text-slate-800">{ASSET.acquisitionDate}</span>
+                <span className="text-sm font-bold text-slate-900">{ASSET.acquisitionDate}</span>
               </div>
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
-                  <div className="p-1.5 bg-slate-50 rounded text-slate-400"><DollarSign size={14} /></div>
+                  <div className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-500"><DollarSign size={14} /></div>
                   Purchase Cost
                 </div>
-                <span className="text-sm font-bold text-slate-800">${ASSET.acquisitionCost.toFixed(2)}</span>
+                <span className="text-sm font-bold text-slate-900">${ASSET.acquisitionCost.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-slate-100">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
-                  <div className="p-1.5 bg-emerald-50 rounded text-emerald-500"><Activity size={14} /></div>
+              <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+                <div className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <div className="p-1.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-600"><Activity size={14} /></div>
                   Current Value
                 </div>
                 <span className="text-sm font-bold text-emerald-600">${ASSET.lifecycle.currentValue.toFixed(2)}</span>
