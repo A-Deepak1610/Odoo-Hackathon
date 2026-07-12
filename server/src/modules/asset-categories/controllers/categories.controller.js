@@ -1,18 +1,5 @@
 const { prisma } = require('../../../core/database/prisma');
 const { successResponse } = require('../../../core/response/apiResponse');
-<<<<<<< HEAD
-
-const getCategories = async (req, res, next) => {
-  try {
-    const categories = await prisma.assetCategory.findMany({
-      select: {
-        id: true,
-        name: true,
-        description: true
-      }
-    });
-
-=======
 const { ApiError } = require('../../../core/errors/ApiError');
 
 const getCategories = async (req, res, next) => {
@@ -21,16 +8,12 @@ const getCategories = async (req, res, next) => {
     const categories = await prisma.assetCategory.findMany({
       where: { organizationId: orgId }
     });
->>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
     return successResponse(res, 200, 'Categories retrieved successfully', categories);
   } catch (error) {
     next(error);
   }
 };
 
-<<<<<<< HEAD
-module.exports = { getCategories };
-=======
 const createCategory = async (req, res, next) => {
   try {
     const orgId = req.user.organizationId;
@@ -58,4 +41,3 @@ module.exports = {
   getCategories,
   createCategory
 };
->>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
