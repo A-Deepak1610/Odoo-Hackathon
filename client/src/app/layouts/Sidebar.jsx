@@ -19,7 +19,7 @@ const navGroups = [
   {
     label: "MAIN",
     items: [
-      { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+      { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard, roles: ['SUPERADMIN', 'ADMIN', 'EMPLOYEE', 'ASSET_MANAGER'] },
       { name: "Notifications", path: "/notifications", icon: Bell },
     ],
   },
@@ -34,19 +34,19 @@ const navGroups = [
   {
     label: "MANAGEMENT",
     items: [
-      { name: 'Organization Setup', path: '/organization', icon: Building2, roles: ['ADMIN'] },
-      { name: 'Assets', path: '/assets', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
-      { name: 'Allocation & Transfer', path: '/allocations', icon: ArrowRightLeft },
-      { name: 'Resource Booking', path: '/booking', icon: CalendarClock },
-      { name: 'Maintenance', path: '/maintenance', icon: Wrench },
+      { name: 'Organization Setup', path: '/organization', icon: Building2, roles: ['SUPERADMIN', 'ADMIN'] },
+      { name: 'Assets', path: '/assets', icon: Box, roles: ['SUPERADMIN', 'ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
+      { name: 'Allocation & Transfer', path: '/allocations', icon: ArrowRightLeft, roles: ['SUPERADMIN', 'ADMIN', 'ASSET_MANAGER', 'EMPLOYEE'] },
+      { name: 'Resource Booking', path: '/booking', icon: CalendarClock, roles: ['SUPERADMIN', 'ADMIN', 'EMPLOYEE'] },
+      { name: 'Maintenance', path: '/maintenance', icon: Wrench, roles: ['SUPERADMIN', 'ADMIN', 'ASSET_MANAGER', 'EMPLOYEE'] },
     ],
   },
   {
     label: "REPORTS & COMPLIANCE",
     items: [
-      { name: 'Audit', path: '/audit', icon: ClipboardCheck, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
-      { name: "DB Assistant", path: "/db-assistant", icon: Bot },
-      { name: 'Reports', path: '/reports', icon: BarChart3, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
+      { name: 'Audit', path: '/audit', icon: ClipboardCheck, roles: ['SUPERADMIN', 'ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
+      { name: "DB Assistant", path: "/db-assistant", icon: Bot, roles: ['SUPERADMIN', 'ADMIN'] },
+      { name: 'Reports', path: '/reports', icon: BarChart3, roles: ['SUPERADMIN', 'ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
     ],
   },
 ];
