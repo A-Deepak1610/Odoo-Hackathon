@@ -10,6 +10,7 @@ import Maintenance from './modules/maintenance/pages/Maintenance';
 import Audit from './modules/audit/pages/Audit';
 import Reports from './modules/reports/pages/Reports';
 import Notifications from './modules/notifications/pages/Notifications';
+import DbAssistant from './modules/db-assistant/pages/DbAssistant';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route path="audit" element={<Audit />} />
           <Route path="reports" element={<Reports />} />
           <Route path="notifications" element={<Notifications />} />
+          <Route path="db-assistant" element={<DbAssistant />} />
           <Route path="*" element={<div className="p-8">Work in progress</div>} />
         </Route>
       </Routes>
