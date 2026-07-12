@@ -35,7 +35,7 @@ graph TD
 
     %% Database Layer
     subgraph Database [Storage]
-        PostgreSQL[(PostgreSQL 15)]
+        MySQL[(MySQL 8)]
     end
 
     %% Connections
@@ -44,13 +44,13 @@ graph TD
     API --> Middleware
     Middleware --> Modules
     Modules --> Prisma
-    Prisma -->|SQL / TCP| PostgreSQL
+    Prisma -->|SQL / TCP| MySQL
 ```
 
 ### Core Technologies
 *   **Frontend**: React 19, Vite, Tailwind CSS, Lucide Icons, Recharts, React Hook Form, Zod.
 *   **Backend**: Node.js, Express.js, Prisma ORM, Winston Logger, Jest + Supertest (Testing).
-*   **Database**: PostgreSQL 15.
+*   **Database**: MySQL 8.
 *   **Infrastructure**: Docker, Docker Compose, GitHub Actions (CI/CD).
 
 ---
@@ -89,7 +89,7 @@ Odoo-Hackathon/
 │   ├── __tests__/           # Jest & Supertest API testing suites
 │   ├── Dockerfile           # Backend container definition
 │   └── package.json         
-├── docker-compose.yml       # Orchestrates Client, Server, and Postgres networks
+├── docker-compose.yml       # Orchestrates Client, Server, and MySQL networks
 ├── SETUP.md                 # Additional setup edge-cases
 ├── MODULE_GUIDE.md          # Guide on how to create a new module
 └── IMPORT_RULES.md          # Architecture dependency rules
@@ -107,7 +107,7 @@ We recommend using Docker for the quickest start, but manual installation is ful
 
 ### Method 1: Docker Compose (Recommended)
 
-This command spins up the Postgres Database, Node Backend, and React Frontend in an isolated network.
+This command spins up the MySQL Database, Node Backend, and React Frontend in an isolated network.
 
 1. **Clone the repository**
    ```bash
@@ -125,7 +125,7 @@ This command spins up the Postgres Database, Node Backend, and React Frontend in
    ```
    * **Frontend**: `http://localhost:5173`
    * **Backend**: `http://localhost:5000`
-   * **Database**: Port `5432`
+   * **Database**: Port `3306`
 
 ---
 
@@ -134,15 +134,15 @@ This command spins up the Postgres Database, Node Backend, and React Frontend in
 Use this method if you need to actively develop and leverage features like hot-reloading.
 
 #### 1. Database Setup
-Start a local PostgreSQL instance and note your connection string.
+Start a local MySQL instance and note your connection string.
 
 #### 2. Backend Installation
 ```bash
 cd server
 cp .env.example .env
 
-# Update DATABASE_URL in .env to match your local PostgreSQL credentials
-# e.g., DATABASE_URL="postgresql://postgres:password@localhost:5432/assetflow"
+# Update DATABASE_URL in .env to match your local MySQL credentials
+# e.g., DATABASE_URL="mysql://root:password@localhost:3306/assetflow"
 
 npm install
 
