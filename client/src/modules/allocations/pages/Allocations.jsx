@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { ArrowRightLeft, Loader2, AlertTriangle, CheckCircle, Plus, User, Building, Trash2 } from "lucide-react";
 import { apiFetch } from "../../../services/api";
+import { useAuth } from "../../auth";
 
 const Allocations = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("transfers"); // transfers | request
   const [myAssets, setMyAssets] = useState([]);
   const [transfers, setTransfers] = useState([]);
@@ -354,7 +356,7 @@ const Allocations = () => {
                     style={{ width: "100%", height: "38px", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "0 8px", fontSize: "13px" }}
                   >
                     <option value="">-- Select Recipient Employee --</option>
-                    {users.filter(u => u.id !== reqUser.id).map((u) => (
+                    {users.filter(u => u.id !== user?.id).map((u) => (
                       <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
                     ))}
                     {/* Fallback mock list if organization has no loaded users */}
@@ -445,8 +447,5 @@ const Allocations = () => {
     </div>
   );
 };
-
-// Simple helper to decode user ID from context safely
-const reqUser = JSON.parse(localStorage.getItem("auth_session"))?.user || { id: "" };
 
 export default Allocations;
