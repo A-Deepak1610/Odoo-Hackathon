@@ -10,6 +10,7 @@ import Maintenance from './modules/maintenance/pages/Maintenance';
 import Audit from './modules/audit/pages/Audit';
 import Reports from './modules/reports/pages/Reports';
 import Notifications from './modules/notifications/pages/Notifications';
+import DbAssistant from './modules/db-assistant/pages/DbAssistant';
 
 // Auth Module exports
 import { AuthProvider, ProtectedRoute, LoginPage, SignupPage } from './modules/auth';
@@ -27,9 +28,10 @@ function App() {
           <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             
-            {/* General Dashboard */}
+            {/* General Dashboard & Panel Routes */}
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="notifications" element={<Notifications />} />
+            <Route path="db-assistant" element={<DbAssistant />} />
             
             {/* RBAC Route: Organization Setup requires ADMIN privilege */}
             <Route 
