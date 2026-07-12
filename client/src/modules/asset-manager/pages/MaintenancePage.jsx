@@ -1,10 +1,326 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { 
+  Plus, MoreHorizontal, AlertCircle, Wrench, Clock, Paperclip, 
+  MessageSquare, User, X, CheckCircle2, ChevronRight
+} from 'lucide-react';
+import { ActivityCard } from '../components';
+
+// Placeholder Data
+const COLUMNS = [
+  { id: 'pending', title: 'Pending Approval', color: 'border-slate-300', bg: 'bg-slate-100' },
+  { id: 'approved', title: 'Approved', color: 'border-blue-300', bg: 'bg-blue-50' },
+  { id: 'assigned', title: 'Technician Assigned', color: 'border-purple-300', bg: 'bg-purple-50' },
+  { id: 'in_progress', title: 'In Progress', color: 'border-amber-300', bg: 'bg-amber-50' },
+  { id: 'resolved', title: 'Resolved', color: 'border-emerald-300', bg: 'bg-emerald-50' }
+];
+
+const MOCK_TICKETS = [
+  {
+    id: 'TKT-1029',
+    asset: 'Dell UltraSharp 32"',
+    assetTag: 'AST-2024-002',
+    issue: 'Screen flickering intermittently after 2 hours of use.',
+    priority: 'Medium',
+    status: 'pending',
+    requester: 'John Doe',
+    technician: null,
+    attachments: 1,
+    comments: 0,
+    date: 'Oct 24, 2024'
+  },
+  {
+    id: 'TKT-1030',
+    asset: 'Conference Projector A',
+    assetTag: 'AST-2024-005',
+    issue: 'Lamp replacement required. Brightness is very low.',
+    priority: 'High',
+    status: 'approved',
+    requester: 'Marketing Dept',
+    technician: null,
+    attachments: 0,
+    comments: 2,
+    date: 'Oct 23, 2024'
+  },
+  {
+    id: 'TKT-1031',
+    asset: 'Herman Miller Chair',
+    assetTag: 'AST-2024-003',
+    issue: 'Right armrest is loose and wobbling.',
+    priority: 'Low',
+    status: 'assigned',
+    requester: 'Sarah Jenkins',
+    technician: 'Mike Fixer',
+    attachments: 2,
+    comments: 1,
+    date: 'Oct 22, 2024'
+  },
+  {
+    id: 'TKT-1032',
+    asset: 'HVAC Unit - Floor 2',
+    assetTag: 'AST-2023-145',
+    issue: 'Leaking water near the server room entrance.',
+    priority: 'High',
+    status: 'in_progress',
+    requester: 'Facilities',
+    technician: 'External Vendor',
+    attachments: 3,
+    comments: 5,
+    date: 'Oct 21, 2024'
+  },
+  {
+    id: 'TKT-1028',
+    asset: 'MacBook Pro 16"',
+    assetTag: 'AST-2024-001',
+    issue: 'Battery swelling issue reported by user.',
+    priority: 'High',
+    status: 'resolved',
+    requester: 'Alex Chen',
+    technician: 'IT Hardware Team',
+    attachments: 1,
+    comments: 3,
+    date: 'Oct 20, 2024'
+  }
+];
+
+const PriorityBadge = ({ priority }) => {
+  const colors = {
+    'High': 'bg-red-100 text-red-700',
+    'Medium': 'bg-amber-100 text-amber-700',
+    'Low': 'bg-blue-100 text-blue-700'
+  };
+  
+  return (
+    <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded ${colors[priority]}`}>
+      {priority}
+    </span>
+  );
+};
+
 
 const MaintenancePage = () => {
+  const [selectedTicket, setSelectedTicket] = useState(null);
+
   return (
-    <div style={{ padding: '24px' }}>
-      <h1 style={{ fontSize: '24px', fontWeight: 'bold' }}>Maintenance</h1>
-      <p>This is a placeholder page for MaintenancePage.</p>
+    <div className="flex flex-col h-full bg-slate-50 relative overflow-hidden">
+      
+      {/* Header */}
+      <div className="px-6 py-5 border-b border-slate-200 bg-white flex justify-between items-center shrink-0">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Maintenance & Repairs</h2>
+          <p className="text-sm font-medium text-slate-500 mt-1">Track and manage asset maintenance requests through the Kanban board.</p>
+        </div>
+        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <Plus size={16} />
+          Log Maintenance
+        </button>
+      </div>
+
+      {/* Kanban Board Container */}
+      <div className="flex-1 overflow-x-auto overflow-y-hidden p-6">
+        <div className="flex gap-6 h-full items-start w-max pb-4">
+          
+          {COLUMNS.map(column => (
+            <div key={column.id} className="w-[320px] flex flex-col max-h-full bg-slate-100/50 rounded-xl border border-slate-200">
+              
+              {/* Column Header */}
+              <div className={`px-4 py-3 border-b-2 ${column.color} flex justify-between items-center bg-white rounded-t-xl`}>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-slate-800 text-sm">{column.title}</h3>
+                  <span className="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">
+                    {MOCK_TICKETS.filter(t => t.status === column.id).length}
+                  </span>
+                </div>
+                <button className="text-slate-400 hover:text-slate-600"><MoreHorizontal size={16}/></button>
+              </div>
+
+              {/* Column Cards */}
+              <div className="p-3 overflow-y-auto flex-1 space-y-3 custom-scrollbar">
+                {MOCK_TICKETS.filter(t => t.status === column.id).map(ticket => (
+                  
+                  <div 
+                    key={ticket.id} 
+                    onClick={() => setSelectedTicket(ticket)}
+                    className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-xs font-mono font-bold text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded">{ticket.id}</span>
+                      <PriorityBadge priority={ticket.priority} />
+                    </div>
+                    
+                    <h4 className="font-bold text-slate-800 text-sm mb-1 group-hover:text-blue-600 transition-colors">{ticket.asset}</h4>
+                    <p className="text-xs text-slate-500 line-clamp-2 mb-3 leading-relaxed">{ticket.issue}</p>
+                    
+                    <div className="flex items-center gap-2 text-xs font-medium text-slate-600 bg-slate-50 px-2 py-1.5 rounded-md mb-3 border border-slate-100">
+                      <User size={12} className="text-slate-400" />
+                      {ticket.technician ? ticket.technician : <span className="text-slate-400 italic">Unassigned</span>}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs font-medium text-slate-400">
+                      <div className="flex items-center gap-3">
+                        {ticket.attachments > 0 && (
+                          <div className="flex items-center gap-1 hover:text-slate-600">
+                            <Paperclip size={12} /> {ticket.attachments}
+                          </div>
+                        )}
+                        {ticket.comments > 0 && (
+                          <div className="flex items-center gap-1 hover:text-slate-600">
+                            <MessageSquare size={12} /> {ticket.comments}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock size={12} /> {ticket.date}
+                      </div>
+                    </div>
+                  </div>
+
+                ))}
+                
+                {/* Empty State for Column */}
+                {MOCK_TICKETS.filter(t => t.status === column.id).length === 0 && (
+                  <div className="p-4 border-2 border-dashed border-slate-200 rounded-lg text-center">
+                    <p className="text-xs font-medium text-slate-400">No tickets in this column</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+
+        </div>
+      </div>
+
+      {/* Request Details Drawer (Overlay) */}
+      {selectedTicket && (
+        <div className="absolute inset-0 z-50 flex justify-end">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-slate-900/20 backdrop-blur-[2px] transition-opacity animate-in fade-in"
+            onClick={() => setSelectedTicket(null)}
+          ></div>
+          
+          {/* Drawer Panel */}
+          <div className="relative w-full max-w-md h-full bg-white shadow-2xl border-l border-slate-200 flex flex-col animate-in slide-in-from-right duration-300 z-10">
+            
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <button onClick={() => setSelectedTicket(null)} className="p-1 text-slate-400 hover:text-slate-600 rounded hover:bg-slate-200"><ChevronRight size={20}/></button>
+                <h3 className="font-bold text-slate-800 text-lg">{selectedTicket.id}</h3>
+              </div>
+              <PriorityBadge priority={selectedTicket.priority} />
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              
+              <div>
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Asset Information</h4>
+                <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between cursor-pointer hover:bg-blue-100 transition-colors">
+                  <div>
+                    <p className="font-bold text-blue-900 text-sm">{selectedTicket.asset}</p>
+                    <p className="text-xs text-blue-600 font-mono mt-0.5">{selectedTicket.assetTag}</p>
+                  </div>
+                  <ChevronRight size={16} className="text-blue-400" />
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Issue Description</h4>
+                <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  {selectedTicket.issue}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Requester</h4>
+                  <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                    <User size={14} className="text-slate-400" />
+                    {selectedTicket.requester}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Assigned Tech</h4>
+                  <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                    <Wrench size={14} className="text-slate-400" />
+                    {selectedTicket.technician || <span className="text-slate-400 italic">Unassigned</span>}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-100 pb-2">Attachments ({selectedTicket.attachments})</h4>
+                {selectedTicket.attachments > 0 ? (
+                   <div className="flex items-center p-2 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+                     <div className="p-2 bg-blue-50 text-blue-600 rounded mr-3">
+                       <Paperclip size={16} />
+                     </div>
+                     <div>
+                       <p className="text-sm font-semibold text-slate-800">issue_screenshot.jpg</p>
+                       <p className="text-xs text-slate-500">1.2 MB</p>
+                     </div>
+                   </div>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">No attachments provided.</p>
+                )}
+              </div>
+
+              <div>
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Ticket Timeline</h4>
+                <div className="pt-2">
+                  {selectedTicket.status === 'resolved' && (
+                    <ActivityCard 
+                      title="Ticket Resolved"
+                      description="Technician marked the issue as fixed."
+                      timestamp="Oct 20"
+                      icon={CheckCircle2}
+                      iconColor="emerald"
+                    />
+                  )}
+                  {(selectedTicket.status === 'in_progress' || selectedTicket.status === 'resolved') && (
+                    <ActivityCard 
+                      title="Work Started"
+                      description="Technician began diagnostics."
+                      timestamp="Oct 19"
+                      icon={Wrench}
+                      iconColor="amber"
+                    />
+                  )}
+                  {(selectedTicket.status === 'assigned' || selectedTicket.status === 'in_progress' || selectedTicket.status === 'resolved') && (
+                    <ActivityCard 
+                      title="Technician Assigned"
+                      description={`${selectedTicket.technician || 'IT Support'} assigned to ticket.`}
+                      timestamp="Oct 18"
+                      icon={User}
+                      iconColor="purple"
+                    />
+                  )}
+                  <ActivityCard 
+                    title="Maintenance Request Approved"
+                    description="Approved by Department Head."
+                    timestamp="Oct 18"
+                    icon={CheckCircle2}
+                    iconColor="blue"
+                  />
+                  <ActivityCard 
+                    title="Ticket Created"
+                    description={`Submitted by ${selectedTicket.requester}.`}
+                    timestamp="Oct 18"
+                    icon={AlertCircle}
+                    iconColor="slate"
+                  />
+                </div>
+              </div>
+
+            </div>
+
+            <div className="p-4 border-t border-slate-200 bg-slate-50 shrink-0">
+              <button className="w-full py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                Update Ticket Status
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
