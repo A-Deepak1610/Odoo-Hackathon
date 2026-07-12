@@ -152,6 +152,7 @@ model User {
   
   // Audits
   auditRecords        AuditRecord[]
+  refreshTokens       RefreshToken[]
 
   @@index([organizationId])
   @@index([email])
@@ -322,4 +323,16 @@ model AuditRecord {
   @@index([organizationId])
   @@index([auditCycleId])
   @@index([assetId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
 }
