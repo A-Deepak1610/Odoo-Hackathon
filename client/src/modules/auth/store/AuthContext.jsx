@@ -5,61 +5,29 @@ import { setAccessToken, registerAuthErrorHandler, buildApiUrl } from '../../../
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // DEV BYPASS: Inject a default Admin user to bypass protected routes
+  const [user, setUser] = useState({ 
+    id: 'dev-admin', 
+    name: 'Dev Admin', 
+    email: 'admin@dev.local', 
+    role: 'ADMIN' 
+  });
+  const [loading, setLoading] = useState(false);
 
   // Clears active tokens and state on authentication failure or logout
   const handleUnauthenticated = () => {
     setAccessToken('');
     localStorage.removeItem('refreshToken');
-    setUser(null);
+    // setUser(null); // Keep user for dev bypass
     setLoading(false);
   };
 
   useEffect(() => {
     // Register global auth error handler for token expiration
     registerAuthErrorHandler(handleUnauthenticated);
-
-    const initializeAuth = async () => {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // Attempt to call refresh token endpoint on mount to retrieve new access token
-        const refreshUrl = buildApiUrl('/api/v1/auth/refresh');
-        const refreshResponse = await fetch(refreshUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refreshToken }),
-        });
-
-        if (refreshResponse.ok) {
-          const result = await refreshResponse.json();
-          if (result.success && result.data.accessToken) {
-            setAccessToken(result.data.accessToken);
-            localStorage.setItem('refreshToken', result.data.refreshToken);
-
-            // Retrieve user profile
-            const profileData = await getMeApi();
-            setUser(profileData.data.user);
-          } else {
-            handleUnauthenticated();
-          }
-        } else {
-          handleUnauthenticated();
-        }
-      } catch (err) {
-        console.error('Failed to initialize session:', err);
-        handleUnauthenticated();
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initializeAuth();
+    
+    // Bypass backend initialization
+    setLoading(false);
   }, []);
 
   const login = async (email, password, rememberMe) => {
@@ -95,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       const result = await signupApi(email, password);
       return result;
     } finally {
-      setLoading(false);
+      setLoading(false);  
     }
   };
 
