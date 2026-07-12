@@ -3,24 +3,30 @@ const {
   getMyTransfers,
   requestTransfer,
   cancelTransferRequest,
-  getDepartmentRequests,
-  approveRequest,
-  rejectRequest
+  getAllAllocations,
+  approveTransfer,
+  rejectTransfer,
+  forceReturn,
+  assignAsset
 } = require('../controllers/allocation.controller');
-const { authenticateJWT, authorizeRoles } = require('../../auth/middlewares/auth.middleware');
+const { authenticateJWT } = require('../../auth/middlewares/auth.middleware');
 
 const router = Router();
 
 // Secure all allocation/transfer routes
 router.use(authenticateJWT);
 
+// Employee routes
+// Employee endpoints
 router.get('/my-transfers', getMyTransfers);
 router.post('/transfer', requestTransfer);
 router.put('/transfer/:id/cancel', cancelTransferRequest);
 
-// Department Head Routes
-router.get('/department', authorizeRoles('DEPARTMENT_HEAD'), getDepartmentRequests);
-router.put('/:id/approve', authorizeRoles('DEPARTMENT_HEAD', 'SUPERADMIN'), approveRequest);
-router.put('/:id/reject', authorizeRoles('DEPARTMENT_HEAD', 'SUPERADMIN'), rejectRequest);
+// Admin routes
+router.get('/', getAllAllocations);
+router.put('/transfer/:id/approve', approveTransfer);
+router.put('/transfer/:id/reject', rejectTransfer);
+router.post('/force-return', forceReturn);
+router.post('/assign', assignAsset)
 
 module.exports = { router };

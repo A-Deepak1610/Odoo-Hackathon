@@ -140,95 +140,214 @@ const cancelTransferRequest = async (req, res, next) => {
 };
 
 /**
- * Get department transfer requests (for Department Head)
+ * Get all allocations in the organization (Admin only)
  */
-const getDepartmentRequests = async (req, res, next) => {
+const getAllAllocations = async (req, res, next) => {
   try {
-    const departmentId = req.user.departmentId;
-    if (!departmentId) {
-      throw new ApiError(400, 'You are not assigned to a department');
-    }
+    const orgId = req.user.organizationId;
+    const whereClause = orgId ? { organizationId: orgId } : {};
 
-    const requests = await prisma.allocation.findMany({
-      where: {
-        OR: [
-          { toDepartmentId: departmentId },
-          { requestedBy: { departmentId: departmentId } }
-        ]
-      },
+    const allocations = await prisma.allocation.findMany({
+      where: whereClause,
       include: {
         asset: true,
-        toEmployee: { select: { id: true, name: true, email: true } },
-        requestedBy: { select: { id: true, name: true, email: true } },
+        toEmployee: {
+          select: { id: true, name: true, email: true }
+        },
+        fromEmployee: {
+          select: { id: true, name: true, email: true }
+        },
         toDepartment: true
       },
       orderBy: { createdAt: 'desc' }
     });
 
-    return successResponse(res, 200, 'Department requests retrieved successfully', requests);
+    return successResponse(res, 200, 'All allocations retrieved successfully', allocations);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Approve a transfer/allocation request
+ * Approve a pending transfer request
  */
-const approveRequest = async (req, res, next) => {
+const approveTransfer = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const approverId = req.user.id;
+    const adminId = req.user.id;
 
-    const allocation = await prisma.allocation.findUnique({ where: { id } });
-    if (!allocation) throw new ApiError(404, 'Request not found');
-    if (allocation.status !== 'PENDING') throw new ApiError(400, 'Only pending requests can be approved');
+    const transfer = await prisma.allocation.findUnique({
+      where: { id },
+      include: { asset: true }
+    });
 
-    // Update allocation
-    const updated = await prisma.allocation.update({
+    if (!transfer) {
+      throw new ApiError(404, 'Transfer request not found');
+    }
+
+    if (transfer.status !== 'PENDING') {
+      throw new ApiError(400, 'Only pending transfer requests can be approved');
+    }
+
+    // Update the transfer status
+    const updatedTransfer = await prisma.allocation.update({
       where: { id },
       data: {
-        status: 'ACTIVE',
-        approvedById: approverId
+        status: 'APPROVED',
+        approvedById: adminId,
+        returnedDate: new Date() // Mark the actual transfer date
       }
     });
 
-    // Update the asset assignment
+    // Update the asset owner
     await prisma.asset.update({
-      where: { id: allocation.assetId },
+      where: { id: transfer.assetId },
       data: {
-        currentEmployeeId: allocation.toEmployeeId,
-        currentDepartmentId: allocation.toDepartmentId,
+        currentEmployeeId: transfer.toEmployeeId || null,
+        currentDepartmentId: transfer.toDepartmentId || null,
         status: 'ALLOCATED'
       }
     });
 
-    return successResponse(res, 200, 'Request approved successfully', updated);
+    return successResponse(res, 200, 'Transfer request approved and asset reassigned successfully', updatedTransfer);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Reject a transfer/allocation request
+ * Reject a pending transfer request
  */
-const rejectRequest = async (req, res, next) => {
+const rejectTransfer = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const approverId = req.user.id;
+    const adminId = req.user.id;
 
-    const allocation = await prisma.allocation.findUnique({ where: { id } });
-    if (!allocation) throw new ApiError(404, 'Request not found');
-    if (allocation.status !== 'PENDING') throw new ApiError(400, 'Only pending requests can be rejected');
+    const transfer = await prisma.allocation.findUnique({
+      where: { id }
+    });
 
-    const updated = await prisma.allocation.update({
+    if (!transfer) {
+      throw new ApiError(404, 'Transfer request not found');
+    }
+
+    if (transfer.status !== 'PENDING') {
+      throw new ApiError(400, 'Only pending transfer requests can be rejected');
+    }
+
+    const updatedTransfer = await prisma.allocation.update({
       where: { id },
       data: {
         status: 'REJECTED',
-        approvedById: approverId
+        approvedById: adminId
       }
     });
 
-    return successResponse(res, 200, 'Request rejected successfully', updated);
+    return successResponse(res, 200, 'Transfer request rejected successfully', updatedTransfer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Force return an asset (de-allocate)
+ */
+const forceReturn = async (req, res, next) => {
+  try {
+    const { assetId } = req.body;
+    const adminId = req.user.id;
+
+    const asset = await prisma.asset.findUnique({
+      where: { id: assetId }
+    });
+
+    if (!asset) {
+      throw new ApiError(404, 'Asset not found');
+    }
+
+    // 1. Update active allocations to completed/returned
+    await prisma.allocation.updateMany({
+      where: {
+        assetId,
+        status: 'ACTIVE'
+      },
+      data: {
+        status: 'RETURNED',
+        returnedDate: new Date(),
+        approvedById: adminId
+      }
+    });
+
+    // 2. Update asset status to available and clear custodians
+    const updatedAsset = await prisma.asset.update({
+      where: { id: assetId },
+      data: {
+        status: 'AVAILABLE',
+        currentEmployeeId: null,
+        currentDepartmentId: null
+      }
+    });
+
+    return successResponse(res, 200, 'Asset returned and marked as available', updatedAsset);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Allocate/Assign an asset directly (Admin only)
+ */
+const assignAsset = async (req, res, next) => {
+  try {
+    const adminId = req.user.id;
+    let orgId = req.user.organizationId;
+    if (!orgId) {
+      const firstOrg = await prisma.organization.findFirst();
+      orgId = firstOrg?.id;
+    }
+
+    const { assetId, toEmployeeId, toDepartmentId } = req.body;
+
+    if (!assetId) {
+      throw new ApiError(400, 'Asset ID is required');
+    }
+    if (!toEmployeeId && !toDepartmentId) {
+      throw new ApiError(400, 'Must specify either employee or department to assign');
+    }
+
+    const asset = await prisma.asset.findUnique({
+      where: { id: assetId }
+    });
+
+    if (!asset) {
+      throw new ApiError(404, 'Asset not found');
+    }
+
+    // Create a new allocation record
+    const allocation = await prisma.allocation.create({
+      data: {
+        organizationId: orgId,
+        assetId,
+        toEmployeeId: toEmployeeId || null,
+        toDepartmentId: toDepartmentId || null,
+        requestedById: adminId,
+        approvedById: adminId,
+        status: 'ACTIVE',
+        expectedReturnDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 days default
+      }
+    });
+
+    // Update asset
+    await prisma.asset.update({
+      where: { id: assetId },
+      data: {
+        status: 'ALLOCATED',
+        currentEmployeeId: toEmployeeId || null,
+        currentDepartmentId: toDepartmentId || null
+      }
+    });
+
+    return successResponse(res, 201, 'Asset assigned successfully', allocation);
   } catch (error) {
     next(error);
   }
@@ -238,7 +357,9 @@ module.exports = {
   getMyTransfers,
   requestTransfer,
   cancelTransferRequest,
-  getDepartmentRequests,
-  approveRequest,
-  rejectRequest
+  getAllAllocations,
+  approveTransfer,
+  rejectTransfer,
+  forceReturn,
+  assignAsset
 };

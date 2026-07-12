@@ -2,6 +2,7 @@ const { Router } = require('express');
 const { 
   getBookableResources,
   getBookings,
+  getAllBookings,
   createBooking,
   cancelBooking,
   rescheduleBooking
@@ -14,6 +15,7 @@ const router = Router();
 router.use(authenticateJWT);
 
 router.get('/', getBookings);
+router.get('/all', getAllBookings);
 router.post('/', createBooking);
 router.get('/resources', getBookableResources);
 router.put('/:id/cancel', cancelBooking);

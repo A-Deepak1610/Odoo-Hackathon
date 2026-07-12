@@ -20,11 +20,19 @@ import TenantManagement from './modules/super-admin/pages/TenantManagement';
 import { SuperAdminProvider } from './modules/super-admin/store/SuperAdminContext';
 
 // Auth Module exports
-import { AuthProvider, ProtectedRoute, LoginPage, SignupPage } from './modules/auth';
+import { AuthProvider, ProtectedRoute, LoginPage, SignupPage, useAuth } from './modules/auth';
 import ProfilePage from './modules/auth/pages/ProfilePage';
 
 // NEW: Import the isolated Asset Manager routes
 import { AssetManagerRoutes } from './modules/asset-manager';
+
+const RoleBasedRedirect = () => {
+  const { user } = useAuth();
+  if (user?.role === 'ASSET_MANAGER') {
+    return <Navigate to="/asset-manager" replace />;
+  }
+  return <Navigate to="/dashboard" replace />;
+};
 
 function App() {
   return (
@@ -37,7 +45,7 @@ function App() {
 
           {/* Secure Application Routes (Authenticated & Guarded Layout) */}
           <Route path="/" element={<ProtectedRoute><SuperAdminProvider><DeptHeadProvider><AppLayout /></DeptHeadProvider></SuperAdminProvider></ProtectedRoute>}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route index element={<RoleBasedRedirect />} />
             
             {/* General Dashboard & Panel Routes */}
             <Route path="dashboard" element={<Dashboard />} />
