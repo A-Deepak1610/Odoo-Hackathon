@@ -24,7 +24,7 @@ AssetFlow is an enterprise-grade Asset Management System built for the Odoo Hack
 ### Backend (Server)
 - **Runtime**: Node.js
 - **Framework**: Express.js
-- **Database**: PostgreSQL
+- **Database**: MySql
 - **ORM**: Prisma
 - **Security**: Helmet, bcryptjs, jsonwebtoken (JWT)
 
