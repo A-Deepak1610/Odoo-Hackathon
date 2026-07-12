@@ -5,20 +5,14 @@ import { setAccessToken, registerAuthErrorHandler, buildApiUrl } from '../../../
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  // DEV BYPASS: Inject a default Admin user to bypass protected routes
-  const [user, setUser] = useState({ 
-    id: 'dev-admin', 
-    name: 'Dev Admin', 
-    email: 'admin@dev.local', 
-    role: 'ADMIN' 
-  });
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Clears active tokens and state on authentication failure or logout
   const handleUnauthenticated = () => {
     setAccessToken('');
     localStorage.removeItem('refreshToken');
-    // setUser(null); // Keep user for dev bypass
+    setUser(null);
     setLoading(false);
   };
 
@@ -26,8 +20,29 @@ export const AuthProvider = ({ children }) => {
     // Register global auth error handler for token expiration
     registerAuthErrorHandler(handleUnauthenticated);
     
-    // Bypass backend initialization
-    setLoading(false);
+    const restoreSession = async () => {
+      const token = localStorage.getItem('refreshToken');
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const result = await getMeApi();
+        if (result && result.success && result.data?.user) {
+          setUser(result.data.user);
+        } else {
+          handleUnauthenticated();
+        }
+      } catch (err) {
+        handleUnauthenticated();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    restoreSession();
   }, []);
 
   const login = async (email, password, rememberMe) => {
