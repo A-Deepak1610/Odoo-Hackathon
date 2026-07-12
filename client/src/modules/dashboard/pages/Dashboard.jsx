@@ -1,155 +1,183 @@
 import React from 'react';
-import { 
-  Box, 
-  ArrowRightLeft, 
-  Wrench, 
-  CalendarClock, 
-  ArrowLeftRight, 
-  RotateCcw,
-  AlertTriangle,
-  Plus,
-  Activity
-} from 'lucide-react';
-import PageHeader from '../../../shared/components/PageHeader';
-import StatCard from '../../../shared/components/StatCard';
-import Button from '../../../shared/components/Button';
-import StatusPill from '../../../shared/components/StatusPill';
-
-const kpiData = [
-  { title: 'Assets Available', value: '1,245', icon: Box, color: 'indigo', trend: { value: '4.2%', direction: 'up' } },
-  { title: 'Assets Allocated', value: '3,812', icon: ArrowRightLeft, color: 'emerald', trend: { value: '2.1%', direction: 'up' } },
-  { title: 'Maintenance Today', value: '18', icon: Wrench, color: 'amber', trend: { value: '12%', direction: 'down' } },
-  { title: 'Active Bookings', value: '64', icon: CalendarClock, color: 'violet', trend: { value: '8.4%', direction: 'up' } },
-  { title: 'Pending Transfers', value: '12', icon: ArrowLeftRight, color: 'blue', trend: { value: '0%', direction: 'neutral' } },
-  { title: 'Upcoming Returns', value: '29', icon: RotateCcw, color: 'emerald', trend: { value: '5%', direction: 'up' } },
-];
-
-const quickActions = [
-  { title: 'Register Asset', description: 'Add a new asset to the registry', icon: Plus, color: 'bg-primary-50 text-primary-600' },
-  { title: 'Book Resource', description: 'Schedule a shared resource', icon: CalendarClock, color: 'bg-emerald-50 text-emerald-600' },
-  { title: 'Raise Maintenance', description: 'Report an issue or repair', icon: Wrench, color: 'bg-amber-50 text-amber-600' },
-];
-
-const recentActivity = [
-  { id: 1, user: 'Sarah Jenkins', action: 'allocated', item: 'MacBook Pro 16"', time: '10 mins ago', status: 'Allocated' },
-  { id: 2, user: 'Mike Ross', action: 'returned', item: 'Projector A1', time: '1 hour ago', status: 'Available' },
-  { id: 3, user: 'System', action: 'flagged for maintenance', item: 'Delivery Van #4', time: '2 hours ago', status: 'Under Maintenance' },
-  { id: 4, user: 'Elena Gilbert', action: 'requested transfer of', item: 'iPad Pro', time: '3 hours ago', status: 'Pending' },
-];
-
-const overdueItems = [
-  { id: '101', type: 'Return', item: 'Dell XPS 15', user: 'Tom Hanks', daysOverdue: 2 },
-  { id: '102', type: 'Maintenance', item: 'HVAC System Unit B', user: 'Tech Team', daysOverdue: 5 },
-];
+import { Box, ArrowRightLeft, Wrench, CalendarClock, ArrowLeftRight, RotateCcw, AlertTriangle, Plus, Activity, TrendingUp } from 'lucide-react';
 
 const Dashboard = () => {
-  return (
-    <div className="p-8 pb-20 max-w-7xl mx-auto">
-      <PageHeader 
-        title="Dashboard" 
-        description="Overview of your organization's assets and resource utilization."
-        actions={
-          <Button icon={Plus}>Register Asset</Button>
-        }
-      />
+  const statsCards = [
+    { icon: 'lucide:box', label: 'Assets Available', value: '1,245', subtitle: '4.2% increase', color: '#1e3a8a', bg: '#eff6ff' },
+    { icon: 'lucide:arrow-right-left', label: 'Assets Allocated', value: '3,812', subtitle: '2.1% increase', color: '#16a34a', bg: '#ecfdf5' },
+    { icon: 'lucide:wrench', label: 'Maintenance Today', value: '18', subtitle: '12% decrease', color: '#b45309', bg: '#fef3c7' },
+    { icon: 'lucide:calendar-clock', label: 'Active Bookings', value: '64', subtitle: '8.4% increase', color: '#7c3aed', bg: '#f3e8ff' },
+  ];
 
-      {/* Overdue Alerts Banner */}
-      {overdueItems.length > 0 && (
-        <div className="mb-8 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-4 shadow-sm">
-          <div className="p-2 bg-red-100 rounded-lg text-red-600 shrink-0">
-            <AlertTriangle size={24} />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-red-800 font-semibold text-sm">Requires Attention ({overdueItems.length} items overdue)</h3>
-            <div className="mt-2 flex flex-col gap-2">
-              {overdueItems.map(item => (
-                <div key={item.id} className="flex items-center justify-between bg-white/60 p-2 rounded-lg border border-red-100 text-sm">
-                  <div className="flex items-center gap-3 text-red-900">
-                    <span className="font-medium">{item.item}</span>
-                    <span className="text-red-600/60">•</span>
-                    <span>{item.type}</span>
-                    <span className="text-red-600/60">•</span>
-                    <span className="text-red-700">{item.user}</span>
-                  </div>
-                  <StatusPill status="Overdue" />
-                </div>
-              ))}
+  const quickActions = [
+    { icon: Plus, label: 'Register Asset', description: 'Add a new asset to the registry', path: '#', color: '#1e3a8a', bg: '#eff6ff' },
+    { icon: CalendarClock, label: 'Book Resource', description: 'Schedule a shared resource', path: '#', color: '#16a34a', bg: '#ecfdf5' },
+    { icon: Wrench, label: 'Raise Maintenance', description: 'Report an issue or repair', path: '#', color: '#b45309', bg: '#fef3c7' },
+  ];
+
+  const recentActivity = [
+    { id: 1, user: 'Sarah Jenkins', action: 'allocated', item: 'MacBook Pro 16"', time: '10 mins ago', status: 'Allocated' },
+    { id: 2, user: 'Mike Ross', action: 'returned', item: 'Projector A1', time: '1 hour ago', status: 'Available' },
+    { id: 3, user: 'System', action: 'flagged for maintenance', item: 'Delivery Van #4', time: '2 hours ago', status: 'Under Maintenance' },
+  ];
+
+  const getStatusColor = (status) => {
+    if (status === 'Allocated') return { bg: '#dcfce7', text: '#15803d' };
+    if (status === 'Available') return { bg: '#dcfce7', text: '#15803d' };
+    if (status === 'Under Maintenance') return { bg: '#fef3c7', text: '#b45309' };
+    return { bg: '#f1f5f9', text: '#475569' };
+  };
+
+  return (
+    <div style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+      {/* ── PAGE HEADER ─── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px' }}>
+        <div>
+          <h1 style={{ fontSize: '26px', fontWeight: 700, margin: '0 0 8px 0', color: '#1e293b' }}>Dashboard</h1>
+          <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>Overview of your organization's assets and resource utilization.</p>
+        </div>
+        <button style={{
+          display: 'flex', alignItems: 'center', gap: '8px',
+          padding: '10px 18px', background: '#1e3a8a', color: 'white',
+          border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+        }}>
+          <Plus size={16} />
+          Register Asset
+        </button>
+      </div>
+
+      {/* ── STAT CARDS (4-col) ─── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '28px' }}>
+        {statsCards.map((stat, i) => (
+          <div key={i} style={{
+            background: 'white', borderRadius: '12px', padding: '20px',
+            border: '1px solid #e2e8f0', display: 'flex', alignItems: 'flex-start', gap: '14px',
+          }}>
+            <div style={{
+              width: '44px', height: '44px', borderRadius: '10px',
+              background: stat.bg, display: 'flex', alignItems: 'center',
+              justifyContent: 'center', flexShrink: 0,
+            }}>
+              {stat.icon === 'lucide:box' && <Box size={22} color={stat.color} />}
+              {stat.icon === 'lucide:arrow-right-left' && <ArrowRightLeft size={22} color={stat.color} />}
+              {stat.icon === 'lucide:wrench' && <Wrench size={22} color={stat.color} />}
+              {stat.icon === 'lucide:calendar-clock' && <CalendarClock size={22} color={stat.color} />}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 500, marginBottom: '4px' }}>{stat.label}</div>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#1e293b', marginBottom: '2px' }}>{stat.value}</div>
+              <div style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <TrendingUp size={12} /> {stat.subtitle}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {kpiData.map((kpi, idx) => (
-          <StatCard key={idx} {...kpi} />
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content Area (Left 2/3) */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Quick Actions */}
-          <section>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {quickActions.map((action, idx) => (
-                <button 
-                  key={idx} 
-                  className="bg-white border border-gray-200 p-4 rounded-xl flex flex-col items-start gap-3 hover:border-primary-300 hover:shadow-sm transition-all text-left"
-                >
-                  <div className={`p-2.5 rounded-lg ${action.color}`}>
-                    <action.icon size={20} />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900 text-sm">{action.title}</h4>
-                    <p className="text-xs text-gray-500 mt-1">{action.description}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Recent Activity */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
-              <button className="text-sm font-medium text-primary-600 hover:text-primary-700">View All</button>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-              <div className="divide-y divide-gray-100">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 shrink-0">
-                        <Activity size={18} />
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-900">
-                          <span className="font-medium">{activity.user}</span> {activity.action} <span className="font-medium">{activity.item}</span>
-                        </p>
-                        <p className="text-xs text-gray-500 mt-0.5">{activity.time}</p>
-                      </div>
-                    </div>
-                    <StatusPill status={activity.status} />
-                  </div>
-                ))}
+      {/* ── QUICK ACTIONS (3-col) ─── */}
+      <div style={{ marginBottom: '28px' }}>
+        <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#1e293b', margin: '0 0 16px 0' }}>Quick Actions</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+          {quickActions.map((action, i) => (
+            <div key={i} style={{
+              background: 'white', borderRadius: '12px', padding: '18px 20px',
+              border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center',
+              gap: '14px', cursor: 'pointer', transition: 'all 0.2s', textDecoration: 'none',
+            }}
+            onMouseOver={e => {
+              e.currentTarget.style.borderColor = action.color;
+              e.currentTarget.style.boxShadow = `0 4px 12px ${action.color}15`;
+            }}
+            onMouseOut={e => {
+              e.currentTarget.style.borderColor = '#e2e8f0';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{
+                width: '44px', height: '44px', borderRadius: '10px',
+                background: action.bg, display: 'flex', alignItems: 'center',
+                justifyContent: 'center', flexShrink: 0,
+              }}>
+                <action.icon size={22} color={action.color} />
+              </div>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b', marginBottom: '2px' }}>{action.label}</div>
+                <div style={{ fontSize: '12px', color: '#64748b' }}>{action.description}</div>
               </div>
             </div>
-          </section>
+          ))}
+        </div>
+      </div>
+
+      {/* ── MAIN CONTENT (2:1 split) ─── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
+        {/* Left column — primary content */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{
+            background: 'white', borderRadius: '12px',
+            border: '1px solid #e2e8f0', padding: '20px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#1e293b', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Activity size={16} color="#1e3a8a" />
+                Recent Activity
+              </h3>
+              <a href="#" style={{ fontSize: '12px', color: '#1e3a8a', textDecoration: 'none', fontWeight: 500 }}>View All →</a>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {recentActivity.map((activity, i) => {
+                const statusColor = getStatusColor(activity.status);
+                return (
+                  <div key={activity.id} style={{
+                    padding: '12px 0', borderBottom: i < recentActivity.length - 1 ? '1px solid #e2e8f0' : 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{
+                        width: '32px', height: '32px', borderRadius: '50%',
+                        background: '#f1f5f9', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', color: '#64748b', fontSize: '12px', fontWeight: 600,
+                      }}>
+                        {activity.user.charAt(0)}{activity.user.split(' ')[1]?.charAt(0)}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 500, color: '#1e293b', marginBottom: '2px' }}>
+                          {activity.user} {activity.action} {activity.item}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>{activity.time}</div>
+                      </div>
+                    </div>
+                    <span style={{
+                      background: statusColor.bg, color: statusColor.text,
+                      padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
+                    }}>
+                      {activity.status}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
-        {/* Sidebar Area (Right 1/3) */}
-        <div className="space-y-8">
-          {/* We can place mini-charts or other widgets here later if needed, leaving it empty for now to match the clean dashboard aesthetic */}
-           <div className="bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl p-6 text-white shadow-md">
-            <h3 className="font-semibold text-lg mb-2">Need help?</h3>
-            <p className="text-primary-100 text-sm mb-4 line-clamp-3">
-              Check out our new documentation on setting up automated maintenance workflows and asset tracking.
+        {/* Right column — secondary content */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)',
+            borderRadius: '12px', padding: '20px', color: 'white',
+          }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 8px 0' }}>Need help?</h3>
+            <p style={{ fontSize: '12px', color: '#bfdbfe', margin: '0 0 12px 0', lineHeight: '1.5' }}>
+              Check out our documentation on asset tracking and maintenance workflows.
             </p>
-            <Button variant="secondary" size="sm" className="w-full">
+            <button style={{
+              width: '100%', padding: '8px 12px', background: 'white', color: '#1e3a8a',
+              border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
+              cursor: 'pointer', transition: 'all 0.2s',
+            }}
+            onMouseOver={e => e.currentTarget.style.background = '#f1f5f9'}
+            onMouseOut={e => e.currentTarget.style.background = 'white'}>
               Read Documentation
-            </Button>
+            </button>
           </div>
         </div>
       </div>
