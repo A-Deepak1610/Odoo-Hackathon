@@ -213,17 +213,14 @@ const Assets = () => {
         )}
       </div>
 
-      {/* --- ADD/EDIT MODAL --- */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        title={editingItem ? 'Edit Asset' : 'Register New Asset'}
-        footer={
-          <>
-            <Button variant="secondary" onClick={handleCloseModal}>Cancel</Button>
-            <Button onClick={handleSave}>Save Asset</Button>
-          </>
-        }
+      {/* ── MAIN CONTENT ─── */}
+      <div
+        style={{
+          background: "white",
+          borderRadius: "12px",
+          border: "1px solid #e2e8f0",
+          padding: "20px",
+        }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2
