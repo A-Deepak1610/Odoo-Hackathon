@@ -28,7 +28,7 @@ const getBookings = async (req, res, next) => {
     const userId = req.user.id;
     const bookings = await prisma.resourceBooking.findMany({
       where: { bookedByEmployeeId: userId },
-      include: { asset: true, bookedByEmployee: { select: { id: true, name: true, email: true } } },
+      include: { asset: true, bookedBy: { select: { id: true, name: true, email: true } } },
       orderBy: { startTime: 'desc' },
     });
     return successResponse(res, 200, 'Booking history retrieved successfully', bookings);
@@ -45,7 +45,7 @@ const getAllBookings = async (req, res, next) => {
     const orgId = req.user.organizationId;
     const bookings = await prisma.resourceBooking.findMany({
       where: { organizationId: orgId },
-      include: { asset: true, bookedByEmployee: { select: { id: true, name: true, email: true } } },
+      include: { asset: true, bookedBy: { select: { id: true, name: true, email: true } } },
       orderBy: { startTime: 'desc' },
     });
     return successResponse(res, 200, 'All organization bookings retrieved successfully', bookings);
