@@ -19,14 +19,18 @@ const navGroups = [
   {
     label: "MAIN",
     items: [
-      { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-      { name: "Notifications", path: "/notifications", icon: Bell },
+      { name: "Dashboard", path: "/asset-manager/dashboard", icon: LayoutDashboard },
+      { name: "Activity Logs & Notifications", path: "/asset-manager/notifications", icon: Bell },
     ],
   },
   {
     label: "MANAGEMENT",    
     items: [
       { name: 'Assets', path: '/admin/assets', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
+      { name: 'Asset Registration & Directory', path: '/asset-manager/directory', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
+      { name: 'Allocation & Transfer', path: '/asset-manager/allocations', icon: ArrowRightLeft },
+      { name: 'Resource Booking', path: '/asset-manager/booking', icon: CalendarClock },
+      { name: 'Maintenance Management', path: '/asset-manager/maintenance', icon: Wrench },
       { name: 'Organization Setup', path: '/organization', icon: Building2, roles: ['ADMIN', 'SUPERADMIN'] },
       { name: 'Assets', path: '/assets', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN', 'EMPLOYEE'] },
       { name: 'Allocation & Transfer', path: '/allocations', icon: ArrowRightLeft },
@@ -37,6 +41,8 @@ const navGroups = [
   {
     label: "REPORTS & COMPLIANCE",
     items: [
+      { name: 'Asset Audit', path: '/asset-manager/audit', icon: ClipboardCheck, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
+      { name: 'Reports & Analytics', path: '/asset-manager/reports', icon: BarChart3, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
       { name: 'Audit', path: '/admin/audit', icon: ClipboardCheck, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
       { name: 'Reports', path: '/admin/reports', icon: BarChart3, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
     ],

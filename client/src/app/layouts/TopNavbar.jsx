@@ -2,12 +2,26 @@ import React from "react";
 import { Search, Bell, Moon, ChevronDown } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
+const PAGE_TITLES = {
+  "dashboard": "Dashboard",
+  "notifications": "Activity Logs & Notifications",
+  "organization": "Organization Setup",
+  "assets": "Asset Registration & Directory",
+  "allocations": "Asset Allocation & Transfer",
+  "booking": "Resource Booking",
+  "maintenance": "Maintenance Management",
+  "audit": "Asset Audit",
+  "reports": "Reports & Analytics",
+};
+
 const getPageTitle = (pathname) => {
   const segments = pathname.split("/").filter(Boolean);
   if (segments.length === 0) return "Dashboard";
   const lastSegment = segments[segments.length - 1];
+  
+  if (PAGE_TITLES[lastSegment]) return PAGE_TITLES[lastSegment];
   if (lastSegment === "db-assistant") return "DB Assistant";
-  if (lastSegment === "organization") return "Organization Setup";
+  
   return lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1).replace(/-/g, " ");
 };
 

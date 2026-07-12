@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './app/layouts/AppLayout';
 import Dashboard from './modules/dashboard/pages/Dashboard';
+// import Assets from './modules/assets/pages/Assets';
 import Organization from './modules/admin-modules/organization/pages/Organization';
 import Assets from './modules/admin-modules/assets/pages/Assets';
 import Allocations from './modules/allocations/pages/Allocations';
@@ -16,6 +17,9 @@ import DbAssistant from './modules/admin-modules/db-assistant/pages/DbAssistant'
 import { AuthProvider, ProtectedRoute, LoginPage, SignupPage } from './modules/auth';
 import ProfilePage from './modules/auth/pages/ProfilePage';
 
+// NEW: Import the isolated Asset Manager routes
+import { AssetManagerRoutes } from './modules/asset-manager';
+
 function App() {
   return (
     <BrowserRouter>
@@ -29,10 +33,8 @@ function App() {
           <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             
-            {/* General Dashboard & Panel Routes */}
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="notifications" element={<Notifications />} />
-<<<<<<< HEAD
             {/* Administration Routes (Grouped under /admin) */}
             <Route path="admin">
               <Route 
@@ -76,64 +78,25 @@ function App() {
                 } 
               />
             </Route>
-=======
+
             <Route path="db-assistant" element={<DbAssistant />} />
             <Route path="profile" element={<ProfilePage />} />
             
-            {/* RBAC Route: Organization Setup requires ADMIN or SUPERADMIN privilege */}
-            <Route 
-              path="organization" 
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN']}>
-                  <Organization />
-                </ProtectedRoute>
-              } 
-            />
+            <Route path="organization" element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN']}><Organization /></ProtectedRoute>} />
             
-            {/* RBAC Route: Assets Management requires ADMIN, ASSET_MANAGER, DEPARTMENT_HEAD, SUPERADMIN or EMPLOYEE */}
-            <Route 
-              path="assets" 
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN', 'EMPLOYEE']}>
-                  <Assets />
-                </ProtectedRoute>
-              } 
-            />
->>>>>>> ac64105ae519cd60a7787a78173a1a5a8ac3debb
-            
-            {/* Standard Employee accessible panels */}
             <Route path="allocations" element={<Allocations />} />
             <Route path="booking" element={<Booking />} />
             <Route path="maintenance" element={<Maintenance />} />
-<<<<<<< HEAD
-=======
-            
-            {/* RBAC Route: Audit requires ADMIN, ASSET_MANAGER, DEPARTMENT_HEAD or SUPERADMIN */}
-            <Route 
-              path="audit" 
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}>
-                  <Audit />
-                </ProtectedRoute>
-              } 
-            />
-            
-            {/* RBAC Route: Reports requires ADMIN, ASSET_MANAGER, DEPARTMENT_HEAD or SUPERADMIN */}
-            <Route 
-              path="reports" 
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}>
-                  <Reports />
-                </ProtectedRoute>
-              } 
-            />
->>>>>>> ac64105ae519cd60a7787a78173a1a5a8ac3debb
+            <Route path="audit" element={<ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}><Audit /></ProtectedRoute>} />
+            <Route path="reports" element={<ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}><Reports /></ProtectedRoute>} />
 
             {/* Catch all fallback within panels */}
             <Route path="*" element={<div className="p-8">Work in progress</div>} />
           </Route>
+          
+          {/* INJECTED THE NEW ISOLATED ASSET MANAGER OUTSIDE APPLAYOUT TO AVOID DOUBLE LAYOUTS */}
+          <Route path="/asset-manager/*" element={<ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}><AssetManagerRoutes /></ProtectedRoute>} />
 
-          {/* Root fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
