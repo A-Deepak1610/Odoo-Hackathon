@@ -139,8 +139,106 @@ const cancelTransferRequest = async (req, res, next) => {
   }
 };
 
+/**
+ * Get department transfer requests (for Department Head)
+ */
+const getDepartmentRequests = async (req, res, next) => {
+  try {
+    const departmentId = req.user.departmentId;
+    if (!departmentId) {
+      throw new ApiError(400, 'You are not assigned to a department');
+    }
+
+    const requests = await prisma.allocation.findMany({
+      where: {
+        OR: [
+          { toDepartmentId: departmentId },
+          { requestedBy: { departmentId: departmentId } }
+        ]
+      },
+      include: {
+        asset: true,
+        toEmployee: { select: { id: true, name: true, email: true } },
+        requestedBy: { select: { id: true, name: true, email: true } },
+        toDepartment: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return successResponse(res, 200, 'Department requests retrieved successfully', requests);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Approve a transfer/allocation request
+ */
+const approveRequest = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const approverId = req.user.id;
+
+    const allocation = await prisma.allocation.findUnique({ where: { id } });
+    if (!allocation) throw new ApiError(404, 'Request not found');
+    if (allocation.status !== 'PENDING') throw new ApiError(400, 'Only pending requests can be approved');
+
+    // Update allocation
+    const updated = await prisma.allocation.update({
+      where: { id },
+      data: {
+        status: 'ACTIVE',
+        approvedById: approverId
+      }
+    });
+
+    // Update the asset assignment
+    await prisma.asset.update({
+      where: { id: allocation.assetId },
+      data: {
+        currentEmployeeId: allocation.toEmployeeId,
+        currentDepartmentId: allocation.toDepartmentId,
+        status: 'ALLOCATED'
+      }
+    });
+
+    return successResponse(res, 200, 'Request approved successfully', updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Reject a transfer/allocation request
+ */
+const rejectRequest = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const approverId = req.user.id;
+
+    const allocation = await prisma.allocation.findUnique({ where: { id } });
+    if (!allocation) throw new ApiError(404, 'Request not found');
+    if (allocation.status !== 'PENDING') throw new ApiError(400, 'Only pending requests can be rejected');
+
+    const updated = await prisma.allocation.update({
+      where: { id },
+      data: {
+        status: 'REJECTED',
+        approvedById: approverId
+      }
+    });
+
+    return successResponse(res, 200, 'Request rejected successfully', updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getMyTransfers,
   requestTransfer,
-  cancelTransferRequest
+  cancelTransferRequest,
+  getDepartmentRequests,
+  approveRequest,
+  rejectRequest
 };

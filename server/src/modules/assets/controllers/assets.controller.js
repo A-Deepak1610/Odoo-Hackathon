@@ -45,7 +45,31 @@ const getMyAssets = async (req, res, next) => {
   }
 };
 
+/**
+ * Get department assets (for Department Head)
+ */
+const getDepartmentAssets = async (req, res, next) => {
+  try {
+    const departmentId = req.user.departmentId;
+    if (!departmentId) {
+      throw new ApiError(400, 'You are not assigned to a department');
+    }
+
+    const assets = await prisma.asset.findMany({
+      where: { currentDepartmentId: departmentId },
+      include: { 
+        category: true, 
+        currentEmployee: { select: { id: true, name: true, email: true } }
+      }
+    });
+    return successResponse(res, 200, 'Department assets retrieved successfully', assets);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAssets,
-  getMyAssets
+  getMyAssets,
+  getDepartmentAssets
 };
