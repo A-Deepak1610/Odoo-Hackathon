@@ -51,15 +51,16 @@ export const DeptHeadProvider = ({ children }) => {
     setRequests(prev => [newReq, ...prev]);
   };
 
-  const requestAsset = () => {
+  const requestAsset = (requestData) => {
     const newReq = {
       id: `REQ-${Math.floor(1000 + Math.random() * 9000)}`,
       type: 'Asset Allocation',
-      asset: 'Dummy Hardware Request',
+      asset: requestData.assetName || 'Hardware Request',
       requester: 'Current User',
       department: 'Engineering',
       date: new Date().toISOString().split('T')[0],
-      status: 'Pending'
+      status: 'Pending',
+      reason: requestData.reason || ''
     };
     setRequests(prev => [newReq, ...prev]);
   };
