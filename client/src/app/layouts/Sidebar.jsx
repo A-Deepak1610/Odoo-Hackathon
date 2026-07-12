@@ -9,8 +9,10 @@ import {
   Wrench, 
   ClipboardCheck, 
   BarChart3, 
-  Bell 
+  Bell,
+  LogOut
 } from 'lucide-react';
+import { useAuth } from '../../modules/auth';
 
 const navGroups = [
   {
@@ -23,8 +25,8 @@ const navGroups = [
   {
     label: 'MANAGEMENT',
     items: [
-      { name: 'Organization Setup', path: '/organization', icon: Building2 },
-      { name: 'Assets', path: '/assets', icon: Box },
+      { name: 'Organization Setup', path: '/organization', icon: Building2, roles: ['ADMIN'] },
+      { name: 'Assets', path: '/assets', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
       { name: 'Allocation & Transfer', path: '/allocations', icon: ArrowRightLeft },
       { name: 'Resource Booking', path: '/booking', icon: CalendarClock },
       { name: 'Maintenance', path: '/maintenance', icon: Wrench },
@@ -33,13 +35,28 @@ const navGroups = [
   {
     label: 'REPORTS & COMPLIANCE',
     items: [
-      { name: 'Audit', path: '/audit', icon: ClipboardCheck },
-      { name: 'Reports', path: '/reports', icon: BarChart3 },
+      { name: 'Audit', path: '/audit', icon: ClipboardCheck, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
+      { name: 'Reports', path: '/reports', icon: BarChart3, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
     ],
   }
 ];
 
 const Sidebar = () => {
+  const { user, logout } = useAuth();
+
+  const displayName = user?.name || (user?.email ? user.email.split('@')[0] : 'User');
+  const initials = displayName.substring(0, 2).toUpperCase();
+  const displayRole = user?.role ? user.role.replace(/_/g, ' ') : 'EMPLOYEE';
+
+  // Filter navigation items based on user role permissions
+  const filteredNavGroups = navGroups.map(group => {
+    const items = group.items.filter(item => {
+      if (!item.roles) return true;
+      return user && item.roles.includes(user.role);
+    });
+    return { ...group, items };
+  }).filter(group => group.items.length > 0);
+
   return (
     <aside style={{
       width: '256px',
@@ -95,7 +112,7 @@ const Sidebar = () => {
         paddingRight: '12px',
         paddingBottom: '16px',
       }}>
-        {navGroups.map((group) => (
+        {filteredNavGroups.map((group) => (
           <div key={group.label} style={{ marginBottom: '24px' }}>
             <h3 style={{
               paddingLeft: '12px',
@@ -211,7 +228,7 @@ const Sidebar = () => {
             fontSize: '14px',
             flexShrink: 0,
           }}>
-            JS
+            {initials}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{
@@ -222,7 +239,7 @@ const Sidebar = () => {
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-            }}>Jane Smith</p>
+            }}>{displayName}</p>
             <p style={{
               fontSize: '12px',
               color: '#64748b',
@@ -230,8 +247,35 @@ const Sidebar = () => {
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-            }}>Org Admin</p>
+              textTransform: 'uppercase',
+            }}>{displayRole}</p>
           </div>
+          <button 
+            onClick={logout}
+            title="Log Out"
+            style={{
+              padding: '6px',
+              color: '#94a3b8',
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s',
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.color = '#ef4444';
+              e.currentTarget.style.backgroundColor = '#fee2e2';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.color = '#94a3b8';
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+          >
+            <LogOut size={18} />
+          </button>
         </div>
       </div>
     </aside>
