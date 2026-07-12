@@ -1,7 +1,20 @@
-import React, { useState, useEffect } from "react";
-import { Search, Download, Plus, AlertTriangle, Loader2 } from "lucide-react";
-import { useAuth } from "../../auth";
-import { apiFetch } from "../../../services/api";
+import React, { useState } from 'react';
+import { Search, Download, Plus, Pencil, Trash2, Box, Package, RefreshCw, Wrench } from 'lucide-react';
+import PageHeader from '../../../../shared/components/PageHeader';
+import DataTable from '../../../../shared/components/DataTable';
+import StatusPill from '../../../../shared/components/StatusPill';
+import StatCard from '../../../../shared/components/StatCard';
+import Button from '../../../../shared/components/Button';
+import Modal from '../../../../shared/components/Modal';
+
+// --- MOCK DATA ---
+const initialAssets = [
+  { id: 'AST-1042', name: 'MacBook Pro 16"', category: 'Laptops', department: 'Engineering', location: 'HQ - Floor 3', status: 'Allocated' },
+  { id: 'AST-1043', name: 'Dell XPS 15', category: 'Laptops', department: 'Marketing', location: 'HQ - Floor 2', status: 'Available' },
+  { id: 'AST-1044', name: 'Projector A1', category: 'A/V Equipment', department: 'Facilities', location: 'Conf Room A', status: 'Reserved' },
+  { id: 'AST-1045', name: 'Delivery Van #4', category: 'Vehicles', department: 'Logistics', location: 'Warehouse North', status: 'Under Maintenance' },
+  { id: 'AST-1046', name: 'iPad Pro', category: 'Tablets', department: 'Sales', location: 'HQ - Floor 1', status: 'Lost' },
+];
 
 const Assets = () => {
   const { user } = useAuth();
