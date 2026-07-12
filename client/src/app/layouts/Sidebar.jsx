@@ -18,7 +18,6 @@ const navGroups = [
     label: "MAIN",
     items: [
       { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-      { name: "DB Assistant", path: "/db-assistant", icon: Bot },
       { name: "Notifications", path: "/notifications", icon: Bell },
     ],
   },
@@ -40,6 +39,7 @@ const navGroups = [
     label: "REPORTS & COMPLIANCE",
     items: [
       { name: "Audit", path: "/audit", icon: ClipboardCheck },
+      { name: "DB Assistant", path: "/db-assistant", icon: Bot },
       { name: "Reports", path: "/reports", icon: BarChart3 },
     ],
   },
