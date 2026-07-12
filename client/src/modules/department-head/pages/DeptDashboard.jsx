@@ -1,5 +1,6 @@
 import React from 'react';
 import { Layers, Wrench, Clock, Search, Filter, MoreVertical, CheckCircle2 } from 'lucide-react';
+import { useDeptHead } from '../store/DeptHeadContext';
 
 const StatCard = ({ title, value, icon: Icon, colorClass, trend }) => (
   <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
@@ -23,15 +24,13 @@ const StatCard = ({ title, value, icon: Icon, colorClass, trend }) => (
   </div>
 );
 
-const MOCK_ASSETS = [
-  { id: 'AF-1042', name: 'MacBook Pro M2', assignee: 'Alex Chen', role: 'Sr. Developer', status: 'Allocated', condition: 'Excellent' },
-  { id: 'AF-1089', name: 'Dell UltraSharp 27"', assignee: 'Sarah Jenkins', role: 'Designer', status: 'Allocated', condition: 'Good' },
-  { id: 'AF-2011', name: 'Herman Miller Chair', assignee: 'Mike Ross', role: 'QA Engineer', status: 'Under Maintenance', condition: 'Needs Repair' },
-  { id: 'AF-3005', name: 'iPad Pro 11"', assignee: 'Unassigned', role: '-', status: 'Available', condition: 'New' },
-  { id: 'AF-1045', name: 'ThinkPad X1 Carbon', assignee: 'Emma Watson', role: 'Developer', status: 'Allocated', condition: 'Good' },
-];
-
 const DeptDashboard = () => {
+  const { assets, requests } = useDeptHead();
+  
+  const totalAssets = assets.length;
+  const underMaintenance = assets.filter(a => a.status === 'Under Maintenance').length;
+  const pendingRequests = requests.length;
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in">
       <div className="flex justify-between items-end">
@@ -48,23 +47,21 @@ const DeptDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard 
           title="Total Department Assets" 
-          value="142" 
+          value={totalAssets} 
           icon={Layers} 
           colorClass="bg-blue-600 text-blue-600"
-          trend={{ value: '+12%', isPositive: true }}
         />
         <StatCard 
           title="Under Maintenance" 
-          value="8" 
+          value={underMaintenance} 
           icon={Wrench} 
           colorClass="bg-amber-500 text-amber-500"
         />
         <StatCard 
           title="Pending Requests" 
-          value="15" 
+          value={pendingRequests} 
           icon={Clock} 
           colorClass="bg-indigo-500 text-indigo-500"
-          trend={{ value: '-3', isPositive: true }}
         />
       </div>
 
@@ -99,7 +96,7 @@ const DeptDashboard = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {MOCK_ASSETS.map((asset, idx) => (
+              {assets.map((asset, idx) => (
                 <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
@@ -156,7 +153,7 @@ const DeptDashboard = () => {
         </div>
         
         <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-sm text-slate-500">
-          <span>Showing 1 to 5 of 142 assets</span>
+          <span>Showing 1 to {assets.length} of {assets.length} assets</span>
           <div className="flex gap-1">
             <button className="px-3 py-1 border border-slate-300 rounded hover:bg-white transition-colors" disabled>Prev</button>
             <button className="px-3 py-1 border border-slate-300 rounded hover:bg-white transition-colors">Next</button>

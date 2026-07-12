@@ -1,16 +1,31 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, Monitor, Presentation, Wifi, MapPin } from 'lucide-react';
 import Button from '../../../shared/components/Button';
-
-const MOCK_RESOURCES = [
-  { id: 'RES-1', name: 'Conference Room A', type: 'Room', capacity: 12, amenities: ['Projector', 'Whiteboard', 'Video Conf'], status: 'Available' },
-  { id: 'RES-2', name: 'Design Studio Lab', type: 'Lab', capacity: 6, amenities: ['Mac Pros', 'Wacom Cintiq', '3D Printer'], status: 'Booked' },
-  { id: 'RES-3', name: 'Portable Projector 4K', type: 'Equipment', capacity: null, amenities: ['HDMI', 'Wireless Cast'], status: 'Available' },
-  { id: 'RES-4', name: 'Meeting Pod 1', type: 'Room', capacity: 4, amenities: ['Monitor', 'Whiteboard'], status: 'Available' },
-];
+import { useDeptHead } from '../store/DeptHeadContext';
 
 const ResourceBooking = () => {
+  const { resources, bookResource } = useDeptHead();
   const [selectedResource, setSelectedResource] = useState(null);
+  
+  // Form State
+  const [date, setDate] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [purpose, setPurpose] = useState('');
+  
+  const handleBooking = (e) => {
+    e.preventDefault();
+    if (!selectedResource || !date || !startTime || !endTime) return;
+    
+    bookResource(selectedResource.id, purpose, date, startTime, endTime);
+    
+    // Reset Form
+    setSelectedResource(null);
+    setDate('');
+    setStartTime('');
+    setEndTime('');
+    setPurpose('');
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in">
@@ -35,7 +50,7 @@ const ResourceBooking = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {MOCK_RESOURCES.map(res => (
+            {resources.map(res => (
               <div 
                 key={res.id} 
                 onClick={() => res.status === 'Available' && setSelectedResource(res)}
@@ -54,7 +69,7 @@ const ResourceBooking = () => {
                     </div>
                   </div>
                   <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                    res.status === 'Available' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                    res.status === 'Available' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
                   }`}>
                     {res.status}
                   </span>
@@ -82,7 +97,7 @@ const ResourceBooking = () => {
             <h2 className="text-lg font-semibold text-slate-800 mb-4">Book Resource</h2>
             
             {selectedResource ? (
-              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+              <form className="space-y-4" onSubmit={handleBooking}>
                 <div className="p-3 bg-primary-50 text-primary-800 rounded-lg border border-primary-100 mb-6">
                   <p className="text-sm font-medium">Selected: {selectedResource.name}</p>
                 </div>
@@ -91,7 +106,13 @@ const ResourceBooking = () => {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <input type="date" className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                    <input 
+                      type="date" 
+                      required
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" 
+                    />
                   </div>
                 </div>
 
@@ -100,14 +121,26 @@ const ResourceBooking = () => {
                     <label className="block text-sm font-medium text-slate-700 mb-1">Start Time</label>
                     <div className="relative">
                       <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                      <input type="time" className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                      <input 
+                        type="time" 
+                        required
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" 
+                      />
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">End Time</label>
                     <div className="relative">
                       <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                      <input type="time" className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                      <input 
+                        type="time" 
+                        required
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" 
+                      />
                     </div>
                   </div>
                 </div>
@@ -116,12 +149,14 @@ const ResourceBooking = () => {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Purpose</label>
                   <textarea 
                     rows={3}
+                    value={purpose}
+                    onChange={(e) => setPurpose(e.target.value)}
                     placeholder="Brief description of usage..."
                     className="w-full p-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                   ></textarea>
                 </div>
 
-                <Button className="w-full mt-4 bg-primary-600 hover:bg-primary-700 text-white py-2 rounded-lg font-medium transition-colors">
+                <Button type="submit" className="w-full mt-4 bg-primary-600 hover:bg-primary-700 text-white py-2 rounded-lg font-medium transition-colors">
                   Confirm Booking
                 </Button>
               </form>

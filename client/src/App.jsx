@@ -14,6 +14,7 @@ import DbAssistant from './modules/db-assistant/pages/DbAssistant';
 import DeptDashboard from './modules/department-head/pages/DeptDashboard';
 import Approvals from './modules/department-head/pages/Approvals';
 import ResourceBooking from './modules/department-head/pages/ResourceBooking';
+import { DeptHeadProvider } from './modules/department-head/store/DeptHeadContext';
 
 // Auth Module exports
 import { AuthProvider, ProtectedRoute, LoginPage, SignupPage } from './modules/auth';
@@ -28,7 +29,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
 
           {/* Secure Application Routes (Authenticated & Guarded Layout) */}
-          <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+          <Route path="/" element={<ProtectedRoute><DeptHeadProvider><AppLayout /></DeptHeadProvider></ProtectedRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             
             {/* General Dashboard & Panel Routes */}

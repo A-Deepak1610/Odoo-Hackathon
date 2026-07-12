@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
 import { Check, X, Clock, FileText, ChevronRight } from 'lucide-react';
-
-const MOCK_REQUESTS = [
-  { id: 'REQ-901', type: 'Asset Allocation', asset: 'MacBook Pro M2', requester: 'John Doe', department: 'Engineering', date: '2023-10-25', status: 'Pending' },
-  { id: 'REQ-902', type: 'Asset Transfer', asset: 'Dell UltraSharp 27"', requester: 'Jane Smith', department: 'Design', date: '2023-10-26', status: 'Pending' },
-  { id: 'REQ-903', type: 'Maintenance', asset: 'Office Chair', requester: 'Mike Ross', department: 'HR', date: '2023-10-27', status: 'Pending' },
-];
+import { useDeptHead } from '../store/DeptHeadContext';
 
 const RequestCard = ({ request, onApprove, onReject }) => (
   <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all group">
@@ -54,16 +49,14 @@ const RequestCard = ({ request, onApprove, onReject }) => (
 );
 
 const Approvals = () => {
-  const [requests, setRequests] = useState(MOCK_REQUESTS);
+  const { requests, approveRequest, rejectRequest } = useDeptHead();
 
   const handleApprove = (id) => {
-    // In a real app, this would trigger an API call and a modal for optional comments
-    setRequests(requests.filter(req => req.id !== id));
+    approveRequest(id);
   };
 
   const handleReject = (id) => {
-    // In a real app, this would trigger an API call and a modal for mandatory comments
-    setRequests(requests.filter(req => req.id !== id));
+    rejectRequest(id);
   };
 
   return (
