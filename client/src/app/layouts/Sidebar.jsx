@@ -19,8 +19,8 @@ const navGroups = [
   {
     label: "MAIN",
     items: [
-      { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-      { name: "Activity Logs & Notifications", path: "/notifications", icon: Bell },
+      { name: "Dashboard", path: "/asset-manager/dashboard", icon: LayoutDashboard },
+      { name: "Activity Logs & Notifications", path: "/asset-manager/notifications", icon: Bell },
     ],
   },
   {

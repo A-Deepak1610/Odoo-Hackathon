@@ -191,7 +191,7 @@ const AllocationPage = () => {
               </div>
 
               <div className="pt-5 border-t border-slate-100 flex justify-end">
-                <Button type="button" className="bg-slate-800 hover:bg-slate-900 text-white gap-2" onClick={() => setShowReturnSuccess(true)}>
+                <Button type="button" className="bg-blue-600 hover:bg-blue-700 text-white gap-2" onClick={() => setShowReturnSuccess(true)}>
                   <CheckCircle2 size={16} />
                   Confirm Return
                 </Button>

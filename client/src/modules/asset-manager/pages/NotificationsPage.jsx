@@ -149,7 +149,7 @@ const NotificationsPage = () => {
                     onClick={() => setActiveTab(tab.id)}
                     className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all focus:outline-none ${
                       activeTab === tab.id 
-                        ? 'bg-slate-900 text-white shadow-sm' 
+                        ? 'bg-blue-600 text-white shadow-sm' 
                         : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                     }`}
                   >

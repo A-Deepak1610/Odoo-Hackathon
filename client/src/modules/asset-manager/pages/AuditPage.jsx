@@ -198,7 +198,7 @@ const AuditPage = () => {
 
             <Button 
               onClick={() => setIsCloseModalOpen(true)}
-              className="w-full mt-6 bg-slate-900 hover:bg-slate-800"
+              className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white"
             >
               Close Audit Cycle
             </Button>
@@ -294,7 +294,7 @@ const AuditPage = () => {
               <Button variant="secondary" onClick={() => setIsCloseModalOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={() => setIsCloseModalOpen(false)} className="bg-slate-900 hover:bg-slate-800 text-white">
+              <Button onClick={() => setIsCloseModalOpen(false)} className="bg-blue-600 hover:bg-blue-700 text-white">
                 Confirm Close
               </Button>
             </div>

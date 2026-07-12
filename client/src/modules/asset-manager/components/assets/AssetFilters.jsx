@@ -2,7 +2,7 @@ import React from 'react';
 import { Search, Filter, Plus, Download } from 'lucide-react';
 import { Input, Select, Button, Card, CardContent } from '../ui';
 
-export const AssetFilters = ({ onRegisterClick }) => {
+export const AssetFilters = () => {
   return (
     <Card className="mb-6">
       <CardContent className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -44,18 +44,6 @@ export const AssetFilters = ({ onRegisterClick }) => {
               <Filter size={16} />
             </Button>
           </div>
-        </div>
-
-        {/* Right side: Actions */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <Button variant="secondary" className="w-full sm:w-auto gap-2">
-            <Download size={16} />
-            <span>Export</span>
-          </Button>
-          <Button onClick={onRegisterClick} className="w-full sm:w-auto gap-2 shadow-sm">
-            <Plus size={16} />
-            <span>Register Asset</span>
-          </Button>
         </div>
 
       </CardContent>

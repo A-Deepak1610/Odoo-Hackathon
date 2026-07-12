@@ -114,9 +114,17 @@ const AssetsPage = () => {
         </div>
       </div>
 
-      <AssetFilters onRegisterClick={() => setIsRegisterModalOpen(true)} />
-      
-      <AssetTable data={MOCK_ASSETS} isLoading={isLoading} />
+      {/* Main Content */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[calc(100vh-170px)]">
+        
+        {/* Filters Bar */}
+        <AssetFilters />
+        
+        {/* Data Table */}
+        <div className="flex-1 overflow-auto bg-slate-50 relative">
+          <AssetTable data={MOCK_ASSETS} isLoading={isLoading} />
+        </div>
+      </div>
 
       <RegisterAssetModal 
         isOpen={isRegisterModalOpen} 
