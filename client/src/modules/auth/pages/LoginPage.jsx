@@ -39,21 +39,21 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 bg-radial-gradient py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 bg-radial-gradient py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
       {/* Decorative Blur Spheres */}
-      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary-900/20 blur-[100px] pointer-events-none"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-900/10 blur-[100px] pointer-events-none"></div>
+      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary-200/50 blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-200/50 blur-[100px] pointer-events-none"></div>
 
-      <div className="max-w-md w-full space-y-8 bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 p-8 rounded-2xl shadow-2xl z-10 relative">
+      <div className="max-w-md w-full space-y-8 bg-white border border-slate-200 p-8 rounded-2xl shadow-xl z-10 relative">
         {/* Brand/Logo Header */}
         <div className="text-center">
           <div className="mx-auto h-12 w-12 rounded-xl bg-gradient-to-tr from-primary-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-primary-500/20">
             <Box size={28} className="animate-pulse" />
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-white tracking-tight">
+          <h2 className="mt-6 text-3xl font-extrabold text-slate-900 tracking-tight">
             Welcome Back
           </h2>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-slate-500">
             Securely access your asset and resource portal
           </p>
         </div>
@@ -70,7 +70,7 @@ const LoginPage = () => {
           <div className="space-y-4">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+              <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
                 Email Address
               </label>
               <div className="relative">
@@ -85,7 +85,7 @@ const LoginPage = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-4 py-2.5 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
+                  className="block w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
                   placeholder="name@company.com"
                 />
               </div>
@@ -93,7 +93,7 @@ const LoginPage = () => {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+              <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -108,13 +108,13 @@ const LoginPage = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-10 py-2.5 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
+                  className="block w-full pl-10 pr-10 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -131,9 +131,9 @@ const LoginPage = () => {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-700 rounded bg-slate-900/50"
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300 rounded bg-white"
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-400 cursor-pointer">
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-600 cursor-pointer">
                 Remember Login
               </label>
             </div>
@@ -160,9 +160,9 @@ const LoginPage = () => {
 
         {/* Footer */}
         <div className="text-center mt-6">
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-500">
             Need an employee account?{' '}
-            <Link to="/signup" className="font-semibold text-primary-400 hover:text-primary-300 hover:underline transition-all">
+            <Link to="/signup" className="font-semibold text-primary-600 hover:text-primary-700 hover:underline transition-all">
               Sign Up
             </Link>
           </p>

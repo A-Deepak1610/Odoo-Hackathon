@@ -192,9 +192,60 @@ const revokeRefreshToken = async (token) => {
   }
 };
 
+const updateProfile = async (userId, data) => {
+  const { phone, address, avatarUrl } = data;
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      phone,
+      address,
+      avatarUrl,
+    },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      phone: true,
+      address: true,
+      avatarUrl: true,
+      departmentId: true,
+      isActive: true,
+    }
+  });
+  return user;
+};
+
+const changePassword = async (userId, currentPassword, newPassword) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  const isPasswordMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!isPasswordMatch) {
+    throw new ApiError(400, 'Incorrect current password');
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      passwordHash: newPasswordHash,
+    },
+  });
+};
+
 module.exports = {
   signupEmployee,
   loginUser,
   refreshAccessToken,
   revokeRefreshToken,
+  updateProfile,
+  changePassword,
 };

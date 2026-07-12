@@ -19,9 +19,11 @@ import {
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useAuth } from "../../auth";
 import { apiFetch } from "../../../services/api";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   // States for Employee Dashboard
   const [data, setData] = useState(null);
@@ -173,6 +175,7 @@ const Dashboard = () => {
         icon: CalendarClock,
         label: "Book Resource",
         description: "Schedule a shared room or equipment",
+        path: "/booking",
         color: "#7c3aed",
         bg: "#f3e8ff",
       },
@@ -180,6 +183,7 @@ const Dashboard = () => {
         icon: Wrench,
         label: "Raise Maintenance",
         description: "Report an issue with your materials",
+        path: "/maintenance",
         color: "#b45309",
         bg: "#fef3c7",
       },
@@ -187,6 +191,7 @@ const Dashboard = () => {
         icon: ArrowLeftRight,
         label: "Request Transfer",
         description: "Reallocate an asset to another user",
+        path: "/allocations",
         color: "#16a34a",
         bg: "#ecfdf5",
       },
@@ -277,6 +282,7 @@ const Dashboard = () => {
             {employeeQuickActions.map((action, i) => (
               <div
                 key={i}
+                onClick={() => navigate(action.path)}
                 style={{
                   background: "white",
                   borderRadius: "12px",
@@ -638,9 +644,30 @@ const Dashboard = () => {
   ];
 
   const quickActions = [
-    { label: "+ Register Asset", icon: Plus, color: "border-blue-200 hover:border-blue-500", iconColor: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Book Resource", icon: CalendarClock, color: "border-emerald-200 hover:border-emerald-500", iconColor: "text-emerald-600", bg: "bg-emerald-50" },
-    { label: "Raise Request", icon: Wrench, color: "border-amber-200 hover:border-amber-500", iconColor: "text-amber-600", bg: "bg-amber-50" },
+    {
+      icon: Plus,
+      label: "Register Asset",
+      description: "Add a new asset to the registry",
+      path: "/assets",
+      color: "#1e3a8a",
+      bg: "#eff6ff",
+    },
+    {
+      icon: CalendarClock,
+      label: "Book Resource",
+      description: "Schedule a shared resource",
+      path: "/booking",
+      color: "#16a34a",
+      bg: "#ecfdf5",
+    },
+    {
+      icon: Wrench,
+      label: "Raise Maintenance",
+      description: "Report an issue or repair",
+      path: "/maintenance",
+      color: "#b45309",
+      bg: "#fef3c7",
+    },
   ];
 
   const recentActivity = [
@@ -688,10 +715,82 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* OVERDUE ALERT */}
-      <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-center gap-3 mb-6 shadow-sm">
-        <AlertCircle className="text-rose-600 shrink-0" size={20} />
-        <span className="text-sm font-semibold text-rose-800">3 assets overdue for return - flagged for follow-up</span>
+      {/* ── QUICK ACTIONS (3-col) ─── */}
+      <div style={{ marginBottom: "28px" }}>
+        <h2
+          style={{
+            fontSize: "16px",
+            fontWeight: 600,
+            color: "#1e293b",
+            margin: "0 0 16px 0",
+          }}
+        >
+          Quick Actions
+        </h2>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "14px",
+          }}
+        >
+          {quickActions.map((action, i) => (
+            <div
+              key={i}
+              onClick={() => navigate(action.path)}
+              style={{
+                background: "white",
+                borderRadius: "12px",
+                padding: "18px 20px",
+                border: "1px solid #e2e8f0",
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                textDecoration: "none",
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.borderColor = action.color;
+                e.currentTarget.style.boxShadow = `0 4px 12px ${action.color}15`;
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.borderColor = "#e2e8f0";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            >
+              <div
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "10px",
+                  background: action.bg,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <action.icon size={22} color={action.color} />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    color: "#1e293b",
+                    marginBottom: "2px",
+                  }}
+                >
+                  {action.label}
+                </div>
+                <div style={{ fontSize: "12px", color: "#64748b" }}>
+                  {action.description}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* QUICK ACTIONS */}

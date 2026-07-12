@@ -99,10 +99,35 @@ const getMe = async (req, res, next) => {
   }
 };
 
+const updateProfile = async (req, res, next) => {
+  try {
+    const { phone, address, avatarUrl } = req.body;
+    const updatedUser = await authService.updateProfile(req.user.id, { phone, address, avatarUrl });
+    return successResponse(res, 200, 'Profile updated successfully', { user: updatedUser });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      throw new ApiError(400, 'Current and new password are required');
+    }
+    await authService.changePassword(req.user.id, currentPassword, newPassword);
+    return successResponse(res, 200, 'Password changed successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   signup,
   login,
   refresh,
   logout,
   getMe,
+  updateProfile,
+  changePassword,
 };
