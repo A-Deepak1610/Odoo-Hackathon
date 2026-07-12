@@ -42,47 +42,27 @@ function App() {
             {/* General Dashboard & Panel Routes */}
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="notifications" element={<Notifications />} />
-            <Route path="db-assistant" element={<DbAssistant />} />
             <Route path="profile" element={<ProfilePage />} />
-
-            {/* Super Admin Exclusives */}
-            <Route path="superadmin-dashboard" element={
-              <ProtectedRoute allowedRoles={['SUPERADMIN']}>
-                <SuperAdminDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="tenants" element={
-              <ProtectedRoute allowedRoles={['SUPERADMIN']}>
-                <TenantManagement />
-              </ProtectedRoute>
-            } />
-
-            {/* Department Head Exclusives */}
-            <Route path="dept-dashboard" element={
-              <ProtectedRoute allowedRoles={['DEPARTMENT_HEAD']}>
-                <DeptDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="approvals" element={
-              <ProtectedRoute allowedRoles={['DEPARTMENT_HEAD']}>
-                <Approvals />
-              </ProtectedRoute>
-            } />
-            <Route path="dept-booking" element={
-              <ProtectedRoute allowedRoles={['DEPARTMENT_HEAD']}>
-                <ResourceBooking />
-              </ProtectedRoute>
-            } />
             
-            {/* RBAC Route: Organization Setup requires ADMIN privilege */}
-            <Route 
-              path="organization" 
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
-                  <Organization />
-                </ProtectedRoute>
-              } 
-            />
+            {/* Administration Routes (Grouped under /admin) */}
+            <Route path="admin">
+              <Route 
+                path="organization" 
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN']}>
+                    <Organization />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="db-assistant" 
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN']}>
+                    <DbAssistant />
+                  </ProtectedRoute>
+                } 
+              />
+            </Route>
             
             {/* RBAC Route: Assets Management requires ADMIN, ASSET_MANAGER or DEPARTMENT_HEAD */}
             <Route 

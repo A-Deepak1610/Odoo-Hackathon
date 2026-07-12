@@ -30,7 +30,7 @@ export const AssetDetails = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <button 
-            onClick={() => navigate('/admin/assets')}
+            onClick={() => navigate('/assets')}
             className="p-2 rounded-full hover:bg-gray-100 text-gray-600"
           >
             <ArrowLeft className="w-5 h-5" />
