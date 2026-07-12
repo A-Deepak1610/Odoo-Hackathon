@@ -31,7 +31,7 @@ const Allocations = () => {
 
       const [assetsRes, transfersRes, orgRes] = await Promise.all([
         apiFetch("/api/v1/assets/my"),
-        apiFetch("/api/v1/allocations/my-transfers"),
+        apiFetch("/api/v1/allocation/my-transfers"),
         apiFetch("/api/v1/organization") // Fetch users and departments if available, or fall back
       ]);
 
@@ -91,7 +91,7 @@ const Allocations = () => {
     setSubmitting(true);
 
     try {
-      const res = await apiFetch("/api/v1/allocations/transfer", {
+      const res = await apiFetch("/api/v1/allocation/transfer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -111,7 +111,7 @@ const Allocations = () => {
         setReason("");
         
         // Reload list
-        const refreshed = await apiFetch("/api/v1/allocations/my-transfers");
+        const refreshed = await apiFetch("/api/v1/allocation/my-transfers");
         const refData = await refreshed.json();
         if (refreshed.ok) setTransfers(refData.data);
         setTimeout(() => setActiveTab("transfers"), 1500);
@@ -129,7 +129,7 @@ const Allocations = () => {
     if (!window.confirm("Are you sure you want to cancel this transfer request?")) return;
 
     try {
-      const res = await apiFetch(`/api/v1/allocations/transfer/${transferId}/cancel`, {
+      const res = await apiFetch(`/api/v1/allocation/transfer/${transferId}/cancel`, {
         method: "PUT"
       });
       if (res.ok) {
