@@ -1,539 +1,268 @@
-import React, { useState } from "react";
-import { Search, Download, Plus, MoreHorizontal } from "lucide-react";
+import React, { useState } from 'react';
+import { Search, Download, Plus, Pencil, Trash2, Box, Package, RefreshCw, Wrench } from 'lucide-react';
+import PageHeader from '../../../shared/components/PageHeader';
+import DataTable from '../../../shared/components/DataTable';
+import StatusPill from '../../../shared/components/StatusPill';
+import StatCard from '../../../shared/components/StatCard';
+import Button from '../../../shared/components/Button';
+import Modal from '../../../shared/components/Modal';
+
+// --- MOCK DATA ---
+const initialAssets = [
+  { id: 'AST-1042', name: 'MacBook Pro 16"', category: 'Laptops', department: 'Engineering', location: 'HQ - Floor 3', status: 'Allocated' },
+  { id: 'AST-1043', name: 'Dell XPS 15', category: 'Laptops', department: 'Marketing', location: 'HQ - Floor 2', status: 'Available' },
+  { id: 'AST-1044', name: 'Projector A1', category: 'A/V Equipment', department: 'Facilities', location: 'Conf Room A', status: 'Reserved' },
+  { id: 'AST-1045', name: 'Delivery Van #4', category: 'Vehicles', department: 'Logistics', location: 'Warehouse North', status: 'Under Maintenance' },
+  { id: 'AST-1046', name: 'iPad Pro', category: 'Tablets', department: 'Sales', location: 'HQ - Floor 1', status: 'Lost' },
+];
 
 const Assets = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
+  // --- STATE ---
+  const [assets, setAssets] = useState(initialAssets);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All Categories');
+  const [statusFilter, setStatusFilter] = useState('All Statuses');
 
-  const statsCards = [
-    {
-      label: "Total Assets",
-      value: "7,342",
-      subtitle: "Across all departments",
-      color: "#1e3a8a",
-      bg: "#eff6ff",
-    },
-    {
-      label: "Available",
-      value: "2,156",
-      subtitle: "Ready for allocation",
-      color: "#16a34a",
-      bg: "#ecfdf5",
-    },
-    {
-      label: "Allocated",
-      value: "4,891",
-      subtitle: "Currently in use",
-      color: "#0891b2",
-      bg: "#ecfeff",
-    },
-    {
-      label: "Under Maintenance",
-      value: "295",
-      subtitle: "Scheduled returns",
-      color: "#b45309",
-      bg: "#fef3c7",
-    },
-  ];
+  // --- MODAL STATE ---
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [formData, setFormData] = useState({
+    id: '', name: '', category: 'Laptops', department: '', location: '', status: 'Available'
+  });
 
-  const mockAssets = [
-    {
-      id: "AST-1042",
-      name: 'MacBook Pro 16"',
-      category: "Laptops",
-      department: "Engineering",
-      location: "HQ - Floor 3",
-      status: "Allocated",
-    },
-    {
-      id: "AST-1043",
-      name: "Dell XPS 15",
-      category: "Laptops",
-      department: "Marketing",
-      location: "HQ - Floor 2",
-      status: "Available",
-    },
-    {
-      id: "AST-1044",
-      name: "Projector A1",
-      category: "A/V Equipment",
-      department: "Facilities",
-      location: "Conf Room A",
-      status: "Reserved",
-    },
-    {
-      id: "AST-1045",
-      name: "Delivery Van #4",
-      category: "Vehicles",
-      department: "Logistics",
-      location: "Warehouse North",
-      status: "Under Maintenance",
-    },
-    {
-      id: "AST-1046",
-      name: "iPad Pro",
-      category: "Tablets",
-      department: "Sales",
-      location: "HQ - Floor 1",
-      status: "Lost",
-    },
-  ];
+  // --- STATS CALCULATION ---
+  const totalAssets = assets.length;
+  const availableCount = assets.filter(a => a.status === 'Available').length;
+  const allocatedCount = assets.filter(a => a.status === 'Allocated').length;
+  const maintenanceCount = assets.filter(a => a.status === 'Under Maintenance').length;
 
-  const getStatusColor = (status) => {
-    if (status === "Allocated") return { bg: "#dcfce7", text: "#15803d" };
-    if (status === "Available") return { bg: "#dbeafe", text: "#1d4ed8" };
-    if (status === "Reserved") return { bg: "#fef3c7", text: "#b45309" };
-    if (status === "Under Maintenance")
-      return { bg: "#fef3c7", text: "#b45309" };
-    if (status === "Lost") return { bg: "#fef2f2", text: "#dc2626" };
-    return { bg: "#f1f5f9", text: "#475569" };
+  // --- FILTERING ---
+  const filteredAssets = assets.filter(asset => {
+    const matchesSearch = asset.name.toLowerCase().includes(searchTerm.toLowerCase()) || asset.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = categoryFilter === 'All Categories' || asset.category === categoryFilter;
+    const matchesStatus = statusFilter === 'All Statuses' || asset.status === statusFilter;
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
+  // --- CRUD ACTIONS ---
+  const handleOpenModal = (item = null) => {
+    if (item) {
+      setEditingItem(item);
+      setFormData(item);
+    } else {
+      setEditingItem(null);
+      setFormData({
+        id: `AST-${1000 + Math.floor(Math.random() * 9000)}`, // Auto-generate random ID for mock
+        name: '', category: 'Laptops', department: '', location: '', status: 'Available'
+      });
+    }
+    setIsModalOpen(true);
   };
 
-  const filtered = mockAssets.filter(
-    (asset) =>
-      (searchTerm === "" ||
-        asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        asset.id.includes(searchTerm)) &&
-      (categoryFilter === "All" || asset.category === categoryFilter) &&
-      (statusFilter === "All" || asset.status === statusFilter),
-  );
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingItem(null);
+  };
+
+  const handleSave = () => {
+    if (editingItem) {
+      setAssets(assets.map(a => a.id === editingItem.id ? formData : a));
+    } else {
+      setAssets([...assets, formData]);
+    }
+    handleCloseModal();
+  };
+
+  const handleDelete = (id) => {
+    setAssets(assets.filter(a => a.id !== id));
+  };
 
   return (
-    <div
-      style={{
-        padding: "24px 32px",
-        maxWidth: "1400px",
-        margin: "0 auto",
-        fontFamily: "Inter, sans-serif",
-      }}
-    >
-      {/* ── PAGE HEADER ─── */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          marginBottom: "28px",
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              fontSize: "26px",
-              fontWeight: 700,
-              margin: "0 0 8px 0",
-              color: "#1e293b",
-            }}
-          >
-            Asset Registry
-          </h1>
-          <p style={{ fontSize: "14px", color: "#64748b", margin: 0 }}>
-            View and manage all organization assets across departments and
-            locations.
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "10px 18px",
-              background: "white",
-              color: "#64748b",
-              border: "1px solid #e2e8f0",
-              borderRadius: "8px",
-              fontSize: "13px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            <Download size={16} />
-            Export
-          </button>
-          <button
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "10px 18px",
-              background: "#1e3a8a",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "13px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            <Plus size={16} />
-            Register Asset
-          </button>
-        </div>
+    <div className="p-8 pb-20 max-w-7xl mx-auto font-sans">
+      <PageHeader 
+        title="Asset Registry" 
+        description="View and manage all organization assets across departments and locations."
+        actions={
+          <>
+            <Button variant="secondary" icon={Download}>Export</Button>
+            <Button onClick={() => handleOpenModal()} icon={Plus}>Register Asset</Button>
+          </>
+        }
+      />
+
+      {/* STAT CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatCard title="Total Assets" value={totalAssets} subtitle="Across all departments" color="indigo" icon={Box} />
+        <StatCard title="Available" value={availableCount} subtitle="Ready for allocation" color="emerald" icon={Package} />
+        <StatCard title="Allocated" value={allocatedCount} subtitle="Currently in use" color="blue" icon={RefreshCw} />
+        <StatCard title="Under Maintenance" value={maintenanceCount} subtitle="Scheduled returns" color="amber" icon={Wrench} />
       </div>
 
-      {/* ── STAT CARDS (4-col) ─── */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "16px",
-          marginBottom: "28px",
-        }}
-      >
-        {statsCards.map((stat, i) => (
-          <div
-            key={i}
-            style={{
-              background: "white",
-              borderRadius: "12px",
-              padding: "20px",
-              border: "1px solid #e2e8f0",
-            }}
-          >
-            <div
-              style={{
-                fontSize: "12px",
-                color: "#64748b",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              {stat.label}
+      {/* MAIN CONTENT */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-gray-100">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">Asset Directory</h2>
+              <p className="text-sm text-gray-500 mt-1">{filteredAssets.length} assets found</p>
             </div>
-            <div
-              style={{
-                fontSize: "24px",
-                fontWeight: 700,
-                color: "#1e293b",
-                marginBottom: "2px",
-              }}
-            >
-              {stat.value}
-            </div>
-            <div style={{ fontSize: "12px", color: "#94a3b8" }}>
-              {stat.subtitle}
+            
+            {/* FILTERS */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input 
+                  type="text"
+                  placeholder="Search by name or ID..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="w-full sm:w-64 pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"
+                />
+              </div>
+              
+              <select 
+                value={categoryFilter}
+                onChange={e => setCategoryFilter(e.target.value)}
+                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none bg-white cursor-pointer"
+              >
+                <option>All Categories</option>
+                <option>Laptops</option>
+                <option>A/V Equipment</option>
+                <option>Vehicles</option>
+                <option>Tablets</option>
+                <option>Furniture</option>
+              </select>
+
+              <select 
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value)}
+                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none bg-white cursor-pointer"
+              >
+                <option>All Statuses</option>
+                <option>Available</option>
+                <option>Allocated</option>
+                <option>Reserved</option>
+                <option>Under Maintenance</option>
+                <option>Lost</option>
+              </select>
             </div>
           </div>
-        ))}
+
+          {/* TABLE */}
+          <DataTable 
+            data={filteredAssets}
+            columns={[
+              { header: 'Tag', accessor: 'id', cellClassName: 'font-mono text-xs text-primary-700 font-semibold' },
+              { header: 'Name', accessor: 'name', cellClassName: 'font-medium text-gray-900' },
+              { header: 'Category', accessor: 'category' },
+              { header: 'Department', accessor: 'department' },
+              { header: 'Location', accessor: 'location' },
+              { 
+                header: 'Status', 
+                accessor: 'status',
+                cell: (row) => <StatusPill status={row.status} /> 
+              },
+              {
+                header: 'Actions',
+                cell: (row) => (
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => handleOpenModal(row)} className="text-gray-400 hover:text-primary-600 transition-colors p-1.5 rounded hover:bg-primary-50">
+                      <Pencil size={16} />
+                    </button>
+                    <button onClick={() => handleDelete(row.id)} className="text-gray-400 hover:text-red-600 transition-colors p-1.5 rounded hover:bg-red-50">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ),
+                className: 'text-right',
+                cellClassName: 'text-right'
+              }
+            ]}
+          />
+        </div>
       </div>
 
-      {/* ── MAIN CONTENT ─── */}
-      <div
-        style={{
-          background: "white",
-          borderRadius: "12px",
-          border: "1px solid #e2e8f0",
-          padding: "20px",
-        }}
+      {/* --- ADD/EDIT MODAL --- */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        title={editingItem ? 'Edit Asset' : 'Register New Asset'}
+        footer={
+          <>
+            <Button variant="secondary" onClick={handleCloseModal}>Cancel</Button>
+            <Button onClick={handleSave}>Save Asset</Button>
+          </>
+        }
       >
-        <h2
-          style={{
-            fontSize: "15px",
-            fontWeight: 600,
-            color: "#1e293b",
-            margin: "0 0 16px 0",
-          }}
-        >
-          Asset Directory
-        </h2>
-        <p style={{ fontSize: "13px", color: "#64748b", margin: "0 0 16px 0" }}>
-          {filtered.length} assets total
-        </p>
-
-        {/* Search & Filters */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "12px",
-            marginBottom: "16px",
-          }}
-        >
-          {/* Search */}
-          <div style={{ position: "relative" }}>
-            <Search
-              size={16}
-              style={{
-                position: "absolute",
-                left: "12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: "#94a3b8",
-                pointerEvents: "none",
-              }}
-            />
-            <input
-              type="text"
-              placeholder="Search by name or ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                width: "100%",
-                paddingLeft: "36px",
-                paddingRight: "12px",
-                height: "36px",
-                border: "1px solid #e2e8f0",
-                borderRadius: "6px",
-                background: "#f8fafc",
-                color: "#1e293b",
-                fontSize: "13px",
-                outline: "none",
-                fontFamily: "Inter, sans-serif",
-              }}
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Asset ID (Auto)</label>
+              <input value={formData.id} disabled className="w-full p-2 border border-gray-200 bg-gray-50 rounded-md font-mono text-sm text-gray-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select 
+                value={formData.status} 
+                onChange={e => setFormData({...formData, status: e.target.value})} 
+                className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm focus:ring-primary-500"
+              >
+                <option>Available</option>
+                <option>Allocated</option>
+                <option>Reserved</option>
+                <option>Under Maintenance</option>
+                <option>Lost</option>
+              </select>
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Asset Name</label>
+            <input 
+              value={formData.name} 
+              onChange={e => setFormData({...formData, name: e.target.value})} 
+              className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-primary-500 focus:border-primary-500 outline-none" 
+              placeholder="e.g. MacBook Pro 16"
             />
           </div>
-          {/* Category Filter */}
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            style={{
-              padding: "8px 12px",
-              border: "1px solid #e2e8f0",
-              borderRadius: "6px",
-              background: "white",
-              color: "#1e293b",
-              fontSize: "13px",
-              fontFamily: "Inter, sans-serif",
-              cursor: "pointer",
-            }}
-          >
-            <option>All Categories</option>
-            <option>Laptops</option>
-            <option>A/V Equipment</option>
-            <option>Vehicles</option>
-            <option>Tablets</option>
-            <option>Furniture</option>
-          </select>
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{
-              padding: "8px 12px",
-              border: "1px solid #e2e8f0",
-              borderRadius: "6px",
-              background: "white",
-              color: "#1e293b",
-              fontSize: "13px",
-              fontFamily: "Inter, sans-serif",
-              cursor: "pointer",
-            }}
-          >
-            <option>All Statuses</option>
-            <option>Available</option>
-            <option>Allocated</option>
-            <option>Reserved</option>
-            <option>Under Maintenance</option>
-            <option>Lost</option>
-          </select>
-        </div>
 
-        {/* Table */}
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid #e2e8f0" }}>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "10px 0",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Tag
-                </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "10px 12px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Name
-                </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "10px 12px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Category
-                </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "10px 12px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Department
-                </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "10px 12px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Location
-                </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "10px 12px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Status
-                </th>
-                <th
-                  style={{
-                    textAlign: "center",
-                    padding: "10px 12px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((asset) => {
-                const statusColor = getStatusColor(asset.status);
-                return (
-                  <tr
-                    key={asset.id}
-                    style={{
-                      borderBottom: "1px solid #e2e8f0",
-                      transition: "background 0.2s",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.background = "#f8fafc")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.background = "transparent")
-                    }
-                  >
-                    <td
-                      style={{
-                        padding: "12px 0",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        color: "#1e3a8a",
-                        fontFamily: "monospace",
-                      }}
-                    >
-                      {asset.id}
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        fontSize: "13px",
-                        fontWeight: 500,
-                        color: "#1e293b",
-                      }}
-                    >
-                      {asset.name}
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        fontSize: "13px",
-                        color: "#64748b",
-                      }}
-                    >
-                      {asset.category}
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        fontSize: "13px",
-                        color: "#64748b",
-                      }}
-                    >
-                      {asset.department}
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        fontSize: "13px",
-                        color: "#64748b",
-                      }}
-                    >
-                      {asset.location}
-                    </td>
-                    <td style={{ padding: "12px" }}>
-                      <span
-                        style={{
-                          background: statusColor.bg,
-                          color: statusColor.text,
-                          padding: "4px 10px",
-                          borderRadius: "6px",
-                          fontSize: "11px",
-                          fontWeight: 600,
-                          display: "inline-block",
-                        }}
-                      >
-                        {asset.status}
-                      </span>
-                    </td>
-                    <td style={{ textAlign: "center", padding: "12px" }}>
-                      <button
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "#94a3b8",
-                          padding: "4px",
-                        }}
-                        onMouseOver={(e) =>
-                          (e.currentTarget.style.color = "#1e293b")
-                        }
-                        onMouseOut={(e) =>
-                          (e.currentTarget.style.color = "#94a3b8")
-                        }
-                      >
-                        <MoreHorizontal size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <select 
+              value={formData.category} 
+              onChange={e => setFormData({...formData, category: e.target.value})} 
+              className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm focus:ring-primary-500"
+            >
+              <option>Laptops</option>
+              <option>A/V Equipment</option>
+              <option>Vehicles</option>
+              <option>Tablets</option>
+              <option>Furniture</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+              <input 
+                value={formData.department} 
+                onChange={e => setFormData({...formData, department: e.target.value})} 
+                className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-primary-500 outline-none" 
+                placeholder="e.g. Engineering"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+              <input 
+                value={formData.location} 
+                onChange={e => setFormData({...formData, location: e.target.value})} 
+                className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-primary-500 outline-none" 
+                placeholder="e.g. HQ - Floor 3"
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      </Modal>
     </div>
   );
 };
