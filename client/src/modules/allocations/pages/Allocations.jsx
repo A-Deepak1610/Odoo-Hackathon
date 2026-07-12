@@ -1,366 +1,270 @@
-import React, { useState } from "react";
-import { ArrowRightLeft, AlertTriangle, Plus } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ArrowRightLeft, Loader2, AlertTriangle, CheckCircle, Plus, User, Building, Trash2 } from "lucide-react";
+import { apiFetch } from "../../../services/api";
 
 const Allocations = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("transfers"); // transfers | request
+  const [myAssets, setMyAssets] = useState([]);
+  const [transfers, setTransfers] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [departments, setDepartments] = useState([]);
 
-  const statsCards = [
-    {
-      label: "Total Allocations",
-      value: "3,812",
-      subtitle: "Current active",
-      color: "#1e3a8a",
-      bg: "#eff6ff",
-    },
-    {
-      label: "Pending Returns",
-      value: "24",
-      subtitle: "Overdue by 3+ days",
-      color: "#dc2626",
-      bg: "#fef2f2",
-    },
-    {
-      label: "Transfer Requests",
-      value: "12",
-      subtitle: "Awaiting approval",
-      color: "#b45309",
-      bg: "#fef3c7",
-    },
-    {
-      label: "Allocation Success",
-      value: "98.5%",
-      subtitle: "On-time delivery",
-      color: "#16a34a",
-      bg: "#ecfdf5",
-    },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const mockAllocations = [
-    {
-      id: "AL-901",
-      asset: 'MacBook Pro 16" (AST-1042)',
-      assignedTo: "Sarah Jenkins",
-      assignedBy: "Jane Smith",
-      date: "Oct 12, 2023",
-      status: "Allocated",
-    },
-    {
-      id: "AL-902",
-      asset: "Dell XPS 15 (AST-1043)",
-      assignedTo: "Mike Ross",
-      assignedBy: "Jane Smith",
-      date: "Nov 05, 2023",
-      status: "Pending Return",
-    },
-    {
-      id: "AL-903",
-      asset: "Delivery Van #4 (AST-1045)",
-      assignedTo: "Logistics Team A",
-      assignedBy: "Admin",
-      date: "Jan 15, 2024",
-      status: "Allocated",
-    },
-  ];
+  // Form State
+  const [selectedAssetId, setSelectedAssetId] = useState("");
+  const [destinationType, setDestinationType] = useState("employee"); // employee | department
+  const [destEmployeeId, setDestEmployeeId] = useState("");
+  const [destDeptId, setDestDeptId] = useState("");
+  const [reason, setReason] = useState("");
+  
+  const [submitting, setSubmitting] = useState(false);
+  const [formMsg, setFormMsg] = useState({ text: "", type: "" });
 
-  const getStatusColor = (status) => {
-    if (status === "Allocated") return { bg: "#dcfce7", text: "#15803d" };
-    if (status === "Pending Return") return { bg: "#fef3c7", text: "#b45309" };
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [assetsRes, transfersRes, orgRes] = await Promise.all([
+        apiFetch("/api/v1/assets/my"),
+        apiFetch("/api/v1/allocations/my-transfers"),
+        apiFetch("/api/v1/organization") // Fetch users and departments if available, or fall back
+      ]);
+
+      const assetsResult = await assetsRes.json();
+      const transfersResult = await transfersRes.json();
+
+      if (assetsRes.ok && transfersRes.ok) {
+        setMyAssets(assetsResult.data);
+        setTransfers(transfersResult.data);
+      } else {
+        setError(assetsResult.message || transfersResult.message || "Failed to load transfer dashboard.");
+      }
+
+      // Try reading users/departments list if organization endpoint is available
+      if (orgRes.ok) {
+        const orgData = await orgRes.json();
+        if (orgData.success && orgData.data) {
+          setUsers(orgData.data.users || []);
+          setDepartments(orgData.data.departments || []);
+        }
+      }
+    } catch (err) {
+      setError("Failed to connect to server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleRequestTransfer = async (e) => {
+    e.preventDefault();
+    setFormMsg({ text: "", type: "" });
+
+    if (!selectedAssetId) {
+      setFormMsg({ text: "Please select an asset to transfer.", type: "error" });
+      return;
+    }
+
+    if (destinationType === "employee" && !destEmployeeId) {
+      setFormMsg({ text: "Please select a destination employee.", type: "error" });
+      return;
+    }
+
+    if (destinationType === "department" && !destDeptId) {
+      setFormMsg({ text: "Please select a destination department.", type: "error" });
+      return;
+    }
+
+    if (!reason || reason.trim() === "") {
+      setFormMsg({ text: "Please enter a transfer reason.", type: "error" });
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const res = await apiFetch("/api/v1/allocations/transfer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assetId: selectedAssetId,
+          toEmployeeId: destinationType === "employee" ? destEmployeeId : undefined,
+          toDepartmentId: destinationType === "department" ? destDeptId : undefined,
+          reason
+        })
+      });
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        setFormMsg({ text: "Transfer request submitted successfully!", type: "success" });
+        setSelectedAssetId("");
+        setDestEmployeeId("");
+        setDestDeptId("");
+        setReason("");
+        
+        // Reload list
+        const refreshed = await apiFetch("/api/v1/allocations/my-transfers");
+        const refData = await refreshed.json();
+        if (refreshed.ok) setTransfers(refData.data);
+        setTimeout(() => setActiveTab("transfers"), 1500);
+      } else {
+        setFormMsg({ text: result.message || "Failed to submit request", type: "error" });
+      }
+    } catch (err) {
+      setFormMsg({ text: "Network error occurred.", type: "error" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCancelTransfer = async (transferId) => {
+    if (!window.confirm("Are you sure you want to cancel this transfer request?")) return;
+
+    try {
+      const res = await apiFetch(`/api/v1/allocations/transfer/${transferId}/cancel`, {
+        method: "PUT"
+      });
+      if (res.ok) {
+        setTransfers(transfers.filter(t => t.id !== transferId));
+      } else {
+        const result = await res.json();
+        alert(result.message || "Failed to cancel transfer request.");
+      }
+    } catch (err) {
+      alert("Network error.");
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    if (status === "PENDING") return { bg: "#f1f5f9", text: "#475569" };
+    if (status === "APPROVED") return { bg: "#dcfce7", text: "#15803d" };
+    if (status === "REJECTED") return { bg: "#fee2e2", text: "#b91c1c" };
     return { bg: "#f1f5f9", text: "#475569" };
   };
 
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '75vh', gap: '16px', fontFamily: 'Inter, sans-serif' }}>
+        <Loader2 size={36} className="animate-spin" style={{ color: '#1e3a8a' }} />
+        <p style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Loading transfers dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '75vh', padding: '24px', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>
+        <AlertTriangle size={36} color="#ef4444" style={{ marginBottom: "16px" }} />
+        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 8px 0' }}>Failed to Load Transfers</h3>
+        <p style={{ fontSize: '14px', color: '#64748b', maxWidth: '380px', margin: '0 0 20px 0' }}>{error}</p>
+        <button onClick={fetchData} style={{ padding: '8px 16px', backgroundColor: '#1e3a8a', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Retry</button>
+      </div>
+    );
+  }
+
   return (
-    <div
-      style={{
-        padding: "24px 32px",
-        maxWidth: "1400px",
-        margin: "0 auto",
-        fontFamily: "Inter, sans-serif",
-      }}
-    >
-      {/* ── PAGE HEADER ─── */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          marginBottom: "28px",
-        }}
-      >
+    <div style={{ padding: "24px 32px", maxWidth: "1400px", margin: "0 auto", fontFamily: "Inter, sans-serif" }}>
+      
+      {/* Header */}
+      <div style={{ display: "flex", justifyContext: "space-between", alignItems: "center", marginBottom: "28px", justifyContent: "space-between" }}>
         <div>
-          <h1
-            style={{
-              fontSize: "26px",
-              fontWeight: 700,
-              margin: "0 0 8px 0",
-              color: "#1e293b",
-            }}
-          >
-            Allocation & Transfer
-          </h1>
-          <p style={{ fontSize: "14px", color: "#64748b", margin: 0 }}>
-            Manage asset assignments and handle transfer requests between
-            employees.
-          </p>
+          <h1 style={{ fontSize: "26px", fontWeight: 700, margin: "0 0 6px 0", color: "#1e293b" }}>Asset Transfer</h1>
+          <p style={{ fontSize: "14px", color: "#64748b", margin: 0 }}>Request transfers of allocated equipment and track review status.</p>
         </div>
-        <button
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "10px 18px",
-            background: "#1e3a8a",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "13px",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          <Plus size={16} />
-          New Allocation
-        </button>
-      </div>
-
-      {/* ── STAT CARDS (4-col) ─── */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "16px",
-          marginBottom: "28px",
-        }}
-      >
-        {statsCards.map((stat, i) => (
-          <div
-            key={i}
+        
+        <div style={{ display: "flex", backgroundColor: "#f1f5f9", padding: "4px", borderRadius: "8px" }}>
+          <button 
+            onClick={() => setActiveTab("transfers")}
             style={{
-              background: "white",
-              borderRadius: "12px",
-              padding: "20px",
-              border: "1px solid #e2e8f0",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+              padding: "6px 16px",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "13px",
+              fontWeight: 600,
+              cursor: "pointer",
+              backgroundColor: activeTab === "transfers" ? "white" : "transparent",
+              color: activeTab === "transfers" ? "#1e3a8a" : "#64748b",
+              boxShadow: activeTab === "transfers" ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
             }}
           >
-            <div
-              style={{
-                fontSize: "12px",
-                color: "#64748b",
-                fontWeight: 500,
-                marginBottom: "4px",
-              }}
-            >
-              {stat.label}
-            </div>
-            <div
-              style={{
-                fontSize: "24px",
-                fontWeight: 700,
-                color: "#1e293b",
-                marginBottom: "2px",
-              }}
-            >
-              {stat.value}
-            </div>
-            <div style={{ fontSize: "12px", color: "#94a3b8" }}>
-              {stat.subtitle}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── MAIN CONTENT (2:1 split) ─── */}
-      <div
-        style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "20px" }}
-      >
-        {/* Left column — allocations table */}
-        <div>
-          <div
+            Transfer History
+          </button>
+          <button 
+            onClick={() => setActiveTab("request")}
             style={{
-              background: "white",
-              borderRadius: "12px",
-              border: "1px solid #e2e8f0",
-              padding: "20px",
+              padding: "6px 16px",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "13px",
+              fontWeight: 600,
+              cursor: "pointer",
+              backgroundColor: activeTab === "request" ? "white" : "transparent",
+              color: activeTab === "request" ? "#1e3a8a" : "#64748b",
+              boxShadow: activeTab === "request" ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
             }}
           >
-            <h3
-              style={{
-                fontSize: "15px",
-                fontWeight: 600,
-                color: "#1e293b",
-                margin: "0 0 16px 0",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              <ArrowRightLeft size={16} color="#1e3a8a" />
-              Current Allocations
-            </h3>
+            New Request
+          </button>
+        </div>
+      </div>
 
-            {/* Search */}
-            <div style={{ marginBottom: "16px", position: "relative" }}>
-              <input
-                type="text"
-                placeholder="Search allocations..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: "100%",
-                  height: "40px",
-                  padding: "0 12px",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "6px",
-                  background: "#f8fafc",
-                  color: "#1e293b",
-                  fontSize: "13px",
-                  outline: "none",
-                  fontFamily: "Inter, sans-serif",
-                }}
-              />
+      {/* Tab: Transfers List */}
+      {activeTab === "transfers" && (
+        <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "20px" }}>
+          <h2 style={{ fontSize: "15px", fontWeight: 600, color: "#1e293b", margin: "0 0 16px 0" }}>Transfer Directory</h2>
+          {transfers.length === 0 ? (
+            <div style={{ padding: "36px 0", textAlign: "center", color: "#64748b", fontSize: "14px" }}>
+              No transfer requests found. Click "New Request" to initiate a transfer.
             </div>
-
-            {/* Table */}
+          ) : (
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
                 <thead>
-                  <tr style={{ borderBottom: "1px solid #e2e8f0" }}>
-                    <th
-                      style={{
-                        textAlign: "left",
-                        padding: "10px 0",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        color: "#64748b",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.4px",
-                      }}
-                    >
-                      ID
-                    </th>
-                    <th
-                      style={{
-                        textAlign: "left",
-                        padding: "10px 12px",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        color: "#64748b",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.4px",
-                      }}
-                    >
-                      Asset
-                    </th>
-                    <th
-                      style={{
-                        textAlign: "left",
-                        padding: "10px 12px",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        color: "#64748b",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.4px",
-                      }}
-                    >
-                      Assigned To
-                    </th>
-                    <th
-                      style={{
-                        textAlign: "left",
-                        padding: "10px 12px",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        color: "#64748b",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.4px",
-                      }}
-                    >
-                      Date
-                    </th>
-                    <th
-                      style={{
-                        textAlign: "left",
-                        padding: "10px 12px",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        color: "#64748b",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.4px",
-                      }}
-                    >
-                      Status
-                    </th>
+                  <tr style={{ borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
+                    <th style={{ padding: "12px 8px" }}>Asset</th>
+                    <th style={{ padding: "12px 8px" }}>Asset Tag</th>
+                    <th style={{ padding: "12px 8px" }}>Destination Type</th>
+                    <th style={{ padding: "12px 8px" }}>Destination Details</th>
+                    <th style={{ padding: "12px 8px" }}>Reason</th>
+                    <th style={{ padding: "12px 8px" }}>Status</th>
+                    <th style={{ padding: "12px 8px", textAlign: "center" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {mockAllocations.map((row) => {
-                    const statusColor = getStatusColor(row.status);
+                  {transfers.map((trans) => {
+                    const badge = getStatusBadge(trans.status);
+                    const destType = trans.toDepartmentId ? "Department" : "Employee";
+                    const destVal = trans.toDepartment ? trans.toDepartment.name : (trans.toEmployee ? trans.toEmployee.name : "System Team");
+                    
                     return (
-                      <tr
-                        key={row.id}
-                        style={{
-                          borderBottom: "1px solid #e2e8f0",
-                          transition: "background 0.2s",
-                        }}
-                        onMouseOver={(e) =>
-                          (e.currentTarget.style.background = "#f8fafc")
-                        }
-                        onMouseOut={(e) =>
-                          (e.currentTarget.style.background = "transparent")
-                        }
-                      >
-                        <td
-                          style={{
-                            padding: "12px 0",
-                            fontSize: "12px",
-                            color: "#64748b",
-                            fontFamily: "monospace",
-                          }}
-                        >
-                          {row.id}
-                        </td>
-                        <td
-                          style={{
-                            padding: "12px",
-                            fontSize: "13px",
-                            fontWeight: 500,
-                            color: "#1e293b",
-                          }}
-                        >
-                          {row.asset}
-                        </td>
-                        <td
-                          style={{
-                            padding: "12px",
-                            fontSize: "13px",
-                            color: "#1e293b",
-                          }}
-                        >
-                          {row.assignedTo}
-                        </td>
-                        <td
-                          style={{
-                            padding: "12px",
-                            fontSize: "12px",
-                            color: "#64748b",
-                          }}
-                        >
-                          {row.date}
-                        </td>
-                        <td style={{ padding: "12px" }}>
-                          <span
-                            style={{
-                              background: statusColor.bg,
-                              color: statusColor.text,
-                              padding: "4px 10px",
-                              borderRadius: "6px",
-                              fontSize: "11px",
-                              fontWeight: 600,
-                              display: "inline-block",
-                            }}
-                          >
-                            {row.status}
+                      <tr key={trans.id} style={{ borderBottom: "1px solid #f8fafc" }}>
+                        <td style={{ padding: "12px 8px", fontWeight: 500, color: "#0f172a" }}>{trans.asset?.name}</td>
+                        <td style={{ padding: "12px 8px", fontFamily: "monospace", color: "#64748b" }}>{trans.asset?.assetTag}</td>
+                        <td style={{ padding: "12px 8px" }}>{destType}</td>
+                        <td style={{ padding: "12px 8px" }}>{destVal}</td>
+                        <td style={{ padding: "12px 8px", color: "#475569" }}>{trans.checkInNotes || "No reason"}</td>
+                        <td style={{ padding: "12px 8px" }}>
+                          <span style={{ backgroundColor: badge.bg, color: badge.text, padding: "3px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: 600 }}>
+                            {trans.status}
                           </span>
+                        </td>
+                        <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                          {trans.status === "PENDING" ? (
+                            <button 
+                              onClick={() => handleCancelTransfer(trans.id)}
+                              style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "5px 10px", backgroundColor: "#fef2f2", color: "#b91c1c", border: "1px solid #fee2e2", borderRadius: "6px", fontSize: "11.5px", fontWeight: 600, cursor: "pointer" }}
+                            >
+                              <Trash2 size={12} /> Cancel
+                            </button>
+                          ) : (
+                            <span style={{ color: "#94a3b8" }}>—</span>
+                          )}
                         </td>
                       </tr>
                     );
@@ -368,192 +272,181 @@ const Allocations = () => {
                 </tbody>
               </table>
             </div>
-          </div>
+          )}
         </div>
+      )}
 
-        {/* Right column — conflict resolution */}
-        <div>
-          <h2
-            style={{
-              fontSize: "16px",
-              fontWeight: 600,
-              color: "#1e293b",
-              margin: "0 0 16px 0",
-            }}
-          >
-            Conflict Resolution
-          </h2>
+      {/* Tab: New Request */}
+      {activeTab === "request" && (
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px" }}>
+          
+          {/* Request Form */}
+          <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "24px" }}>
+            <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#0f172a", margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+              <ArrowRightLeft size={18} color="#1e3a8a" /> Request Asset Transfer
+            </h2>
 
-          <div
-            style={{
-              background: "white",
-              borderRadius: "12px",
-              border: "1px solid #fed7aa",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                background: "#fef3c7",
-                padding: "16px",
-                borderBottom: "1px solid #fed7aa",
+            {formMsg.text && (
+              <div style={{
+                padding: "10px 14px",
+                borderRadius: "6px",
+                fontSize: "13px",
+                marginBottom: "16px",
                 display: "flex",
-                alignItems: "flex-start",
-                gap: "12px",
-              }}
-            >
-              <AlertTriangle
-                color="#b45309"
-                size={20}
-                style={{ marginTop: "2px", flexShrink: 0 }}
-              />
-              <div>
-                <h4
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    color: "#92400e",
-                    marginBottom: "4px",
-                    margin: 0,
-                  }}
-                >
-                  Allocation Conflict
-                </h4>
-                <p
-                  style={{
-                    fontSize: "12px",
-                    color: "#b45309",
-                    margin: 0,
-                    lineHeight: "1.5",
-                  }}
-                >
-                  An employee is requesting an asset currently allocated to
-                  someone else.
-                </p>
+                alignItems: "center",
+                gap: "8px",
+                backgroundColor: formMsg.type === "success" ? "#dcfce7" : "#fee2e2",
+                color: formMsg.type === "success" ? "#15803d" : "#b91c1c"
+              }}>
+                {formMsg.type === "success" ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
+                {formMsg.text}
               </div>
-            </div>
-            <div
-              style={{
-                padding: "16px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "12px",
-              }}
-            >
+            )}
+
+            <form onSubmit={handleRequestTransfer} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
-                <div
-                  style={{
-                    fontSize: "11px",
-                    textTransform: "uppercase",
-                    color: "#64748b",
-                    fontWeight: 600,
-                    letterSpacing: "0.4px",
-                    marginBottom: "6px",
-                  }}
+                <label style={{ display: "block", fontSize: "12px", color: "#64748b", fontWeight: 600, marginBottom: "6px" }}>Select Asset to Transfer</label>
+                <select 
+                  value={selectedAssetId} 
+                  onChange={(e) => setSelectedAssetId(e.target.value)}
+                  required
+                  style={{ width: "100%", height: "38px", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "0 8px", fontSize: "13px" }}
                 >
-                  Requested Asset
-                </div>
-                <div
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "#1e293b",
-                  }}
-                >
-                  Projector A1 (AST-1044)
-                </div>
+                  <option value="">-- Select Assigned Asset --</option>
+                  {myAssets.map((asset) => (
+                    <option key={asset.id} value={asset.id}>
+                      {asset.name} [{asset.assetTag}]
+                    </option>
+                  ))}
+                </select>
               </div>
+
               <div>
-                <div
-                  style={{
-                    fontSize: "11px",
-                    textTransform: "uppercase",
-                    color: "#64748b",
-                    fontWeight: 600,
-                    letterSpacing: "0.4px",
-                    marginBottom: "6px",
-                  }}
-                >
-                  Currently Held By
+                <label style={{ display: "block", fontSize: "12px", color: "#64748b", fontWeight: 600, marginBottom: "6px" }}>Transfer To</label>
+                <div style={{ display: "flex", gap: "16px", marginBottom: "12px" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+                    <input 
+                      type="radio" 
+                      name="destType" 
+                      value="employee" 
+                      checked={destinationType === "employee"} 
+                      onChange={() => setDestinationType("employee")} 
+                    />
+                    <User size={14} /> Another Employee
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+                    <input 
+                      type="radio" 
+                      name="destType" 
+                      value="department" 
+                      checked={destinationType === "department"} 
+                      onChange={() => setDestinationType("department")} 
+                    />
+                    <Building size={14} /> A Department
+                  </label>
                 </div>
-                <div style={{ fontSize: "13px", color: "#1e293b" }}>
-                  Mike Ross (Marketing)
-                </div>
+
+                {destinationType === "employee" ? (
+                  <select 
+                    value={destEmployeeId} 
+                    onChange={(e) => setDestEmployeeId(e.target.value)}
+                    required
+                    style={{ width: "100%", height: "38px", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "0 8px", fontSize: "13px" }}
+                  >
+                    <option value="">-- Select Recipient Employee --</option>
+                    {users.filter(u => u.id !== reqUser.id).map((u) => (
+                      <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
+                    ))}
+                    {/* Fallback mock list if organization has no loaded users */}
+                    {users.length === 0 && (
+                      <>
+                        <option value="m-ross-id">Mike Ross (m.ross@acme.com)</option>
+                        <option value="s-jenkins-id">Sarah Jenkins (s.jenkins@acme.com)</option>
+                      </>
+                    )}
+                  </select>
+                ) : (
+                  <select 
+                    value={destDeptId} 
+                    onChange={(e) => setDestDeptId(e.target.value)}
+                    required
+                    style={{ width: "100%", height: "38px", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "0 8px", fontSize: "13px" }}
+                  >
+                    <option value="">-- Select Destination Department --</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                    {departments.length === 0 && (
+                      <>
+                        <option value="d-eng-id">Engineering</option>
+                        <option value="d-mkt-id">Marketing</option>
+                        <option value="d-sales-id">Sales</option>
+                      </>
+                    )}
+                  </select>
+                )}
               </div>
+
               <div>
-                <div
-                  style={{
-                    fontSize: "11px",
-                    textTransform: "uppercase",
-                    color: "#64748b",
-                    fontWeight: 600,
-                    letterSpacing: "0.4px",
-                    marginBottom: "6px",
-                  }}
-                >
-                  Requested By
-                </div>
-                <div style={{ fontSize: "13px", color: "#1e293b" }}>
-                  Sarah Jenkins (Engineering)
-                </div>
-              </div>
-              <div
-                style={{
-                  paddingTop: "8px",
-                  borderTop: "1px solid #e2e8f0",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "8px",
-                }}
-              >
-                <button
+                <label style={{ display: "block", fontSize: "12px", color: "#64748b", fontWeight: 600, marginBottom: "6px" }}>Reason for Transfer</label>
+                <textarea 
+                  value={reason} 
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Explain why this resource is being transferred (e.g. employee department transfer, project change)..."
+                  rows={4}
+                  required
                   style={{
                     width: "100%",
-                    padding: "10px 12px",
-                    background: "#1e3a8a",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
-                >
-                  Approve Transfer
-                </button>
-                <button
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    background: "white",
-                    color: "#64748b",
+                    padding: "10px",
                     border: "1px solid #e2e8f0",
                     borderRadius: "6px",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    transition: "all 0.2s",
+                    fontSize: "13px",
+                    resize: "none",
+                    fontFamily: "Inter, sans-serif"
                   }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.borderColor = "#dc2626";
-                    e.currentTarget.style.color = "#dc2626";
-                    e.currentTarget.style.background = "#fef2f2";
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.borderColor = "#e2e8f0";
-                    e.currentTarget.style.color = "#64748b";
-                    e.currentTarget.style.background = "white";
-                  }}
-                >
-                  Deny Request
-                </button>
+                />
               </div>
-            </div>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                style={{
+                  alignSelf: "flex-end",
+                  padding: "10px 20px",
+                  backgroundColor: "#1e3a8a",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}
+              >
+                {submitting && <Loader2 size={14} className="animate-spin" />}
+                Submit Request
+              </button>
+            </form>
           </div>
+
+          {/* Info Side Panel */}
+          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "20px", height: "fit-content" }}>
+            <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a", marginBottom: "12px" }}>Transfer Policy</h3>
+            <p style={{ fontSize: "12.5px", color: "#64748b", lineHeight: "1.6", margin: 0 }}>
+              Transfer requests are submitted to administration and department managers for verification. The transfer will only complete when approved by an authorized administrator. You can cancel your request while its status remains <strong>Pending</strong>.
+            </p>
+          </div>
+
         </div>
-      </div>
+      )}
+
     </div>
   );
 };
+
+// Simple helper to decode user ID from context safely
+const reqUser = JSON.parse(localStorage.getItem("auth_session"))?.user || { id: "" };
 
 export default Allocations;

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { ClipboardCheck, Plus, ArrowLeft, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
-import PageHeader from '../../../shared/components/PageHeader';
-import DataTable from '../../../shared/components/DataTable';
-import StatusPill from '../../../shared/components/StatusPill';
-import StatCard from '../../../shared/components/StatCard';
-import Button from '../../../shared/components/Button';
-import { cn } from '../../../shared/utils/cn';
+import PageHeader from '../../../../shared/components/PageHeader';
+import DataTable from '../../../../shared/components/DataTable';
+import StatusPill from '../../../../shared/components/StatusPill';
+import StatCard from '../../../../shared/components/StatCard';
+import Button from '../../../../shared/components/Button';
+import { cn } from '../../../../shared/utils/cn';
 
 // --- MOCK DATA ---
 const initialAudits = [

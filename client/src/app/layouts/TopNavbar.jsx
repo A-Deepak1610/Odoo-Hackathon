@@ -15,9 +15,14 @@ const PAGE_TITLES = {
 };
 
 const getPageTitle = (pathname) => {
-  const pathParts = pathname.split("/").filter(Boolean);
-  const path = pathParts[pathParts.length - 1] || "dashboard";
-  return PAGE_TITLES[path] || (path.charAt(0).toUpperCase() + path.slice(1).replace("-", " "));
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length === 0) return "Dashboard";
+  const lastSegment = segments[segments.length - 1];
+  
+  if (PAGE_TITLES[lastSegment]) return PAGE_TITLES[lastSegment];
+  if (lastSegment === "db-assistant") return "DB Assistant";
+  
+  return lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1).replace(/-/g, " ");
 };
 
 const TopNavbar = () => {

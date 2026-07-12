@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, Send, User, Database, TrendingUp, AlertTriangle } from 'lucide-react';
-import PageHeader from '../../../shared/components/PageHeader';
-import Button from '../../../shared/components/Button';
-import StatCard from '../../../shared/components/StatCard';
-import { cn } from '../../../shared/utils/cn';
+import PageHeader from '../../../../shared/components/PageHeader';
+import Button from '../../../../shared/components/Button';
+import StatCard from '../../../../shared/components/StatCard';
+import { cn } from '../../../../shared/utils/cn';
 
 // Predefined questions and their mock analytical responses
 const predefinedQuestions = [

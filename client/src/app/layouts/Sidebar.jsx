@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Building2, 
@@ -24,11 +24,11 @@ const navGroups = [
     ],
   },
   {
-    label: "MANAGEMENT",
+    label: "MANAGEMENT",    
     items: [
-      { name: 'Organization Setup', path: '/organization', icon: Building2, roles: ['ADMIN', 'SUPERADMIN'] },
+      { name: 'Assets', path: '/admin/assets', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
       { name: 'Asset Registration & Directory', path: '/asset-manager/directory', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
-      { name: 'Asset Allocation & Transfer', path: '/asset-manager/allocations', icon: ArrowRightLeft },
+      { name: 'Allocation & Transfer', path: '/asset-manager/allocations', icon: ArrowRightLeft },
       { name: 'Resource Booking', path: '/asset-manager/booking', icon: CalendarClock },
       { name: 'Maintenance Management', path: '/asset-manager/maintenance', icon: Wrench },
     ],
@@ -40,10 +40,18 @@ const navGroups = [
       { name: 'Reports & Analytics', path: '/asset-manager/reports', icon: BarChart3, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
     ],
   },
+  {
+    label: "ADMINISTRATION",
+    items: [
+      { name: 'Organization Setup', path: '/admin/organization', icon: Building2, roles: ['ADMIN'] },
+      { name: "DB Assistant", path: "/admin/db-assistant", icon: Bot, roles: ['ADMIN'] },
+    ],
+  },
 ];
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const displayName = user?.name || (user?.email ? user.email.split('@')[0] : 'User');
   const initials = displayName.substring(0, 2).toUpperCase();
@@ -224,6 +232,7 @@ const Sidebar = () => {
           cursor: 'pointer',
           transition: 'background-color 0.2s',
         }}
+        onClick={() => navigate('/profile')}
         onMouseOver={(e) => {
           e.currentTarget.style.backgroundColor = '#f8fafc';
         }}
@@ -266,7 +275,10 @@ const Sidebar = () => {
             }}>{displayRole}</p>
           </div>
           <button 
-            onClick={logout}
+            onClick={(e) => {
+              e.stopPropagation();
+              logout();
+            }}
             title="Log Out"
             style={{
               padding: '6px',
