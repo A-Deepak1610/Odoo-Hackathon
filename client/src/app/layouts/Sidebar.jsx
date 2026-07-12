@@ -31,6 +31,11 @@ const navGroups = [
       { name: 'Allocation & Transfer', path: '/asset-manager/allocations', icon: ArrowRightLeft },
       { name: 'Resource Booking', path: '/asset-manager/booking', icon: CalendarClock },
       { name: 'Maintenance Management', path: '/asset-manager/maintenance', icon: Wrench },
+      { name: 'Organization Setup', path: '/organization', icon: Building2, roles: ['ADMIN', 'SUPERADMIN'] },
+      { name: 'Assets', path: '/assets', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN', 'EMPLOYEE'] },
+      { name: 'Allocation & Transfer', path: '/allocations', icon: ArrowRightLeft },
+      { name: 'Resource Booking', path: '/booking', icon: CalendarClock },
+      { name: 'Maintenance', path: '/maintenance', icon: Wrench },
     ],
   },
   {
@@ -38,6 +43,8 @@ const navGroups = [
     items: [
       { name: 'Asset Audit', path: '/asset-manager/audit', icon: ClipboardCheck, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
       { name: 'Reports & Analytics', path: '/asset-manager/reports', icon: BarChart3, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
+      { name: 'Audit', path: '/admin/audit', icon: ClipboardCheck, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
+      { name: 'Reports', path: '/admin/reports', icon: BarChart3, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
     ],
   },
   {
@@ -45,6 +52,9 @@ const navGroups = [
     items: [
       { name: 'Organization Setup', path: '/admin/organization', icon: Building2, roles: ['ADMIN'] },
       { name: "DB Assistant", path: "/admin/db-assistant", icon: Bot, roles: ['ADMIN'] },
+      { name: 'Audit', path: '/audit', icon: ClipboardCheck, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
+      { name: "DB Assistant", path: "/db-assistant", icon: Bot },
+      { name: 'Reports', path: '/reports', icon: BarChart3, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
     ],
   },
 ];
