@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './app/layouts/AppLayout';
 import Dashboard from './modules/dashboard/pages/Dashboard';
-import Organization from './modules/organization/pages/Organization';
 // import Assets from './modules/assets/pages/Assets';
 import Organization from './modules/admin-modules/organization/pages/Organization';
 import Assets from './modules/admin-modules/assets/pages/Assets';
