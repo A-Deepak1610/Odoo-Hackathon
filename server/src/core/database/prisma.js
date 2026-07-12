@@ -5,26 +5,31 @@ let PrismaClient;
 try {
   PrismaClient = require('@prisma/client').PrismaClient;
 } catch (err) {
-  logger.warn('Prisma Client not found. Please add a model to schema.prisma and run `npx prisma generate`.');
-  // Mock PrismaClient for initial bootstrapping without models
-  PrismaClient = class {
-    constructor() {}
-    async $disconnect() {}
-  };
+  PrismaClient = null;
 }
 
-let prisma;
+let prisma = {
+  $disconnect: async () => {},
+};
 
-if (env.NODE_ENV === 'production') {
-  prisma = new PrismaClient();
-} else {
-  // Prevent multiple instances of Prisma Client in development
-  if (!global.__prisma) {
-    global.__prisma = new PrismaClient({
-      log: ['query', 'error', 'warn'],
-    });
+if (PrismaClient) {
+  try {
+    if (env.NODE_ENV === 'production') {
+      prisma = new PrismaClient();
+    } else {
+      // Prevent multiple instances of Prisma Client in development
+      if (!global.__prisma) {
+        global.__prisma = new PrismaClient({
+          log: ['query', 'error', 'warn'],
+        });
+      }
+      prisma = global.__prisma;
+    }
+  } catch (err) {
+    logger.warn('Prisma Client failed to initialize. Please add a model to schema.prisma and run `npx prisma generate`.');
   }
-  prisma = global.__prisma;
+} else {
+  logger.warn('Prisma Client not found. Please install dependencies and run `npx prisma generate`.');
 }
 
 module.exports = { prisma };
