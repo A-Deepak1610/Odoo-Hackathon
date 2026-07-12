@@ -33,21 +33,21 @@ function App() {
             <Route path="notifications" element={<Notifications />} />
             <Route path="db-assistant" element={<DbAssistant />} />
             
-            {/* RBAC Route: Organization Setup requires ADMIN privilege */}
+            {/* RBAC Route: Organization Setup requires ADMIN or SUPERADMIN privilege */}
             <Route 
               path="organization" 
               element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN']}>
                   <Organization />
                 </ProtectedRoute>
               } 
             />
             
-            {/* RBAC Route: Assets Management requires ADMIN, ASSET_MANAGER or DEPARTMENT_HEAD */}
+            {/* RBAC Route: Assets Management requires ADMIN, ASSET_MANAGER, DEPARTMENT_HEAD or SUPERADMIN */}
             <Route 
               path="assets" 
               element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}>
                   <Assets />
                 </ProtectedRoute>
               } 
@@ -58,21 +58,21 @@ function App() {
             <Route path="booking" element={<Booking />} />
             <Route path="maintenance" element={<Maintenance />} />
             
-            {/* RBAC Route: Audit requires ADMIN, ASSET_MANAGER, or DEPARTMENT_HEAD */}
+            {/* RBAC Route: Audit requires ADMIN, ASSET_MANAGER, DEPARTMENT_HEAD or SUPERADMIN */}
             <Route 
               path="audit" 
               element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}>
                   <Audit />
                 </ProtectedRoute>
               } 
             />
             
-            {/* RBAC Route: Reports requires ADMIN, ASSET_MANAGER, or DEPARTMENT_HEAD */}
+            {/* RBAC Route: Reports requires ADMIN, ASSET_MANAGER, DEPARTMENT_HEAD or SUPERADMIN */}
             <Route 
               path="reports" 
               element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}>
                   <Reports />
                 </ProtectedRoute>
               } 
