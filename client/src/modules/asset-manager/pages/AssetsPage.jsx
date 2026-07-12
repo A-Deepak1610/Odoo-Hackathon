@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AssetFilters, AssetTable, RegisterAssetModal } from '../components/assets';
 import { Button } from '../components/ui';
 import { Download, Plus, X } from 'lucide-react';
+<<<<<<< HEAD
 
 // Placeholder Data
 const MOCK_ASSETS = [
@@ -95,6 +96,44 @@ const AssetsPage = () => {
       setIsLoading(false);
     }, 800);
     return () => clearTimeout(timer);
+=======
+import { getAssetsApi } from '../api';
+
+const AssetsPage = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [assets, setAssets] = useState([]);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+  const loadAssets = async () => {
+    setIsLoading(true);
+    try {
+      const res = await getAssetsApi();
+      if (res.success) {
+        // Map the backend data structure to fit the AssetTable if necessary
+        const mappedAssets = res.data.map(asset => ({
+          id: asset.id,
+          tag: asset.assetTag,
+          name: asset.name,
+          category: asset.category?.name || 'Uncategorized',
+          status: asset.status === 'AVAILABLE' ? 'Available' : asset.status === 'ALLOCATED' ? 'Allocated' : asset.status === 'UNDER_MAINTENANCE' ? 'In Maintenance' : asset.status === 'LOST' ? 'Missing' : asset.status,
+          department: asset.currentDepartment?.name || 'Unassigned',
+          holder: asset.currentEmployee ? asset.currentEmployee.name : (asset.currentDepartment ? asset.currentDepartment.name : 'Unknown'),
+          location: asset.location || 'Unknown',
+          condition: asset.condition || 'Unknown',
+        }));
+        setAssets(mappedAssets);
+      }
+    } catch (err) {
+      console.error('Failed to load assets', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAssets();
+>>>>>>> c6229ab (resolved bug in imports)
   }, []);
 
   return (
@@ -122,13 +161,21 @@ const AssetsPage = () => {
         
         {/* Data Table */}
         <div className="flex-1 overflow-auto bg-slate-50 relative">
+<<<<<<< HEAD
           <AssetTable data={MOCK_ASSETS} isLoading={isLoading} />
+=======
+          <AssetTable data={assets} isLoading={isLoading} />
+>>>>>>> c6229ab (resolved bug in imports)
         </div>
       </div>
 
       <RegisterAssetModal 
         isOpen={isRegisterModalOpen} 
         onClose={() => setIsRegisterModalOpen(false)} 
+<<<<<<< HEAD
+=======
+        onAssetCreated={loadAssets}
+>>>>>>> c6229ab (resolved bug in imports)
       />
 
       {/* Export Directory Dialog */}
