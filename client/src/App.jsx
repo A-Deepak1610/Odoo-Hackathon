@@ -15,6 +15,9 @@ import DeptDashboard from './modules/department-head/pages/DeptDashboard';
 import Approvals from './modules/department-head/pages/Approvals';
 import ResourceBooking from './modules/department-head/pages/ResourceBooking';
 import { DeptHeadProvider } from './modules/department-head/store/DeptHeadContext';
+import SuperAdminDashboard from './modules/super-admin/pages/SuperAdminDashboard';
+import TenantManagement from './modules/super-admin/pages/TenantManagement';
+import { SuperAdminProvider } from './modules/super-admin/store/SuperAdminContext';
 
 // Auth Module exports
 import { AuthProvider, ProtectedRoute, LoginPage, SignupPage } from './modules/auth';
@@ -29,13 +32,25 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
 
           {/* Secure Application Routes (Authenticated & Guarded Layout) */}
-          <Route path="/" element={<ProtectedRoute><DeptHeadProvider><AppLayout /></DeptHeadProvider></ProtectedRoute>}>
+          <Route path="/" element={<ProtectedRoute><SuperAdminProvider><DeptHeadProvider><AppLayout /></DeptHeadProvider></SuperAdminProvider></ProtectedRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             
             {/* General Dashboard & Panel Routes */}
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="db-assistant" element={<DbAssistant />} />
+
+            {/* Super Admin Exclusives */}
+            <Route path="superadmin-dashboard" element={
+              <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                <SuperAdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="tenants" element={
+              <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                <TenantManagement />
+              </ProtectedRoute>
+            } />
 
             {/* Department Head Exclusives */}
             <Route path="dept-dashboard" element={
