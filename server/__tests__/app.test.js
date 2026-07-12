@@ -7,6 +7,6 @@ describe('Global App Configuration', () => {
     
     expect(response.status).toBe(404);
     expect(response.body).toHaveProperty('success', false);
-    expect(response.body.error).toHaveProperty('message');
+    expect(response.body).toHaveProperty('message');
   });
 });
