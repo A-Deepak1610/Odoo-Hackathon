@@ -23,9 +23,6 @@ import { SuperAdminProvider } from './modules/super-admin/store/SuperAdminContex
 import { AuthProvider, ProtectedRoute, LoginPage, SignupPage, useAuth } from './modules/auth';
 import ProfilePage from './modules/auth/pages/ProfilePage';
 
-<<<<<<< HEAD
-
-=======
 // NEW: Import the isolated Asset Manager routes
 import { AssetManagerRoutes } from './modules/asset-manager';
 
@@ -36,7 +33,6 @@ const RoleBasedRedirect = () => {
   }
   return <Navigate to="/dashboard" replace />;
 };
->>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
 
 function App() {
   return (
@@ -49,11 +45,7 @@ function App() {
 
           {/* Secure Application Routes (Authenticated & Guarded Layout) */}
           <Route path="/" element={<ProtectedRoute><SuperAdminProvider><DeptHeadProvider><AppLayout /></DeptHeadProvider></SuperAdminProvider></ProtectedRoute>}>
-<<<<<<< HEAD
-            <Route index element={<Navigate to="/dashboard" replace />} />
-=======
             <Route index element={<RoleBasedRedirect />} />
->>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
             
             {/* General Dashboard & Panel Routes */}
             <Route path="dashboard" element={<Dashboard />} />
@@ -80,11 +72,10 @@ function App() {
               />
             </Route>
             
-            {/* RBAC Route: Assets Management requires ADMIN, ASSET_MANAGER or DEPARTMENT_HEAD */}
             <Route 
               path="assets" 
               element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}>
                   <Assets />
                 </ProtectedRoute>
               } 
@@ -115,7 +106,33 @@ function App() {
               } 
             />
 
-          {/* Catch all fallback within panels */}
+            {/* Department Head Dedicated Screens (Mocked for Hackathon) */}
+            <Route 
+              path="dept-dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN', 'DEPARTMENT_HEAD']}>
+                  <DeptDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="dept-approvals" 
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN', 'DEPARTMENT_HEAD']}>
+                  <Approvals />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="dept-booking" 
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN', 'DEPARTMENT_HEAD']}>
+                  <ResourceBooking />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Catch all fallback within panels */}
             <Route path="*" element={<div className="p-8">Work in progress</div>} />
           </Route>
           

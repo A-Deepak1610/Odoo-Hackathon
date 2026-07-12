@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Download, Plus, Pencil, Trash2, Box, Package, RefreshCw, Wrench, Loader2 } from 'lucide-react';
+import { Search, Download, Plus, Pencil, Trash2, Box, Package, RefreshCw, Wrench, Loader2, AlertTriangle } from 'lucide-react';
 import PageHeader from '../../../../shared/components/PageHeader';
 import DataTable from '../../../../shared/components/DataTable';
 import StatusPill from '../../../../shared/components/StatusPill';
