@@ -23,6 +23,9 @@ import { SuperAdminProvider } from './modules/super-admin/store/SuperAdminContex
 import { AuthProvider, ProtectedRoute, LoginPage, SignupPage } from './modules/auth';
 import ProfilePage from './modules/auth/pages/ProfilePage';
 
+// NEW: Import the isolated Asset Manager routes
+import { AssetManagerRoutes } from './modules/asset-manager';
+
 function App() {
   return (
     <BrowserRouter>
@@ -119,6 +122,9 @@ function App() {
             {/* Catch all fallback within panels */}
             <Route path="*" element={<div className="p-8">Work in progress</div>} />
           </Route>
+          
+          {/* INJECTED THE NEW ISOLATED ASSET MANAGER OUTSIDE APPLAYOUT TO AVOID DOUBLE LAYOUTS */}
+          <Route path="/asset-manager/*" element={<ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}><AssetManagerRoutes /></ProtectedRoute>} />
 
           {/* Root fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
