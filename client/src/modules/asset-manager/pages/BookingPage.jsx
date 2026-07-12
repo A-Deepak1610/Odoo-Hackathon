@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -8,63 +8,106 @@ import {
 } from 'lucide-react';
 import { DashboardCard } from '../components/dashboard';
 import { Button, Badge, Input, Select, Label, Card, CardContent, CardHeader, CardTitle } from '../components/ui';
+import { getAllBookingsApi, getBookableResourcesApi, createBookingApi, cancelBookingApi } from '../api';
+import { useForm } from 'react-hook-form';
 
 // Setup localizer for react-big-calendar
 const localizer = momentLocalizer(moment);
 
 const BookingStatusBadge = ({ status }) => {
   const variantMap = {
-    'Confirmed': 'success',
-    'Pending': 'warning',
-    'Conflict': 'danger',
-    'Completed': 'neutral',
+    'UPCOMING': 'success',
+    'ONGOING': 'success',
+    'PENDING': 'warning',
+    'CONFLICT': 'danger',
+    'COMPLETED': 'neutral',
+    'CANCELLED': 'neutral',
   };
   return <Badge variant={variantMap[status] || 'neutral'}>{status}</Badge>;
 };
-
-// Placeholder Data
-const EVENTS = [
-  {
-    id: 1,
-    title: 'Marketing Pitch - Conf Projector A',
-    start: new Date(new Date().setHours(10, 0, 0, 0)),
-    end: new Date(new Date().setHours(12, 0, 0, 0)),
-    status: 'Confirmed',
-    user: 'Sarah Jenkins',
-    type: 'booked',
-    desc: 'Using the main projector for Q3 marketing pitch.'
-  },
-  {
-    id: 2,
-    title: 'Monthly Review (CONFLICT)',
-    start: new Date(new Date().setHours(11, 30, 0, 0)),
-    end: new Date(new Date().setHours(13, 0, 0, 0)),
-    status: 'Conflict',
-    user: 'Mike Ross',
-    type: 'conflict',
-    desc: 'Requested projector but slot is overlapping with Marketing.'
-  },
-  {
-    id: 3,
-    title: 'Available Slot - Drone Kit',
-    start: new Date(new Date().setHours(14, 0, 0, 0)),
-    end: new Date(new Date().setHours(16, 0, 0, 0)),
-    type: 'available',
-    desc: 'Standard maintenance window cleared.'
-  }
-];
-
-const UPCOMING_BOOKINGS = [
-  { id: 10, resource: 'Conference Projector A', user: 'Sarah Jenkins', time: 'Today, 10:00 AM - 12:00 PM', status: 'Confirmed' },
-  { id: 11, resource: 'Sony A7IV Camera Kit', user: 'Alex Chen', time: 'Tomorrow, 09:00 AM - 05:00 PM', status: 'Pending' },
-  { id: 12, resource: 'Conference Projector A', user: 'Mike Ross', time: 'Today, 11:30 AM - 01:00 PM', status: 'Conflict' }
-];
 
 
 const BookingPage = () => {
   const [isBookDialogOpen, setIsBookDialogOpen] = useState(false);
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  
+  const [bookings, setBookings] = useState([]);
+  const [resources, setResources] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { register, handleSubmit, reset } = useForm();
+
+  const loadData = async () => {
+    try {
+      const [bookingsRes, resRes] = await Promise.all([
+        getAllBookingsApi(),
+        getBookableResourcesApi()
+      ]);
+      if (bookingsRes.success) setBookings(bookingsRes.data);
+      if (resRes.success) setResources(resRes.data);
+    } catch (err) {
+      console.error("Failed to load bookings data", err);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const EVENTS = bookings.filter(b => b.status !== 'CANCELLED').map(b => ({
+    id: b.id,
+    title: `${b.asset?.name}`,
+    start: new Date(b.startTime),
+    end: new Date(b.endTime),
+    status: b.status,
+    user: b.bookedByEmployee?.name || 'Unknown',
+    type: b.status === 'CONFLICT' ? 'conflict' : 'booked',
+    desc: `Booked by ${b.bookedByEmployee?.name || 'Unknown'}`
+  }));
+
+  const UPCOMING_BOOKINGS = bookings.filter(b => b.status === 'UPCOMING' || b.status === 'ONGOING').slice(0, 5).map(b => ({
+    id: b.id,
+    resource: b.asset?.name,
+    user: b.bookedByEmployee?.name || 'Unknown',
+    time: `${new Date(b.startTime).toLocaleDateString()} ${new Date(b.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`,
+    status: b.status
+  }));
+  
+  const onBookSubmit = async (data) => {
+    setIsSubmitting(true);
+    try {
+      const res = await createBookingApi(data);
+      if (res.success) {
+        setIsBookDialogOpen(false);
+        reset();
+        loadData();
+      } else {
+        alert(res.message);
+      }
+    } catch (err) {
+      alert("Failed to book resource");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleCancelBooking = async () => {
+    if (!selectedEvent) return;
+    if (confirm("Are you sure you want to cancel this booking?")) {
+      try {
+        const res = await cancelBookingApi(selectedEvent.id);
+        if (res.success) {
+          setSelectedEvent(null);
+          loadData();
+        } else {
+          alert(res.message);
+        }
+      } catch (err) {
+        alert("Failed to cancel booking");
+      }
+    }
+  };
 
   // Custom Event Styling
   const eventStyleGetter = (event) => {
@@ -203,7 +246,7 @@ const BookingPage = () => {
                   >
                     <Edit size={14} /> Reschedule
                   </Button>
-                  <Button variant="danger" size="sm" className="gap-1.5">
+                  <Button variant="danger" size="sm" className="gap-1.5" onClick={handleCancelBooking}>
                     <Trash2 size={14} /> Cancel
                   </Button>
                 </div>
@@ -214,6 +257,7 @@ const BookingPage = () => {
           {/* Upcoming Bookings Cards */}
           <DashboardCard title="Upcoming Bookings">
             <div className="space-y-3">
+              {UPCOMING_BOOKINGS.length === 0 && <p className="text-xs text-slate-400 italic">No upcoming bookings.</p>}
               {UPCOMING_BOOKINGS.map(booking => (
                 <div key={booking.id} className="p-3 border border-slate-100 rounded-lg hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-sm transition-all cursor-pointer group bg-white">
                   <div className="flex justify-between items-start mb-2">
@@ -233,48 +277,50 @@ const BookingPage = () => {
                 </div>
               ))}
             </div>
-            <Button variant="ghost" className="w-full mt-4 gap-1 text-blue-600">
-              View All Bookings <ChevronRight size={14} />
-            </Button>
+            {UPCOMING_BOOKINGS.length > 0 && (
+              <Button variant="ghost" className="w-full mt-4 gap-1 text-blue-600">
+                View All Bookings <ChevronRight size={14} />
+              </Button>
+            )}
           </DashboardCard>
         </div>
       </div>
 
-      {/* Book Resource Dialog (Simplified for UI Preview) */}
+      {/* Book Resource Dialog */}
       {isBookDialogOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center">
               <h3 className="font-bold text-slate-900">Book a Resource</h3>
-              <button onClick={() => setIsBookDialogOpen(false)} className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-1 rounded-md transition-colors"><X size={18}/></button>
+              <button onClick={() => {setIsBookDialogOpen(false); reset();}} className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-1 rounded-md transition-colors"><X size={18}/></button>
             </div>
-            <div className="p-5 space-y-4">
-              <div className="space-y-1.5">
-                <Label>Select Resource *</Label>
-                <Select>
-                  <option>Conference Projector A</option>
-                  <option>Sony A7IV Camera Kit</option>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit(onBookSubmit)}>
+              <div className="p-5 space-y-4">
                 <div className="space-y-1.5">
-                  <Label>Start Date & Time</Label>
-                  <Input type="datetime-local" />
+                  <Label>Select Resource *</Label>
+                  <Select {...register('assetId', { required: true })}>
+                    <option value="">Select Resource...</option>
+                    {resources.map(r => (
+                      <option key={r.id} value={r.id}>{r.name} - {r.assetTag}</option>
+                    ))}
+                  </Select>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>End Date & Time</Label>
-                  <Input type="datetime-local" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Start Date & Time *</Label>
+                    <Input type="datetime-local" {...register('startTime', { required: true })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>End Date & Time *</Label>
+                    <Input type="datetime-local" {...register('endTime', { required: true })} />
+                  </div>
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <Label>Purpose / Notes</Label>
-                <textarea rows="2" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"></textarea>
+              <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+                <Button variant="secondary" type="button" onClick={() => {setIsBookDialogOpen(false); reset();}} disabled={isSubmitting}>Cancel</Button>
+                <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Booking...' : 'Confirm Booking'}</Button>
               </div>
-            </div>
-            <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
-              <Button variant="secondary" onClick={() => setIsBookDialogOpen(false)}>Cancel</Button>
-              <Button onClick={() => setIsBookDialogOpen(false)}>Confirm Booking</Button>
-            </div>
+            </form>
           </div>
         </div>
       )}

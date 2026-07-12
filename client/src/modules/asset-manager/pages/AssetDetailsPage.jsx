@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Edit, Trash2, Image as ImageIcon, FileText, 
   MapPin, Box, Hash, Calendar, DollarSign, Activity,
@@ -8,36 +8,51 @@ import {
 import { DashboardCard, ActivityCard } from '../components/dashboard';
 import { AssetStatusBadge } from '../components/assets';
 import { Button, Badge } from '../components/ui';
-
-// Placeholder data
-const ASSET = {
-  id: 'AST-2024-001',
-  name: 'MacBook Pro 16" M3 Max',
-  category: 'Electronics',
-  tag: 'AST-2024-001',
-  serialNumber: 'C02F9823J9X',
-  status: 'Allocated',
-  condition: 'Good',
-  location: 'Building A, Floor 3',
-  acquisitionDate: '2024-01-15',
-  acquisitionCost: 3499.00,
-  isBookable: false,
-  holder: {
-    name: 'Sarah Jenkins',
-    role: 'Senior Developer',
-    email: 'sarah.j@assertflow.com'
-  },
-  department: 'Engineering',
-  lifecycle: {
-    expectedLifespan: '4 Years',
-    currentValue: 2800.00
-  }
-};
+import { getAssetByIdApi } from '../api';
 
 const AssetDetailsPage = () => {
   const { assetId } = useParams();
+  const navigate = useNavigate();
+  const [asset, setAsset] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  useEffect(() => {
+    const loadAsset = async () => {
+      setIsLoading(true);
+      try {
+        const res = await getAssetByIdApi(assetId);
+        if (res.success) {
+          setAsset(res.data);
+        } else {
+          console.error("Asset not found");
+        }
+      } catch (err) {
+        console.error("Failed to load asset details", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (assetId) loadAsset();
+  }, [assetId]);
+
+  if (isLoading) {
+    return <div className="p-6 text-center text-slate-500">Loading asset details...</div>;
+  }
+
+  if (!asset) {
+    return <div className="p-6 text-center text-red-500">Asset not found.</div>;
+  }
+
+  // Safely mapping data
+  const categoryName = asset.category?.name || 'Uncategorized';
+  const holderName = asset.currentEmployee?.name || 'Unassigned';
+  const holderRole = asset.currentEmployee?.role || 'N/A';
+  const holderEmail = asset.currentEmployee?.email || 'N/A';
+  const departmentName = asset.currentDepartment?.name || 'Unassigned';
+  const displayStatus = asset.status === 'AVAILABLE' ? 'Available' : asset.status === 'ALLOCATED' ? 'Allocated' : asset.status === 'UNDER_MAINTENANCE' ? 'In Maintenance' : asset.status === 'LOST' ? 'Missing' : asset.status;
+
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto space-y-6">
@@ -48,10 +63,10 @@ const AssetDetailsPage = () => {
             <ArrowLeft size={18} />
           </Link>
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{ASSET.name}</h2>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{asset.name}</h2>
             <div className="flex items-center gap-3 mt-1.5">
-              <span className="text-sm font-mono font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{ASSET.tag}</span>
-              <AssetStatusBadge status={ASSET.status} />
+              <span className="text-sm font-mono font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{asset.assetTag}</span>
+              <AssetStatusBadge status={displayStatus} />
             </div>
           </div>
         </div>
@@ -85,33 +100,33 @@ const AssetDetailsPage = () => {
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
                 <div>
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Asset Name</div>
-                  <div className="text-sm font-semibold text-slate-900">{ASSET.name}</div>
+                  <div className="text-sm font-semibold text-slate-900">{asset.name}</div>
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Category</div>
                   <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
                     <Box size={16} className="text-blue-500" />
-                    {ASSET.category}
+                    {categoryName}
                   </div>
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Serial Number</div>
                   <div className="flex items-center gap-2 text-sm font-mono font-medium text-slate-800">
                     <Hash size={16} className="text-slate-400" />
-                    {ASSET.serialNumber}
+                    {asset.serialNumber || 'N/A'}
                   </div>
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Location</div>
                   <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
                     <MapPin size={16} className="text-slate-400" />
-                    {ASSET.location}
+                    {asset.location || 'N/A'}
                   </div>
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Condition</div>
-                  <Badge variant={ASSET.condition === 'Good' ? 'success' : ASSET.condition === 'Fair' ? 'warning' : 'danger'}>
-                    {ASSET.condition}
+                  <Badge variant={asset.condition === 'Good' ? 'success' : asset.condition === 'Fair' ? 'warning' : asset.condition === 'Poor' ? 'danger' : 'neutral'}>
+                    {asset.condition || 'Unknown'}
                   </Badge>
                 </div>
               </div>
@@ -124,22 +139,11 @@ const AssetDetailsPage = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-start pb-4 border-b border-slate-100">
                   <div>
-                    <p className="text-sm font-bold text-slate-900">Sarah Jenkins</p>
-                    <p className="text-xs font-medium text-slate-500 mt-1">Engineering Dept</p>
+                    <p className="text-sm font-bold text-slate-900">{holderName}</p>
+                    <p className="text-xs font-medium text-slate-500 mt-1">{departmentName}</p>
                   </div>
                   <div className="text-right">
                     <Badge variant="info" className="mb-1.5">Current</Badge>
-                    <p className="text-xs text-slate-500 font-medium">Jan 20, 2024 - Present</p>
-                  </div>
-                </div>
-                <div className="flex justify-between items-start pb-4 border-b border-slate-100">
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">IT Storage Room</p>
-                    <p className="text-xs font-medium text-slate-500 mt-1">Inventory</p>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant="neutral" className="mb-1.5">Returned</Badge>
-                    <p className="text-xs text-slate-500 font-medium">Jan 15 - Jan 20, 2024</p>
                   </div>
                 </div>
               </div>
@@ -147,18 +151,8 @@ const AssetDetailsPage = () => {
 
             <DashboardCard title="Maintenance History">
               <div className="space-y-4">
-                <div className="flex items-start gap-3 pb-4 border-b border-slate-100">
-                  <div className="p-2 bg-slate-50 border border-slate-100 rounded-lg text-slate-500 shrink-0">
-                    <Wrench size={16} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">Initial Setup & Config</p>
-                    <p className="text-xs font-medium text-slate-600 mt-1 leading-relaxed">Installed corporate profile and security software.</p>
-                    <p className="text-xs font-medium text-slate-400 mt-2">Jan 16, 2024 • by IT Support</p>
-                  </div>
-                </div>
                 <div className="text-center py-4">
-                  <p className="text-xs text-slate-400 font-medium italic">No further maintenance records.</p>
+                  <p className="text-xs text-slate-400 font-medium italic">No maintenance records.</p>
                 </div>
               </div>
             </DashboardCard>
@@ -167,23 +161,8 @@ const AssetDetailsPage = () => {
           {/* Media & Documents */}
           <DashboardCard title="Files & Documents">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex items-center p-3 border border-slate-200 rounded-xl hover:border-blue-300 hover:shadow-sm hover:bg-blue-50/50 transition-all cursor-pointer group bg-white">
-                <div className="p-2.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg mr-3 group-hover:bg-blue-100 transition-colors">
-                  <FileText size={20} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 truncate">Purchase_Invoice.pdf</p>
-                  <p className="text-xs font-medium text-slate-500 mt-0.5">2.4 MB • Jan 15, 2024</p>
-                </div>
-              </div>
-              <div className="flex items-center p-3 border border-slate-200 rounded-xl hover:border-emerald-300 hover:shadow-sm hover:bg-emerald-50/50 transition-all cursor-pointer group bg-white">
-                <div className="p-2.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg mr-3 group-hover:bg-emerald-100 transition-colors">
-                  <FileText size={20} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 truncate">AppleCare_Warranty.pdf</p>
-                  <p className="text-xs font-medium text-slate-500 mt-0.5">1.1 MB • Jan 15, 2024</p>
-                </div>
+              <div className="text-center py-4 col-span-2">
+                  <p className="text-xs text-slate-400 font-medium italic">No documents available.</p>
               </div>
             </div>
           </DashboardCard>
@@ -198,12 +177,12 @@ const AssetDetailsPage = () => {
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold text-slate-700">Current Status</span>
-                <AssetStatusBadge status={ASSET.status} />
+                <AssetStatusBadge status={displayStatus} />
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                 <span className="text-sm font-bold text-slate-700">Available for Booking</span>
-                <Badge variant={ASSET.isBookable ? 'success' : 'neutral'}>
-                  {ASSET.isBookable ? 'Yes' : 'No'}
+                <Badge variant={asset.isSharedBookable ? 'success' : 'neutral'}>
+                  {asset.isSharedBookable ? 'Yes' : 'No'}
                 </Badge>
               </div>
             </div>
@@ -214,12 +193,12 @@ const AssetDetailsPage = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-100 border border-blue-200 text-blue-700 rounded-full flex items-center justify-center font-bold text-lg shrink-0 shadow-sm">
-                  {ASSET.holder.name.split(' ').map(n => n[0]).join('')}
+                  {holderName !== 'Unassigned' ? holderName.split(' ').map(n => n[0]).join('') : '?'}
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-900">{ASSET.holder.name}</p>
-                  <p className="text-xs font-medium text-slate-500 mt-0.5">{ASSET.holder.role}</p>
-                  <p className="text-xs font-semibold text-blue-600 mt-0.5">{ASSET.holder.email}</p>
+                  <p className="text-sm font-bold text-slate-900">{holderName}</p>
+                  <p className="text-xs font-medium text-slate-500 mt-0.5">{holderRole}</p>
+                  <p className="text-xs font-semibold text-blue-600 mt-0.5">{holderEmail}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
@@ -228,7 +207,7 @@ const AssetDetailsPage = () => {
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-0.5">Department</p>
-                  <p className="text-sm font-bold text-slate-900">{ASSET.department}</p>
+                  <p className="text-sm font-bold text-slate-900">{departmentName}</p>
                 </div>
               </div>
             </div>
@@ -242,21 +221,21 @@ const AssetDetailsPage = () => {
                   <div className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-500"><Calendar size={14} /></div>
                   Acquired On
                 </div>
-                <span className="text-sm font-bold text-slate-900">{ASSET.acquisitionDate}</span>
+                <span className="text-sm font-bold text-slate-900">{asset.acquisitionDate ? new Date(asset.acquisitionDate).toLocaleDateString() : 'N/A'}</span>
               </div>
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
                   <div className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-500"><DollarSign size={14} /></div>
                   Purchase Cost
                 </div>
-                <span className="text-sm font-bold text-slate-900">${ASSET.acquisitionCost.toFixed(2)}</span>
+                <span className="text-sm font-bold text-slate-900">{asset.acquisitionCost ? `$${asset.acquisitionCost.toFixed(2)}` : 'N/A'}</span>
               </div>
               <div className="flex justify-between items-center pt-3 border-t border-slate-100">
                 <div className="flex items-center gap-2 text-sm font-bold text-slate-700">
                   <div className="p-1.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-600"><Activity size={14} /></div>
                   Current Value
                 </div>
-                <span className="text-sm font-bold text-emerald-600">${ASSET.lifecycle.currentValue.toFixed(2)}</span>
+                <span className="text-sm font-bold text-emerald-600">N/A</span>
               </div>
             </div>
           </DashboardCard>
@@ -265,23 +244,9 @@ const AssetDetailsPage = () => {
           <DashboardCard title="Activity Timeline">
             <div className="pt-2 pl-2">
               <ActivityCard 
-                title="Allocated to Sarah Jenkins"
-                description="Asset transferred from IT Storage to Engineering."
-                timestamp="Jan 20"
-                icon={CheckCircle2}
-                iconColor="emerald"
-              />
-              <ActivityCard 
-                title="Maintenance Done"
-                description="Initial software provisioning completed."
-                timestamp="Jan 16"
-                icon={Wrench}
-                iconColor="blue"
-              />
-              <ActivityCard 
                 title="Asset Registered"
                 description="Added to directory manually."
-                timestamp="Jan 15"
+                timestamp={new Date(asset.createdAt).toLocaleDateString()}
                 icon={Box}
                 iconColor="purple"
               />
@@ -315,7 +280,8 @@ const AssetDetailsPage = () => {
                 <Trash2 size={32} />
               </div>
               <h3 className="font-bold text-slate-900 text-xl">Delete Asset</h3>
-              <p className="text-sm text-slate-500">Are you sure you want to delete <span className="font-semibold text-slate-700">{ASSET.name}</span>? This action cannot be undone.</p>
+              <p className="text-sm text-slate-500">Are you sure you want to delete <span className="font-semibold text-slate-700">{asset.name}</span>? This action cannot be undone.</p>
+
               <div className="flex gap-2 w-full pt-4">
                 <Button variant="secondary" className="flex-1" onClick={() => setIsDeleteModalOpen(false)}>Cancel</Button>
                 <Button variant="danger" className="flex-1" onClick={() => setIsDeleteModalOpen(false)}>Confirm Delete</Button>

@@ -1,93 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, MoreHorizontal, AlertCircle, Wrench, Clock, Paperclip, 
   MessageSquare, User, X, CheckCircle2, ChevronRight
 } from 'lucide-react';
 import { ActivityCard } from '../components/dashboard';
 import { Button, Badge } from '../components/ui';
+import { getAllMaintenanceRequestsApi, approveMaintenanceRequestApi, resolveMaintenanceRequestApi } from '../api';
 
-// Placeholder Data
 const COLUMNS = [
-  { id: 'pending', title: 'Pending Approval', color: 'border-slate-300', bg: 'bg-slate-100' },
-  { id: 'approved', title: 'Approved', color: 'border-blue-300', bg: 'bg-blue-50' },
-  { id: 'assigned', title: 'Technician Assigned', color: 'border-purple-300', bg: 'bg-purple-50' },
-  { id: 'in_progress', title: 'In Progress', color: 'border-amber-300', bg: 'bg-amber-50' },
-  { id: 'resolved', title: 'Resolved', color: 'border-emerald-300', bg: 'bg-emerald-50' }
-];
-
-const MOCK_TICKETS = [
-  {
-    id: 'TKT-1029',
-    asset: 'Dell UltraSharp 32"',
-    assetTag: 'AST-2024-002',
-    issue: 'Screen flickering intermittently after 2 hours of use.',
-    priority: 'Medium',
-    status: 'pending',
-    requester: 'John Doe',
-    technician: null,
-    attachments: 1,
-    comments: 0,
-    date: 'Oct 24, 2024'
-  },
-  {
-    id: 'TKT-1030',
-    asset: 'Conference Projector A',
-    assetTag: 'AST-2024-005',
-    issue: 'Lamp replacement required. Brightness is very low.',
-    priority: 'High',
-    status: 'approved',
-    requester: 'Marketing Dept',
-    technician: null,
-    attachments: 0,
-    comments: 2,
-    date: 'Oct 23, 2024'
-  },
-  {
-    id: 'TKT-1031',
-    asset: 'Herman Miller Chair',
-    assetTag: 'AST-2024-003',
-    issue: 'Right armrest is loose and wobbling.',
-    priority: 'Low',
-    status: 'assigned',
-    requester: 'Sarah Jenkins',
-    technician: 'Mike Fixer',
-    attachments: 2,
-    comments: 1,
-    date: 'Oct 22, 2024'
-  },
-  {
-    id: 'TKT-1032',
-    asset: 'HVAC Unit - Floor 2',
-    assetTag: 'AST-2023-145',
-    issue: 'Leaking water near the server room entrance.',
-    priority: 'High',
-    status: 'in_progress',
-    requester: 'Facilities',
-    technician: 'External Vendor',
-    attachments: 3,
-    comments: 5,
-    date: 'Oct 21, 2024'
-  },
-  {
-    id: 'TKT-1028',
-    asset: 'MacBook Pro 16"',
-    assetTag: 'AST-2024-001',
-    issue: 'Battery swelling issue reported by user.',
-    priority: 'High',
-    status: 'resolved',
-    requester: 'Alex Chen',
-    technician: 'IT Hardware Team',
-    attachments: 1,
-    comments: 3,
-    date: 'Oct 20, 2024'
-  }
+  { id: 'PENDING', title: 'Pending Approval', color: 'border-slate-300', bg: 'bg-slate-100' },
+  { id: 'APPROVED', title: 'Approved', color: 'border-blue-300', bg: 'bg-blue-50' },
+  { id: 'IN_PROGRESS', title: 'In Progress', color: 'border-amber-300', bg: 'bg-amber-50' },
+  { id: 'RESOLVED', title: 'Resolved', color: 'border-emerald-300', bg: 'bg-emerald-50' }
 ];
 
 const PriorityBadge = ({ priority }) => {
   const variantMap = {
-    'High': 'danger',
-    'Medium': 'warning',
-    'Low': 'info'
+    'HIGH': 'danger',
+    'MEDIUM': 'warning',
+    'LOW': 'info'
   };
   
   return (
@@ -97,10 +28,59 @@ const PriorityBadge = ({ priority }) => {
   );
 };
 
-
 const MaintenancePage = () => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  const [requests, setRequests] = useState([]);
+
+  const loadData = async () => {
+    try {
+      const res = await getAllMaintenanceRequestsApi();
+      if (res.success) {
+        setRequests(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to load maintenance requests", err);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleStatusUpdate = async (ticket) => {
+    try {
+      if (ticket.status === 'PENDING') {
+        const res = await approveMaintenanceRequestApi(ticket.id);
+        if (res.success) {
+          loadData();
+          setSelectedTicket(null);
+        } else alert(res.message);
+      } else if (ticket.status === 'APPROVED' || ticket.status === 'IN_PROGRESS') {
+        const res = await resolveMaintenanceRequestApi(ticket.id);
+        if (res.success) {
+          loadData();
+          setSelectedTicket(null);
+        } else alert(res.message);
+      }
+    } catch (err) {
+      alert("Failed to update status");
+    }
+  };
+
+  const MOCK_TICKETS = requests.map(r => ({
+    id: r.id,
+    asset: r.asset?.name || 'Unknown',
+    assetTag: r.asset?.assetTag || 'Unknown',
+    issue: r.description,
+    priority: r.priority,
+    status: r.status,
+    requester: r.requestedBy?.name || 'Unknown',
+    technician: r.approvedById ? 'Maintenance Tech' : null,
+    attachments: r.photoUrl ? 1 : 0,
+    comments: 0,
+    date: new Date(r.createdAt).toLocaleDateString()
+  }));
 
   return (
     <div className="flex flex-col h-full bg-slate-50 relative overflow-hidden">
@@ -315,9 +295,14 @@ const MaintenancePage = () => {
             </div>
 
             <div className="p-5 border-t border-slate-200 bg-slate-50 shrink-0">
-              <Button className="w-full">
-                Update Ticket Status
-              </Button>
+              {selectedTicket.status !== 'RESOLVED' && (
+                <Button 
+                  className="w-full"
+                  onClick={() => handleStatusUpdate(selectedTicket)}
+                >
+                  {selectedTicket.status === 'PENDING' ? 'Approve Request' : 'Mark as Resolved'}
+                </Button>
+              )}
             </div>
           </div>
         </div>

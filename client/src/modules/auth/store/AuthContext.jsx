@@ -62,7 +62,11 @@ export const AuthProvider = ({ children }) => {
       }
 
       setUser(loggedUser);
-      navigate('/dashboard');
+      if (loggedUser.role === 'ASSET_MANAGER') {
+        navigate('/asset-manager');
+      } else {
+        navigate('/dashboard');
+      }
       return loggedUser;
     } catch (error) {
       handleUnauthenticated();
