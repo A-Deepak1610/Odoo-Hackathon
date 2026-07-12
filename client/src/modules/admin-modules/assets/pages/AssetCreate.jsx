@@ -13,7 +13,7 @@ export const AssetCreate = () => {
     try {
       await createAsset(data);
       // alert('Asset created successfully');
-      navigate('/admin/assets');
+      navigate('/assets');
     } catch (error) {
       console.error(error);
     }
@@ -23,7 +23,7 @@ export const AssetCreate = () => {
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center space-x-4">
         <button 
-          onClick={() => navigate('/admin/assets')}
+          onClick={() => navigate('/assets')}
           className="p-2 rounded-full hover:bg-gray-100 text-gray-600"
         >
           <ArrowLeft className="w-5 h-5" />

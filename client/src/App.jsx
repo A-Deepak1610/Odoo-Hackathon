@@ -32,13 +32,14 @@ function App() {
             {/* General Dashboard & Panel Routes */}
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="notifications" element={<Notifications />} />
-<<<<<<< HEAD
+            <Route path="profile" element={<ProfilePage />} />
+            
             {/* Administration Routes (Grouped under /admin) */}
             <Route path="admin">
               <Route 
                 path="organization" 
                 element={
-                  <ProtectedRoute allowedRoles={['ADMIN']}>
+                  <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN']}>
                     <Organization />
                   </ProtectedRoute>
                 } 
@@ -46,49 +47,12 @@ function App() {
               <Route 
                 path="db-assistant" 
                 element={
-                  <ProtectedRoute allowedRoles={['ADMIN']}>
+                  <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN']}>
                     <DbAssistant />
                   </ProtectedRoute>
                 } 
               />
-              <Route 
-                path="assets" 
-                element={
-                  <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
-                    <Assets />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="audit" 
-                element={
-                  <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
-                    <Audit />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="reports" 
-                element={
-                  <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
-                    <Reports />
-                  </ProtectedRoute>
-                } 
-              />
             </Route>
-=======
-            <Route path="db-assistant" element={<DbAssistant />} />
-            <Route path="profile" element={<ProfilePage />} />
-            
-            {/* RBAC Route: Organization Setup requires ADMIN or SUPERADMIN privilege */}
-            <Route 
-              path="organization" 
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN']}>
-                  <Organization />
-                </ProtectedRoute>
-              } 
-            />
             
             {/* RBAC Route: Assets Management requires ADMIN, ASSET_MANAGER, DEPARTMENT_HEAD, SUPERADMIN or EMPLOYEE */}
             <Route 
@@ -99,14 +63,11 @@ function App() {
                 </ProtectedRoute>
               } 
             />
->>>>>>> ac64105ae519cd60a7787a78173a1a5a8ac3debb
             
             {/* Standard Employee accessible panels */}
             <Route path="allocations" element={<Allocations />} />
             <Route path="booking" element={<Booking />} />
             <Route path="maintenance" element={<Maintenance />} />
-<<<<<<< HEAD
-=======
             
             {/* RBAC Route: Audit requires ADMIN, ASSET_MANAGER, DEPARTMENT_HEAD or SUPERADMIN */}
             <Route 
@@ -127,7 +88,6 @@ function App() {
                 </ProtectedRoute>
               } 
             />
->>>>>>> ac64105ae519cd60a7787a78173a1a5a8ac3debb
 
             {/* Catch all fallback within panels */}
             <Route path="*" element={<div className="p-8">Work in progress</div>} />
