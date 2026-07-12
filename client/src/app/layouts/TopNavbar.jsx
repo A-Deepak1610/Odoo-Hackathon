@@ -3,9 +3,12 @@ import { Search, Bell, Moon, ChevronDown } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
 const getPageTitle = (pathname) => {
-  const path = pathname.split("/")[1];
-  if (!path) return "Dashboard";
-  return path.charAt(0).toUpperCase() + path.slice(1).replace("-", " ");
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length === 0) return "Dashboard";
+  const lastSegment = segments[segments.length - 1];
+  if (lastSegment === "db-assistant") return "DB Assistant";
+  if (lastSegment === "organization") return "Organization Setup";
+  return lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1).replace(/-/g, " ");
 };
 
 const TopNavbar = () => {

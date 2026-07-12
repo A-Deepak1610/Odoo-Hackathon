@@ -24,9 +24,9 @@ const navGroups = [
     ],
   },
   {
-    label: "MANAGEMENT",
+    label: "MANAGEMENT",    
     items: [
-      { name: 'Assets', path: '/assets', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
+      { name: 'Assets', path: '/admin/assets', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
       { name: 'Allocation & Transfer', path: '/allocations', icon: ArrowRightLeft },
       { name: 'Resource Booking', path: '/booking', icon: CalendarClock },
       { name: 'Maintenance', path: '/maintenance', icon: Wrench },
@@ -35,8 +35,8 @@ const navGroups = [
   {
     label: "REPORTS & COMPLIANCE",
     items: [
-      { name: 'Audit', path: '/audit', icon: ClipboardCheck, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
-      { name: 'Reports', path: '/reports', icon: BarChart3, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
+      { name: 'Audit', path: '/admin/audit', icon: ClipboardCheck, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
+      { name: 'Reports', path: '/admin/reports', icon: BarChart3, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD'] },
     ],
   },
   {

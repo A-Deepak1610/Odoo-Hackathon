@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Building2, Tags, Users, Plus, MoreHorizontal, Search, Filter, ClipboardCheck, Pencil, Trash2 } from 'lucide-react';
-import PageHeader from '../../../shared/components/PageHeader';
-import Tabs from '../../../shared/components/Tabs';
-import DataTable from '../../../shared/components/DataTable';
-import StatusPill from '../../../shared/components/StatusPill';
-import Button from '../../../shared/components/Button';
-import Modal from '../../../shared/components/Modal';
+import PageHeader from '../../../../shared/components/PageHeader';
+import Tabs from '../../../../shared/components/Tabs';
+import DataTable from '../../../../shared/components/DataTable';
+import StatusPill from '../../../../shared/components/StatusPill';
+import Button from '../../../../shared/components/Button';
+import Modal from '../../../../shared/components/Modal';
 
 // --- INITIAL MOCK DATA ---
 const initialDepartments = [

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Search, Download, Plus, Pencil, Trash2, Box, Package, RefreshCw, Wrench } from 'lucide-react';
-import PageHeader from '../../../shared/components/PageHeader';
-import DataTable from '../../../shared/components/DataTable';
-import StatusPill from '../../../shared/components/StatusPill';
-import StatCard from '../../../shared/components/StatCard';
-import Button from '../../../shared/components/Button';
-import Modal from '../../../shared/components/Modal';
+import PageHeader from '../../../../shared/components/PageHeader';
+import DataTable from '../../../../shared/components/DataTable';
+import StatusPill from '../../../../shared/components/StatusPill';
+import StatCard from '../../../../shared/components/StatCard';
+import Button from '../../../../shared/components/Button';
+import Modal from '../../../../shared/components/Modal';
 
 // --- MOCK DATA ---
 const initialAssets = [

@@ -2,15 +2,15 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './app/layouts/AppLayout';
 import Dashboard from './modules/dashboard/pages/Dashboard';
-import Organization from './modules/organization/pages/Organization';
-import Assets from './modules/assets/pages/Assets';
+import Organization from './modules/admin-modules/organization/pages/Organization';
+import Assets from './modules/admin-modules/assets/pages/Assets';
 import Allocations from './modules/allocations/pages/Allocations';
 import Booking from './modules/booking/pages/Booking';
 import Maintenance from './modules/maintenance/pages/Maintenance';
-import Audit from './modules/audit/pages/Audit';
-import Reports from './modules/reports/pages/Reports';
+import Audit from './modules/admin-modules/audit/pages/Audit';
+import Reports from './modules/admin-modules/reports/pages/Reports';
 import Notifications from './modules/notifications/pages/Notifications';
-import DbAssistant from './modules/db-assistant/pages/DbAssistant';
+import DbAssistant from './modules/admin-modules/db-assistant/pages/DbAssistant';
 
 // Auth Module exports
 import { AuthProvider, ProtectedRoute, LoginPage, SignupPage } from './modules/auth';
@@ -49,41 +49,36 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
+              <Route 
+                path="assets" 
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
+                    <Assets />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="audit" 
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
+                    <Audit />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="reports" 
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
+                    <Reports />
+                  </ProtectedRoute>
+                } 
+              />
             </Route>
-            {/* RBAC Route: Assets Management requires ADMIN, ASSET_MANAGER or DEPARTMENT_HEAD */}
-            <Route 
-              path="assets" 
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
-                  <Assets />
-                </ProtectedRoute>
-              } 
-            />
             
             {/* Standard Employee accessible panels */}
             <Route path="allocations" element={<Allocations />} />
             <Route path="booking" element={<Booking />} />
             <Route path="maintenance" element={<Maintenance />} />
-            
-            {/* RBAC Route: Audit requires ADMIN, ASSET_MANAGER, or DEPARTMENT_HEAD */}
-            <Route 
-              path="audit" 
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
-                  <Audit />
-                </ProtectedRoute>
-              } 
-            />
-            
-            {/* RBAC Route: Reports requires ADMIN, ASSET_MANAGER, or DEPARTMENT_HEAD */}
-            <Route 
-              path="reports" 
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
-                  <Reports />
-                </ProtectedRoute>
-              } 
-            />
 
             {/* Catch all fallback within panels */}
             <Route path="*" element={<div className="p-8">Work in progress</div>} />
