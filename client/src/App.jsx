@@ -11,6 +11,9 @@ import Audit from './modules/audit/pages/Audit';
 import Reports from './modules/reports/pages/Reports';
 import Notifications from './modules/notifications/pages/Notifications';
 import DbAssistant from './modules/db-assistant/pages/DbAssistant';
+import DeptDashboard from './modules/department-head/pages/DeptDashboard';
+import Approvals from './modules/department-head/pages/Approvals';
+import ResourceBooking from './modules/department-head/pages/ResourceBooking';
 
 // Auth Module exports
 import { AuthProvider, ProtectedRoute, LoginPage, SignupPage } from './modules/auth';
@@ -32,6 +35,23 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="db-assistant" element={<DbAssistant />} />
+
+            {/* Department Head Exclusives */}
+            <Route path="dept-dashboard" element={
+              <ProtectedRoute allowedRoles={['DEPARTMENT_HEAD']}>
+                <DeptDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="approvals" element={
+              <ProtectedRoute allowedRoles={['DEPARTMENT_HEAD']}>
+                <Approvals />
+              </ProtectedRoute>
+            } />
+            <Route path="dept-booking" element={
+              <ProtectedRoute allowedRoles={['DEPARTMENT_HEAD']}>
+                <ResourceBooking />
+              </ProtectedRoute>
+            } />
             
             {/* RBAC Route: Organization Setup requires ADMIN privilege */}
             <Route 

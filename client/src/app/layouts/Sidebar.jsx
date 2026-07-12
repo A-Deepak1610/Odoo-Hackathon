@@ -24,6 +24,14 @@ const navGroups = [
     ],
   },
   {
+    label: "DEPARTMENT HEAD",
+    items: [
+      { name: "Dept Dashboard", path: "/dept-dashboard", icon: LayoutDashboard, roles: ['DEPARTMENT_HEAD'] },
+      { name: "Approvals", path: "/approvals", icon: ClipboardCheck, roles: ['DEPARTMENT_HEAD'] },
+      { name: "Dept Booking", path: "/dept-booking", icon: CalendarClock, roles: ['DEPARTMENT_HEAD'] },
+    ],
+  },
+  {
     label: "MANAGEMENT",
     items: [
       { name: 'Organization Setup', path: '/organization', icon: Building2, roles: ['ADMIN'] },
