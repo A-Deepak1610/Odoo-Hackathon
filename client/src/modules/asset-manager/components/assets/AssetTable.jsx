@@ -96,7 +96,12 @@ export const AssetTable = ({ data, isLoading }) => {
                 />
               </TableCell>
               <TableCell className="font-mono font-medium text-slate-700">{asset.tag}</TableCell>
-              <TableCell className="font-semibold text-slate-900">{asset.name}</TableCell>
+              <TableCell 
+                className="font-medium text-slate-900 hover:text-blue-600 cursor-pointer transition-colors"
+                onClick={() => window.location.href = `/asset-manager/directory/${asset.id}`}
+              >
+                {asset.name}
+              </TableCell>
               <TableCell className="text-slate-600">{asset.category}</TableCell>
               <TableCell><AssetStatusBadge status={asset.status} /></TableCell>
               <TableCell className="text-slate-600">{asset.department}</TableCell>

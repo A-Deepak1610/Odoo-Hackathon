@@ -26,16 +26,9 @@ export const Breadcrumb = () => {
 
   return (
     <div className="flex flex-col">
-      {/* Added breadcrumb hierarchy prefix as requested */}
-      <div className="text-xs text-slate-500 mb-1">
-        Home &gt; <span className="text-blue-900 font-semibold">{pageTitle}</span>
-      </div>
-      <h1 className="text-lg font-bold text-slate-900 leading-tight m-0">
+      <h1 className="text-lg font-semibold text-slate-900 leading-tight m-0">
         {pageTitle}
       </h1>
-      <p className="text-xs text-slate-500 hidden sm:block mt-1 m-0 font-medium">
-        AssetFlow Organization Admin
-      </p>
     </div>
   );
 };

@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   User, Building2, Calendar, AlertTriangle, ArrowRightLeft, 
-  CheckCircle2, Clock, RotateCcw, Box, FileText, Search
+  CheckCircle2, Clock, RotateCcw, Box, FileText, Search, X
 } from 'lucide-react';
 import { DashboardCard, ActivityCard, AlertCard } from '../components/dashboard';
 import { Input, Select, Button, Label, Card, CardContent } from '../components/ui';
 
 const AllocationPage = () => {
+  const [showTransferSuccess, setShowTransferSuccess] = useState(false);
+  const [showReturnSuccess, setShowReturnSuccess] = useState(false);
+
   return (
     <div className="p-6 max-w-[1600px] mx-auto space-y-6">
       <div className="mb-2">
@@ -112,10 +116,10 @@ const AllocationPage = () => {
               </div>
 
               <div className="pt-5 border-t border-slate-100 flex justify-end gap-3">
-                <Button variant="secondary" type="button">
+                <Button variant="secondary" type="button" onClick={() => {}}>
                   Cancel
                 </Button>
-                <Button variant="primary" type="button" className="gap-2">
+                <Button variant="primary" type="button" className="gap-2" onClick={() => setShowTransferSuccess(true)}>
                   <ArrowRightLeft size={16} />
                   Initiate Transfer
                 </Button>
@@ -187,7 +191,7 @@ const AllocationPage = () => {
               </div>
 
               <div className="pt-5 border-t border-slate-100 flex justify-end">
-                <Button type="button" className="bg-slate-800 hover:bg-slate-900 text-white gap-2">
+                <Button type="button" className="bg-slate-800 hover:bg-slate-900 text-white gap-2" onClick={() => setShowReturnSuccess(true)}>
                   <CheckCircle2 size={16} />
                   Confirm Return
                 </Button>
@@ -276,6 +280,46 @@ const AllocationPage = () => {
 
         </div>
       </div>
+
+      {/* Transfer Success Modal */}
+      {showTransferSuccess && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-2">
+                <CheckCircle2 size={32} />
+              </div>
+              <h3 className="font-bold text-slate-900 text-xl">Transfer Initiated</h3>
+              <p className="text-sm text-slate-500">
+                The transfer request for <span className="font-semibold text-slate-700">Dell XPS 15</span> has been successfully submitted for approval.
+              </p>
+              <Button className="w-full mt-4" onClick={() => setShowTransferSuccess(false)}>
+                Done
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Return Success Modal */}
+      {showReturnSuccess && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-2">
+                <RotateCcw size={32} />
+              </div>
+              <h3 className="font-bold text-slate-900 text-xl">Return Processed</h3>
+              <p className="text-sm text-slate-500">
+                The asset has been successfully marked as returned and is now available in inventory.
+              </p>
+              <Button className="w-full mt-4" onClick={() => setShowReturnSuccess(false)}>
+                Done
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

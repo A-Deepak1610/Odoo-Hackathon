@@ -19,25 +19,25 @@ const navGroups = [
   {
     label: "MAIN",
     items: [
-      { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-      { name: "Activity Logs & Notifications", path: "/notifications", icon: Bell },
+      { name: "Dashboard", path: "/asset-manager/dashboard", icon: LayoutDashboard },
+      { name: "Activity Logs & Notifications", path: "/asset-manager/notifications", icon: Bell },
     ],
   },
   {
     label: "MANAGEMENT",
     items: [
       { name: 'Organization Setup', path: '/organization', icon: Building2, roles: ['ADMIN', 'SUPERADMIN'] },
-      { name: 'Asset Registration & Directory', path: '/assets', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
-      { name: 'Asset Allocation & Transfer', path: '/allocations', icon: ArrowRightLeft },
-      { name: 'Resource Booking', path: '/booking', icon: CalendarClock },
-      { name: 'Maintenance Management', path: '/maintenance', icon: Wrench },
+      { name: 'Asset Registration & Directory', path: '/asset-manager/directory', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
+      { name: 'Asset Allocation & Transfer', path: '/asset-manager/allocations', icon: ArrowRightLeft },
+      { name: 'Resource Booking', path: '/asset-manager/booking', icon: CalendarClock },
+      { name: 'Maintenance Management', path: '/asset-manager/maintenance', icon: Wrench },
     ],
   },
   {
     label: "REPORTS & COMPLIANCE",
     items: [
-      { name: 'Asset Audit', path: '/audit', icon: ClipboardCheck, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
-      { name: 'Reports & Analytics', path: '/reports', icon: BarChart3, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
+      { name: 'Asset Audit', path: '/asset-manager/audit', icon: ClipboardCheck, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
+      { name: 'Reports & Analytics', path: '/asset-manager/reports', icon: BarChart3, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
     ],
   },
 ];
@@ -85,21 +85,21 @@ const Sidebar = () => {
                     key={item.name}
                     to={item.path}
                     className={({ isActive }) => 
-                      `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 transition-all relative ${
+                      `flex items-center gap-3 px-3 py-2 rounded-lg text-[14px] font-medium transition-all relative ${
                         isActive 
                           ? "bg-blue-50 text-blue-900" 
-                          : "hover:bg-slate-50 hover:text-slate-900"
+                          : "text-slate-900 hover:bg-slate-50"
                       }`
                     }
                   >
                     {({ isActive }) => (
                       <>
                         {isActive && (
-                          <span className="absolute left-0 top-0 bottom-0 w-1 bg-blue-700 rounded-r-md" />
+                          <span className="absolute left-0 top-0 bottom-0 w-1 bg-blue-900 rounded-r-md" />
                         )}
                         <IconComp
                           size={18}
-                          className={isActive ? "text-blue-700" : "text-slate-400 group-hover:text-slate-500"}
+                          className={isActive ? "text-blue-900" : "text-slate-400"}
                         />
                         {item.name}
                       </>

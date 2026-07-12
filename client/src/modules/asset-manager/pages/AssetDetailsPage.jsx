@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Edit, Trash2, Image as ImageIcon, FileText, 
@@ -36,13 +36,15 @@ const ASSET = {
 
 const AssetDetailsPage = () => {
   const { assetId } = useParams();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto space-y-6">
       {/* Header & Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
         <div className="flex items-center gap-4">
-          <Link to="/assets" className="p-2 border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200 shadow-sm bg-white">
+          <Link to="/asset-manager/directory" className="p-2 border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200 shadow-sm bg-white">
             <ArrowLeft size={18} />
           </Link>
           <div>
@@ -54,11 +56,11 @@ const AssetDetailsPage = () => {
           </div>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <Button variant="secondary" className="flex-1 sm:flex-none gap-2">
+          <Button variant="secondary" className="flex-1 sm:flex-none gap-2" onClick={() => setIsEditModalOpen(true)}>
             <Edit size={16} />
             <span>Edit Asset</span>
           </Button>
-          <Button variant="danger" className="flex-1 sm:flex-none gap-2">
+          <Button variant="danger" className="flex-1 sm:flex-none gap-2" onClick={() => setIsDeleteModalOpen(true)}>
             <Trash2 size={16} />
             <span>Delete</span>
           </Button>
@@ -288,6 +290,40 @@ const AssetDetailsPage = () => {
           
         </div>
       </div>
+
+      {/* Edit Modal (Mock) */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 flex flex-col text-center space-y-4">
+              <h3 className="font-bold text-slate-900 text-xl">Edit Asset</h3>
+              <p className="text-sm text-slate-500">Edit form would be rendered here, similar to the Register modal.</p>
+              <div className="flex gap-2 w-full pt-4">
+                <Button className="flex-1" onClick={() => setIsEditModalOpen(false)}>Close</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 flex flex-col text-center space-y-4">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-600 mx-auto mb-2">
+                <Trash2 size={32} />
+              </div>
+              <h3 className="font-bold text-slate-900 text-xl">Delete Asset</h3>
+              <p className="text-sm text-slate-500">Are you sure you want to delete <span className="font-semibold text-slate-700">{ASSET.name}</span>? This action cannot be undone.</p>
+              <div className="flex gap-2 w-full pt-4">
+                <Button variant="secondary" className="flex-1" onClick={() => setIsDeleteModalOpen(false)}>Cancel</Button>
+                <Button variant="danger" className="flex-1" onClick={() => setIsDeleteModalOpen(false)}>Confirm Delete</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -27,17 +27,17 @@ const navGroups = [
     label: "MANAGEMENT",
     items: [
       { name: 'Organization Setup', path: '/organization', icon: Building2, roles: ['ADMIN', 'SUPERADMIN'] },
-      { name: 'Asset Registration & Directory', path: '/assets', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
-      { name: 'Asset Allocation & Transfer', path: '/allocations', icon: ArrowRightLeft },
-      { name: 'Resource Booking', path: '/booking', icon: CalendarClock },
-      { name: 'Maintenance Management', path: '/maintenance', icon: Wrench },
+      { name: 'Asset Registration & Directory', path: '/asset-manager/directory', icon: Box, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
+      { name: 'Asset Allocation & Transfer', path: '/asset-manager/allocations', icon: ArrowRightLeft },
+      { name: 'Resource Booking', path: '/asset-manager/booking', icon: CalendarClock },
+      { name: 'Maintenance Management', path: '/asset-manager/maintenance', icon: Wrench },
     ],
   },
   {
     label: "REPORTS & COMPLIANCE",
     items: [
-      { name: 'Asset Audit', path: '/audit', icon: ClipboardCheck, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
-      { name: 'Reports & Analytics', path: '/reports', icon: BarChart3, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
+      { name: 'Asset Audit', path: '/asset-manager/audit', icon: ClipboardCheck, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
+      { name: 'Reports & Analytics', path: '/asset-manager/reports', icon: BarChart3, roles: ['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN'] },
     ],
   },
 ];
