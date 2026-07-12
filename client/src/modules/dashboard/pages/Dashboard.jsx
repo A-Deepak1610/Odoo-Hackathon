@@ -16,9 +16,11 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../auth";
 import { apiFetch } from "../../../services/api";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   // States for Employee Dashboard
   const [data, setData] = useState(null);
@@ -170,6 +172,7 @@ const Dashboard = () => {
         icon: CalendarClock,
         label: "Book Resource",
         description: "Schedule a shared room or equipment",
+        path: "/booking",
         color: "#7c3aed",
         bg: "#f3e8ff",
       },
@@ -177,6 +180,7 @@ const Dashboard = () => {
         icon: Wrench,
         label: "Raise Maintenance",
         description: "Report an issue with your materials",
+        path: "/maintenance",
         color: "#b45309",
         bg: "#fef3c7",
       },
@@ -184,6 +188,7 @@ const Dashboard = () => {
         icon: ArrowLeftRight,
         label: "Request Transfer",
         description: "Reallocate an asset to another user",
+        path: "/allocations",
         color: "#16a34a",
         bg: "#ecfdf5",
       },
@@ -274,6 +279,7 @@ const Dashboard = () => {
             {employeeQuickActions.map((action, i) => (
               <div
                 key={i}
+                onClick={() => navigate(action.path)}
                 style={{
                   background: "white",
                   borderRadius: "12px",
@@ -665,7 +671,7 @@ const Dashboard = () => {
       icon: Plus,
       label: "Register Asset",
       description: "Add a new asset to the registry",
-      path: "#",
+      path: "/assets",
       color: "#1e3a8a",
       bg: "#eff6ff",
     },
@@ -673,7 +679,7 @@ const Dashboard = () => {
       icon: CalendarClock,
       label: "Book Resource",
       description: "Schedule a shared resource",
-      path: "#",
+      path: "/booking",
       color: "#16a34a",
       bg: "#ecfdf5",
     },
@@ -681,7 +687,7 @@ const Dashboard = () => {
       icon: Wrench,
       label: "Raise Maintenance",
       description: "Report an issue or repair",
-      path: "#",
+      path: "/maintenance",
       color: "#b45309",
       bg: "#fef3c7",
     },
@@ -881,6 +887,7 @@ const Dashboard = () => {
           {quickActions.map((action, i) => (
             <div
               key={i}
+              onClick={() => navigate(action.path)}
               style={{
                 background: "white",
                 borderRadius: "12px",
