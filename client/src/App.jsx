@@ -18,22 +18,6 @@ import { AuthProvider, ProtectedRoute, LoginPage, SignupPage } from './modules/a
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<AppLayout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="organization" element={<Organization />} />
-          <Route path="assets" element={<Assets />} />
-          <Route path="allocations" element={<Allocations />} />
-          <Route path="booking" element={<Booking />} />
-          <Route path="maintenance" element={<Maintenance />} />
-          <Route path="audit" element={<Audit />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="notifications" element={<Notifications />} />
-          <Route path="db-assistant" element={<DbAssistant />} />
-          <Route path="*" element={<div className="p-8">Work in progress</div>} />
-        </Route>
-      </Routes>
       <AuthProvider>
         <Routes>
           {/* Public Authentication Routes */}
@@ -44,9 +28,10 @@ function App() {
           <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             
-            {/* General Dashboard */}
+            {/* General Dashboard & Panel Routes */}
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="notifications" element={<Notifications />} />
+            <Route path="db-assistant" element={<DbAssistant />} />
             
             {/* RBAC Route: Organization Setup requires ADMIN privilege */}
             <Route 
