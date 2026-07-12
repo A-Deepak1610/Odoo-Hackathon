@@ -46,96 +46,96 @@ function App() {
           {/* Secure Application Routes (Authenticated & Guarded Layout) */}
           <Route path="/" element={<ProtectedRoute><SuperAdminProvider><DeptHeadProvider><AppLayout /></DeptHeadProvider></SuperAdminProvider></ProtectedRoute>}>
             <Route index element={<RoleBasedRedirect />} />
-            
+
             {/* General Dashboard & Panel Routes */}
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="profile" element={<ProfilePage />} />
-            
+
             {/* Administration Routes (Grouped under /admin) */}
             <Route path="admin">
-              <Route 
-                path="organization" 
+              <Route
+                path="organization"
                 element={
                   <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN']}>
                     <Organization />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="db-assistant" 
+              <Route
+                path="db-assistant"
                 element={
                   <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN']}>
                     <DbAssistant />
                   </ProtectedRoute>
-                } 
+                }
               />
             </Route>
-            
-            <Route 
-              path="assets" 
+
+            <Route
+              path="assets"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}>
                   <Assets />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
+
             {/* Standard Employee accessible panels */}
             <Route path="allocations" element={<Allocations />} />
             <Route path="booking" element={<Booking />} />
             <Route path="maintenance" element={<Maintenance />} />
-            
+
             {/* RBAC Route: Audit requires ADMIN, ASSET_MANAGER, or DEPARTMENT_HEAD */}
-            <Route 
-              path="audit" 
+            <Route
+              path="audit"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
                   <Audit />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
+
             {/* RBAC Route: Reports requires ADMIN, ASSET_MANAGER, or DEPARTMENT_HEAD */}
-            <Route 
-              path="reports" 
+            <Route
+              path="reports"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD']}>
                   <Reports />
                 </ProtectedRoute>
-              } 
+              }
             />
 
             {/* Department Head Dedicated Screens (Mocked for Hackathon) */}
-            <Route 
-              path="dept-dashboard" 
+            <Route
+              path="dept-dashboard"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN', 'DEPARTMENT_HEAD']}>
                   <DeptDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="dept-approvals" 
+            <Route
+              path="dept-approvals"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN', 'DEPARTMENT_HEAD']}>
                   <Approvals />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="dept-booking" 
+            <Route
+              path="dept-booking"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN', 'DEPARTMENT_HEAD']}>
                   <ResourceBooking />
                 </ProtectedRoute>
-              } 
+              }
             />
 
             {/* Catch all fallback within panels */}
             <Route path="*" element={<div className="p-8">Work in progress</div>} />
           </Route>
-          
+
           {/* INJECTED THE NEW ISOLATED ASSET MANAGER OUTSIDE APPLAYOUT TO AVOID DOUBLE LAYOUTS */}
           <Route path="/asset-manager/*" element={<ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}><AssetManagerRoutes /></ProtectedRoute>} />
 

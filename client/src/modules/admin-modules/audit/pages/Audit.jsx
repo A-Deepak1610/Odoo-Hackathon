@@ -5,6 +5,7 @@ import DataTable from '../../../../shared/components/DataTable';
 import StatusPill from '../../../../shared/components/StatusPill';
 import StatCard from '../../../../shared/components/StatCard';
 import Button from '../../../../shared/components/Button';
+import Modal from '../../../../shared/components/Modal';
 import { cn } from '../../../../shared/utils/cn';
 
 // --- MOCK DATA ---
@@ -29,6 +30,11 @@ const Audit = () => {
   // Detail view state for assets in the specific audit
   const [auditAssets, setAuditAssets] = useState(mockAuditAssets);
 
+  // New Audit Modal state
+  const [isNewAuditModalOpen, setIsNewAuditModalOpen] = useState(false);
+  const [newAuditName, setNewAuditName] = useState('');
+  const [newAuditScope, setNewAuditScope] = useState('');
+
   // Auto-calculated stats for the master view
   const totalAudits = audits.length;
   const inProgress = audits.filter(a => a.status === 'In Progress').length;
@@ -50,6 +56,25 @@ const Audit = () => {
     ));
     
     setSelectedAudit(null);
+  };
+
+  const handleCreateAudit = (e) => {
+    e.preventDefault();
+    if (!newAuditName || !newAuditScope) return;
+    
+    const newAudit = {
+      id: `AUD-2024-Q${Math.floor(Math.random() * 4) + 1}-${Math.floor(Math.random() * 1000)}`,
+      name: newAuditName,
+      scope: newAuditScope,
+      auditors: 'You (Current User)',
+      status: 'Pending',
+      discrepancies: 0
+    };
+    
+    setAudits([newAudit, ...audits]);
+    setIsNewAuditModalOpen(false);
+    setNewAuditName('');
+    setNewAuditScope('');
   };
 
   // --- RENDERERS ---
@@ -234,10 +259,41 @@ const Audit = () => {
       <PageHeader 
         title="Asset Audits" 
         description={selectedAudit ? `Executing verification for ${selectedAudit.id}` : "Manage audit cycles, track discrepancies, and ensure compliance."}
-        actions={!selectedAudit && <Button icon={Plus}>New Audit Cycle</Button>}
+        actions={!selectedAudit && <Button icon={Plus} onClick={() => setIsNewAuditModalOpen(true)}>New Audit Cycle</Button>}
       />
 
       {selectedAudit ? renderDetailView() : renderMasterView()}
+
+      <Modal isOpen={isNewAuditModalOpen} onClose={() => setIsNewAuditModalOpen(false)} title="Start New Audit Cycle">
+        <form onSubmit={handleCreateAudit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Audit Name</label>
+            <input 
+              type="text" 
+              required
+              value={newAuditName}
+              onChange={(e) => setNewAuditName(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="e.g. Q4 Department Audit"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Scope</label>
+            <input 
+              type="text" 
+              required
+              value={newAuditScope}
+              onChange={(e) => setNewAuditScope(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="e.g. Engineering Assets"
+            />
+          </div>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button type="button" variant="secondary" onClick={() => setIsNewAuditModalOpen(false)}>Cancel</Button>
+            <Button type="submit">Create Audit</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

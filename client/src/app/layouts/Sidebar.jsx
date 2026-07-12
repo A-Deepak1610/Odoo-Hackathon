@@ -1,14 +1,14 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Building2, 
-  Box, 
-  ArrowRightLeft, 
-  CalendarClock, 
-  Wrench, 
-  ClipboardCheck, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  Building2,
+  Box,
+  ArrowRightLeft,
+  CalendarClock,
+  Wrench,
+  ClipboardCheck,
+  BarChart3,
   Bell,
   Bot,
   LogOut
@@ -245,13 +245,13 @@ const Sidebar = () => {
           cursor: 'pointer',
           transition: 'background-color 0.2s',
         }}
-        onClick={() => navigate('/profile')}
-        onMouseOver={(e) => {
-          e.currentTarget.style.backgroundColor = '#f8fafc';
-        }}
-        onMouseOut={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent';
-        }}>
+          onClick={() => navigate('/profile')}
+          onMouseOver={(e) => {
+            e.currentTarget.style.backgroundColor = '#f8fafc';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}>
           <div style={{
             width: '36px',
             height: '36px',
@@ -287,7 +287,7 @@ const Sidebar = () => {
               textTransform: 'uppercase',
             }}>{displayRole}</p>
           </div>
-          <button 
+          <button
             onClick={(e) => {
               e.stopPropagation();
               logout();
