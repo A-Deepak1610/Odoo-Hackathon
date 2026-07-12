@@ -1,8 +1,325 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum UserRole {
+  EMPLOYEE
+  DEPARTMENT_HEAD
+  ASSET_MANAGER
+  ADMIN        // Tenant Admin
+  SUPERADMIN   // Global SaaS Owner
+}
+
+enum AssetStatus {
+  AVAILABLE
+  ALLOCATED
+  RESERVED
+  UNDER_MAINTENANCE
+  LOST
+  RETIRED
+  DISPOSED
+}
+
+enum AllocationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ACTIVE
+  RETURNED
+}
+
+enum BookingStatus {
+  UPCOMING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum MaintenancePriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum MaintenanceStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum AuditStatus {
+  OPEN
+  CLOSED
+}
+
+enum AuditRecordStatus {
+  VERIFIED
+  MISSING
+  DAMAGED
+}
+
+// ==========================================
+// MODELS (SaaS Multi-Tenant + Highly Indexed)
+// ==========================================
+
+model Organization {
+  id               String   @id @default(uuid())
+  name             String
+  subdomain        String?  @unique
+  subscriptionPlan String   @default("FREE")
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  users               User[]
+  departments         Department[]
+  assetCategories     AssetCategory[]
+  assets              Asset[]
+  allocations         Allocation[]
+  resourceBookings    ResourceBooking[]
+  maintenanceRequests MaintenanceRequest[]
+  auditCycles         AuditCycle[]
+  auditRecords        AuditRecord[]
+
+  @@index([subdomain])
+  @@index([isActive])
+}
+
+model Department {
+  id                 String       @id @default(uuid())
+  organizationId     String
+  name               String
+  parentDepartmentId String?
+  headId             String?      @unique // Department Head
+  isActive           Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  parentDepartment   Department?  @relation("DepartmentHierarchy", fields: [parentDepartmentId], references: [id])
+  subDepartments     Department[] @relation("DepartmentHierarchy")
+  head               User?        @relation("DepartmentHead", fields: [headId], references: [id])
+  
+  users              User[]       @relation("DepartmentUsers")
+  assets             Asset[]
+  allocations        Allocation[]
+
+  @@unique([organizationId, name]) // A department name must be unique within an organization
+  @@index([organizationId])
+}
+
+model User {
+  id               String       @id @default(uuid())
+  organizationId   String?      // Optional: SUPERADMINs might not belong to a specific tenant
+  name             String
+  email            String       @unique
+  passwordHash     String
+  departmentId     String?
+  role             UserRole     @default(EMPLOYEE)
+  isActive         Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department       Department?  @relation("DepartmentUsers", fields: [departmentId], references: [id])
+  headedDepartment Department?  @relation("DepartmentHead")
+  
+  assets           Asset[]
+  
+  // Allocations/Transfers
+  givenAllocations    Allocation[] @relation("AllocationFrom")
+  receivedAllocations Allocation[] @relation("AllocationTo")
+  requestedAllocations Allocation[] @relation("AllocationRequestedBy")
+  approvedAllocations  Allocation[] @relation("AllocationApprovedBy")
+  
+  // Bookings
+  bookings            ResourceBooking[]
+  
+  // Maintenance
+  maintenanceRequests MaintenanceRequest[] @relation("MaintenanceRequestedBy")
+  maintenanceApprovals MaintenanceRequest[] @relation("MaintenanceApprovedBy")
+  
+  // Audits
+  auditRecords        AuditRecord[]
+
+  @@index([organizationId])
+  @@index([email])
+}
+
+model AssetCategory {
+  id                     String   @id @default(uuid())
+  organizationId         String
+  name                   String
+  description            String?
+  customAttributesSchema Json?    // To store dynamic field schemas
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  organization           Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assets                 Asset[]
+
+  @@unique([organizationId, name]) // Categories must be unique within an organization
+  @@index([organizationId])
+}
+
+model Asset {
+  id                   String      @id @default(uuid())
+  organizationId       String
+  name                 String
+  assetTag             String
+  serialNumber         String?
+  categoryId           String
+  acquisitionDate      DateTime?
+  acquisitionCost      Float?
+  condition            String?
+  location             String?
+  imageUrl             String?
+  isSharedBookable     Boolean     @default(false)
+  status               AssetStatus @default(AVAILABLE)
+  currentDepartmentId  String?
+  currentEmployeeId    String?
+  customAttributesData Json?       // Actual dynamic data
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  organization         Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category             AssetCategory @relation(fields: [categoryId], references: [id])
+  currentDepartment    Department?   @relation(fields: [currentDepartmentId], references: [id])
+  currentEmployee      User?         @relation(fields: [currentEmployeeId], references: [id])
+
+  allocations          Allocation[]
+  bookings             ResourceBooking[]
+  maintenanceRequests  MaintenanceRequest[]
+  auditRecords         AuditRecord[]
+
+  @@unique([organizationId, assetTag]) // Asset tags must be unique within an org
+  @@index([organizationId])
+  @@index([status])
+  @@index([categoryId])
+  @@index([assetTag])
+}
+
+model Allocation {
+  id                 String           @id @default(uuid())
+  organizationId     String
+  assetId            String
+  fromEmployeeId     String?
+  toEmployeeId       String?
+  toDepartmentId     String?
+  requestedById      String
+  status             AllocationStatus @default(PENDING)
+  expectedReturnDate DateTime?
+  returnedDate       DateTime?
+  checkInNotes       String?
+  approvedById       String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  asset              Asset       @relation(fields: [assetId], references: [id])
+  fromEmployee       User?       @relation("AllocationFrom", fields: [fromEmployeeId], references: [id])
+  toEmployee         User?       @relation("AllocationTo", fields: [toEmployeeId], references: [id])
+  toDepartment       Department? @relation(fields: [toDepartmentId], references: [id])
+  requestedBy        User        @relation("AllocationRequestedBy", fields: [requestedById], references: [id])
+  approvedBy         User?       @relation("AllocationApprovedBy", fields: [approvedById], references: [id])
+
+  @@index([organizationId])
+  @@index([assetId])
+  @@index([status])
+  @@index([requestedById])
+}
+
+model ResourceBooking {
+  id                  String        @id @default(uuid())
+  organizationId      String
+  assetId             String
+  bookedByEmployeeId  String
+  startTime           DateTime
+  endTime             DateTime
+  status              BookingStatus @default(UPCOMING)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  organization        Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  asset               Asset         @relation(fields: [assetId], references: [id])
+  bookedBy            User          @relation(fields: [bookedByEmployeeId], references: [id])
+
+  @@index([organizationId])
+  @@index([assetId])
+  @@index([startTime, endTime])
+}
+
+model MaintenanceRequest {
+  id                 String              @id @default(uuid())
+  organizationId     String
+  assetId            String
+  requestedById      String
+  description        String
+  priority           MaintenancePriority @default(MEDIUM)
+  photoUrl           String?
+  status             MaintenanceStatus   @default(PENDING)
+  assignedTechnician String?
+  approvedById       String?
+  resolvedAt         DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  organization       Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  asset              Asset               @relation(fields: [assetId], references: [id])
+  requestedBy        User                @relation("MaintenanceRequestedBy", fields: [requestedById], references: [id])
+  approvedBy         User?               @relation("MaintenanceApprovedBy", fields: [approvedById], references: [id])
+
+  @@index([organizationId])
+  @@index([assetId])
+  @@index([status])
+}
+
+model AuditCycle {
+  id                 String      @id @default(uuid())
+  organizationId     String
+  scopeDepartmentId  String?
+  scopeLocation      String?
+  startDate          DateTime
+  endDate            DateTime
+  status             AuditStatus @default(OPEN)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  organization       Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  auditRecords       AuditRecord[]
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model AuditRecord {
+  id                 String            @id @default(uuid())
+  organizationId     String
+  auditCycleId       String
+  assetId            String
+  auditorId          String
+  status             AuditRecordStatus
+  discrepancyNotes   String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  organization       Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  auditCycle         AuditCycle        @relation(fields: [auditCycleId], references: [id])
+  asset              Asset             @relation(fields: [assetId], references: [id])
+  auditor            User              @relation(fields: [auditorId], references: [id])
+
+  @@index([organizationId])
+  @@index([auditCycleId])
+  @@index([assetId])
 }
