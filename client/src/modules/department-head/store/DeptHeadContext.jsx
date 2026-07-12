@@ -27,6 +27,7 @@ const DeptHeadContext = createContext();
 export const DeptHeadProvider = ({ children }) => {
   const [assets, setAssets] = useState(INITIAL_ASSETS);
   const [requests, setRequests] = useState(INITIAL_REQUESTS);
+  const [processedRequests, setProcessedRequests] = useState([]);
   const [resources, setResources] = useState(INITIAL_RESOURCES);
 
   // Actions
@@ -50,12 +51,27 @@ export const DeptHeadProvider = ({ children }) => {
     setRequests(prev => [newReq, ...prev]);
   };
 
+  const requestAsset = () => {
+    const newReq = {
+      id: `REQ-${Math.floor(1000 + Math.random() * 9000)}`,
+      type: 'Asset Allocation',
+      asset: 'Dummy Hardware Request',
+      requester: 'Current User',
+      department: 'Engineering',
+      date: new Date().toISOString().split('T')[0],
+      status: 'Pending'
+    };
+    setRequests(prev => [newReq, ...prev]);
+  };
+
   const approveRequest = (requestId) => {
     const request = requests.find(r => r.id === requestId);
     if (!request) return;
 
     // Remove from pending requests
     setRequests(prev => prev.filter(req => req.id !== requestId));
+    // Add to processed
+    setProcessedRequests(prev => [{ ...request, status: 'Approved', processedAt: new Date().toISOString() }, ...prev]);
 
     // If it was a resource booking, mark the resource as Booked
     if (request.type === 'Resource Booking') {
@@ -71,6 +87,8 @@ export const DeptHeadProvider = ({ children }) => {
 
     // Remove from pending requests
     setRequests(prev => prev.filter(req => req.id !== requestId));
+    // Add to processed
+    setProcessedRequests(prev => [{ ...request, status: 'Rejected', processedAt: new Date().toISOString() }, ...prev]);
 
     // If it was a resource booking, revert the resource to Available
     if (request.type === 'Resource Booking') {
@@ -84,8 +102,10 @@ export const DeptHeadProvider = ({ children }) => {
     <DeptHeadContext.Provider value={{
       assets,
       requests,
+      processedRequests,
       resources,
       bookResource,
+      requestAsset,
       approveRequest,
       rejectRequest
     }}>

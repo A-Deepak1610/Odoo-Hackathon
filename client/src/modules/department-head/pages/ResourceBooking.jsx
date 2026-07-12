@@ -6,6 +6,7 @@ import { useDeptHead } from '../store/DeptHeadContext';
 const ResourceBooking = () => {
   const { resources, bookResource } = useDeptHead();
   const [selectedResource, setSelectedResource] = useState(null);
+  const [filterType, setFilterType] = useState('All Types');
   
   // Form State
   const [date, setDate] = useState('');
@@ -27,6 +28,13 @@ const ResourceBooking = () => {
     setPurpose('');
   };
 
+  const filteredResources = resources.filter(res => {
+    if (filterType === 'All Types') return true;
+    if (filterType === 'Rooms') return res.type === 'Room';
+    if (filterType === 'Equipment') return res.type === 'Equipment';
+    return true;
+  });
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in">
       <div>
@@ -41,7 +49,11 @@ const ResourceBooking = () => {
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-800">Available Resources</h2>
             <div className="flex gap-2">
-              <select className="text-sm border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-600">
+              <select 
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="text-sm border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-600"
+              >
                 <option>All Types</option>
                 <option>Rooms</option>
                 <option>Equipment</option>
@@ -50,7 +62,7 @@ const ResourceBooking = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {resources.map(res => (
+            {filteredResources.map(res => (
               <div 
                 key={res.id} 
                 onClick={() => res.status === 'Available' && setSelectedResource(res)}
