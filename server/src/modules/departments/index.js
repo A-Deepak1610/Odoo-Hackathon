@@ -1,1 +1,1 @@
-// Public interface for departments module
+export {}

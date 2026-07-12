@@ -1,1 +1,1 @@
-// Public interface for assets module
+export {}

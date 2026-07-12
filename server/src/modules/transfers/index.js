@@ -1,1 +1,1 @@
-// Public interface for transfers module
+export {}

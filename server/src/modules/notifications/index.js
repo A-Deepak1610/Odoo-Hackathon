@@ -1,1 +1,1 @@
-// Public interface for notifications module
+export {}

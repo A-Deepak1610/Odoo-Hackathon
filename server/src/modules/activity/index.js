@@ -1,1 +1,1 @@
-// Public interface for activity module
+export {}

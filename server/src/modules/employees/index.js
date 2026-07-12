@@ -1,1 +1,1 @@
-// Public interface for employees module
+export {}

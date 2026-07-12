@@ -1,1 +1,1 @@
-// Public interface for bookings module
+export {}
