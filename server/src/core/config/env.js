@@ -6,6 +6,8 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   DATABASE_URL: z.string().url(),
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly']).default('info'),
+  JWT_SECRET: z.string().default('assertflow_jwt_secret_key_123'),
+  JWT_REFRESH_SECRET: z.string().default('assertflow_jwt_refresh_secret_key_456'),
 });
 
 const _env = envSchema.safeParse(process.env);
