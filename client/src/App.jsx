@@ -20,10 +20,23 @@ import TenantManagement from './modules/super-admin/pages/TenantManagement';
 import { SuperAdminProvider } from './modules/super-admin/store/SuperAdminContext';
 
 // Auth Module exports
-import { AuthProvider, ProtectedRoute, LoginPage, SignupPage } from './modules/auth';
+import { AuthProvider, ProtectedRoute, LoginPage, SignupPage, useAuth } from './modules/auth';
 import ProfilePage from './modules/auth/pages/ProfilePage';
 
+<<<<<<< HEAD
 
+=======
+// NEW: Import the isolated Asset Manager routes
+import { AssetManagerRoutes } from './modules/asset-manager';
+
+const RoleBasedRedirect = () => {
+  const { user } = useAuth();
+  if (user?.role === 'ASSET_MANAGER') {
+    return <Navigate to="/asset-manager" replace />;
+  }
+  return <Navigate to="/dashboard" replace />;
+};
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
 
 function App() {
   return (
@@ -36,7 +49,11 @@ function App() {
 
           {/* Secure Application Routes (Authenticated & Guarded Layout) */}
           <Route path="/" element={<ProtectedRoute><SuperAdminProvider><DeptHeadProvider><AppLayout /></DeptHeadProvider></SuperAdminProvider></ProtectedRoute>}>
+<<<<<<< HEAD
             <Route index element={<Navigate to="/dashboard" replace />} />
+=======
+            <Route index element={<RoleBasedRedirect />} />
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
             
             {/* General Dashboard & Panel Routes */}
             <Route path="dashboard" element={<Dashboard />} />
@@ -101,6 +118,9 @@ function App() {
           {/* Catch all fallback within panels */}
             <Route path="*" element={<div className="p-8">Work in progress</div>} />
           </Route>
+          
+          {/* INJECTED THE NEW ISOLATED ASSET MANAGER OUTSIDE APPLAYOUT TO AVOID DOUBLE LAYOUTS */}
+          <Route path="/asset-manager/*" element={<ProtectedRoute allowedRoles={['ADMIN', 'ASSET_MANAGER', 'DEPARTMENT_HEAD', 'SUPERADMIN']}><AssetManagerRoutes /></ProtectedRoute>} />
 
           {/* Root fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

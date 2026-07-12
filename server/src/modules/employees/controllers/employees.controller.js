@@ -1,5 +1,6 @@
 const { prisma } = require('../../../core/database/prisma');
 const { successResponse } = require('../../../core/response/apiResponse');
+<<<<<<< HEAD
 const { ApiError } = require('../../../core/errors/ApiError');
 const bcrypt = require('bcryptjs');
 
@@ -20,11 +21,23 @@ const getEmployees = async (req, res, next) => {
     });
 
     return successResponse(res, 200, 'Employees retrieved successfully', employees);
+=======
+
+const getEmployees = async (req, res, next) => {
+  try {
+    const orgId = req.user.organizationId;
+    const employees = await prisma.user.findMany({
+      where: { organizationId: orgId, isActive: true },
+      include: { department: true }
+    });
+    return successResponse(res, 200, 'Employees retrieved', employees);
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
   } catch (error) {
     next(error);
   }
 };
 
+<<<<<<< HEAD
 /**
  * Add / Invite a new employee
  */
@@ -143,3 +156,6 @@ module.exports = {
   updateEmployee,
   deleteEmployee
 };
+=======
+module.exports = { getEmployees };
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1

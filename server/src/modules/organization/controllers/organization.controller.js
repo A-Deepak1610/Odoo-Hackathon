@@ -7,11 +7,18 @@ const { successResponse } = require('../../../core/response/apiResponse');
 const getOrganizationDetails = async (req, res, next) => {
   try {
     const orgId = req.user.organizationId;
+<<<<<<< HEAD
     const whereClause = orgId ? { organizationId: orgId } : {};
 
     const users = await prisma.user.findMany({
       where: { 
         ...whereClause,
+=======
+
+    const users = await prisma.user.findMany({
+      where: { 
+        organizationId: orgId,
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
         isActive: true
       },
       select: { id: true, name: true, email: true }
@@ -19,7 +26,11 @@ const getOrganizationDetails = async (req, res, next) => {
 
     const departments = await prisma.department.findMany({
       where: { 
+<<<<<<< HEAD
         ...whereClause,
+=======
+        organizationId: orgId,
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
         isActive: true
       }
     });

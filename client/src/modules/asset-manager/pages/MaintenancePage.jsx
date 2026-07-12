@@ -1,10 +1,15 @@
+<<<<<<< HEAD
 import React, { useState } from 'react';
+=======
+import React, { useState, useEffect } from 'react';
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
 import { 
   Plus, MoreHorizontal, AlertCircle, Wrench, Clock, Paperclip, 
   MessageSquare, User, X, CheckCircle2, ChevronRight
 } from 'lucide-react';
 import { ActivityCard } from '../components/dashboard';
 import { Button, Badge } from '../components/ui';
+<<<<<<< HEAD
 
 // Placeholder Data
 const COLUMNS = [
@@ -81,13 +86,28 @@ const MOCK_TICKETS = [
     comments: 3,
     date: 'Oct 20, 2024'
   }
+=======
+import { getAllMaintenanceRequestsApi, approveMaintenanceRequestApi, resolveMaintenanceRequestApi } from '../api';
+
+const COLUMNS = [
+  { id: 'PENDING', title: 'Pending Approval', color: 'border-slate-300', bg: 'bg-slate-100' },
+  { id: 'APPROVED', title: 'Approved', color: 'border-blue-300', bg: 'bg-blue-50' },
+  { id: 'IN_PROGRESS', title: 'In Progress', color: 'border-amber-300', bg: 'bg-amber-50' },
+  { id: 'RESOLVED', title: 'Resolved', color: 'border-emerald-300', bg: 'bg-emerald-50' }
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
 ];
 
 const PriorityBadge = ({ priority }) => {
   const variantMap = {
+<<<<<<< HEAD
     'High': 'danger',
     'Medium': 'warning',
     'Low': 'info'
+=======
+    'HIGH': 'danger',
+    'MEDIUM': 'warning',
+    'LOW': 'info'
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
   };
   
   return (
@@ -97,10 +117,66 @@ const PriorityBadge = ({ priority }) => {
   );
 };
 
+<<<<<<< HEAD
 
 const MaintenancePage = () => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+=======
+const MaintenancePage = () => {
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  const [requests, setRequests] = useState([]);
+
+  const loadData = async () => {
+    try {
+      const res = await getAllMaintenanceRequestsApi();
+      if (res.success) {
+        setRequests(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to load maintenance requests", err);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleStatusUpdate = async (ticket) => {
+    try {
+      if (ticket.status === 'PENDING') {
+        const res = await approveMaintenanceRequestApi(ticket.id);
+        if (res.success) {
+          loadData();
+          setSelectedTicket(null);
+        } else alert(res.message);
+      } else if (ticket.status === 'APPROVED' || ticket.status === 'IN_PROGRESS') {
+        const res = await resolveMaintenanceRequestApi(ticket.id);
+        if (res.success) {
+          loadData();
+          setSelectedTicket(null);
+        } else alert(res.message);
+      }
+    } catch (err) {
+      alert("Failed to update status");
+    }
+  };
+
+  const MOCK_TICKETS = requests.map(r => ({
+    id: r.id,
+    asset: r.asset?.name || 'Unknown',
+    assetTag: r.asset?.assetTag || 'Unknown',
+    issue: r.description,
+    priority: r.priority,
+    status: r.status,
+    requester: r.requestedBy?.name || 'Unknown',
+    technician: r.approvedById ? 'Maintenance Tech' : null,
+    attachments: r.photoUrl ? 1 : 0,
+    comments: 0,
+    date: new Date(r.createdAt).toLocaleDateString()
+  }));
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
 
   return (
     <div className="flex flex-col h-full bg-slate-50 relative overflow-hidden">
@@ -315,9 +391,20 @@ const MaintenancePage = () => {
             </div>
 
             <div className="p-5 border-t border-slate-200 bg-slate-50 shrink-0">
+<<<<<<< HEAD
               <Button className="w-full">
                 Update Ticket Status
               </Button>
+=======
+              {selectedTicket.status !== 'RESOLVED' && (
+                <Button 
+                  className="w-full"
+                  onClick={() => handleStatusUpdate(selectedTicket)}
+                >
+                  {selectedTicket.status === 'PENDING' ? 'Approve Request' : 'Mark as Resolved'}
+                </Button>
+              )}
+>>>>>>> 25c276ded4546bec26ea8afd0ced4c7846393dc1
             </div>
           </div>
         </div>
