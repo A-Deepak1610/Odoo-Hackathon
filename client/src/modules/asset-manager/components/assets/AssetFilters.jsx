@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search, Filter, Plus, Download } from 'lucide-react';
 
-export const AssetFilters = () => {
+export const AssetFilters = ({ onRegisterClick }) => {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6">
       
@@ -50,7 +50,10 @@ export const AssetFilters = () => {
           <Download size={16} />
           <span>Export</span>
         </button>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 w-full sm:w-auto justify-center shadow-sm">
+        <button 
+          onClick={onRegisterClick}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 w-full sm:w-auto justify-center shadow-sm"
+        >
           <Plus size={16} />
           <span>Register Asset</span>
         </button>

@@ -1,1 +1,1 @@
-// export * from './assetSchema';
+export * from './assetSchema';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AssetFilters, AssetTable } from '../components/assets';
+import { AssetFilters, AssetTable, RegisterAssetModal } from '../components/assets';
 
 // Placeholder Data
 const MOCK_ASSETS = [
@@ -84,6 +84,7 @@ const MOCK_ASSETS = [
 
 const AssetsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   // Simulate network loading state so you can see the skeleton!
   useEffect(() => {
@@ -102,9 +103,14 @@ const AssetsPage = () => {
         </div>
       </div>
 
-      <AssetFilters />
+      <AssetFilters onRegisterClick={() => setIsRegisterModalOpen(true)} />
       
       <AssetTable data={MOCK_ASSETS} isLoading={isLoading} />
+
+      <RegisterAssetModal 
+        isOpen={isRegisterModalOpen} 
+        onClose={() => setIsRegisterModalOpen(false)} 
+      />
     </div>
   );
 };
